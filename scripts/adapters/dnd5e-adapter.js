@@ -127,6 +127,68 @@ function getRollContextDetail(item, rollType) {
   };
 }
 
+function getFirstAvailableAbility(value) {
+  if (!value) return null;
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return normalized || null;
+  }
+
+  if (typeof value.first === "function") {
+    const first = value.first();
+    return typeof first === "string" && first.trim() ? first.trim() : null;
+  }
+
+  if (Array.isArray(value)) {
+    const first = value.find((entry) => typeof entry === "string" && entry.trim());
+    return first?.trim() ?? null;
+  }
+
+  if (value instanceof Set) {
+    for (const entry of value) {
+      if (typeof entry === "string" && entry.trim()) return entry.trim();
+    }
+  }
+
+  return null;
+}
+
+function resolveSpellcastingAbility(actor, item, activity) {
+  const activityAbility = getFirstAvailableAbility(activity?.availableAbilities);
+  if (activityAbility) return activityAbility;
+
+  const itemAbility = getFirstAvailableAbility(item?.system?.availableAbilities);
+  if (itemAbility) return itemAbility;
+
+  const classIdentifier = String(item?.system?.classIdentifier ?? "").trim();
+  const classAbility = actor?.spellcastingClasses?.[classIdentifier]?.spellcasting?.ability;
+  if (typeof classAbility === "string" && classAbility.trim()) return classAbility.trim();
+
+  const actorAbility = actor?.system?.attributes?.spellcasting;
+  if (typeof actorAbility === "string" && actorAbility.trim()) return actorAbility.trim();
+
+  return null;
+}
+
+function resolveActivityAbility(actor, item, activity) {
+  const directAbility = [
+    activity?.ability,
+    activity?.attack?.ability,
+    activity?.damage?.ability,
+    activity?.check?.ability,
+    activity?.save?.ability,
+    activity?.system?.ability,
+    item?.system?.ability
+  ].find((value) => typeof value === "string" && value.trim());
+
+  if (directAbility && directAbility !== "spellcasting") return directAbility.trim();
+  return resolveSpellcastingAbility(actor, item, activity);
+}
+
+function resolveActivityAttackBonus(activity) {
+  return sanitizeExpression(activity?.attack?.bonus ?? activity?.attackBonus);
+}
+
 function buildBaseDamageCandidates(item, activity) {
   const candidates = [];
 
@@ -232,7 +294,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
   const candidates = [];
   const contextLabel = getBucketContextLabel(item);
   const detailText = getRollContextDetail(item, "attack");
-  const abilityKey = activity?.ability;
+  const abilityKey = resolveActivityAbility(actor, item, activity);
   const abilityMod = toFiniteNumber(actor?.system?.abilities?.[abilityKey]?.mod);
   if (abilityKey && abilityMod) {
     candidates.push(...createCandidate(`${localizeAbilityLabel(abilityKey)} modifier`, `${abilityMod}`, {
@@ -251,7 +313,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
     }));
   }
 
-  const attackBonus = sanitizeExpression(activity?.attackBonus);
+  const attackBonus = resolveActivityAttackBonus(activity);
   if (attackBonus) {
     candidates.push(...createCandidate(`${item?.name ?? "Item"} attack bonus`, attackBonus, {
       sourceType: "item",
@@ -320,7 +382,7 @@ function buildDamageSourceCandidates(actor, item, activity) {
     }
   }
 
-  const abilityKey = activity?.ability;
+  const abilityKey = resolveActivityAbility(actor, item, activity);
   const abilityMod = toFiniteNumber(actor?.system?.abilities?.[abilityKey]?.mod);
   if (abilityKey && abilityMod) {
     candidates.push(...createCandidate(`${localizeAbilityLabel(abilityKey)} modifier`, `${abilityMod}`, {

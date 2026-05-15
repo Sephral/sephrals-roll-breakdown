@@ -176,8 +176,10 @@ test("dnd5e adapter resolves attack roll sources including effects and ammunitio
     }
   };
   const activity = {
-    ability: "str",
-    attackBonus: "2",
+    attack: {
+      ability: "str",
+      bonus: "2"
+    },
     type: "attack"
   };
 
@@ -361,8 +363,10 @@ test("dnd5e adapter covers attack fallbacks, unresolved matches, and generic rul
     }
   };
   const attackActivity = {
-    ability: "cha",
-    attackBonus: "1",
+    attack: {
+      ability: "cha",
+      bonus: "1"
+    },
     type: "attack"
   };
 
@@ -446,4 +450,103 @@ test("dnd5e adapter covers attack fallbacks, unresolved matches, and generic rul
   });
 
   assert.equal(damageBreakdowns[0].modifiers.some((term) => term.sourceLabel === "INT modifier"), true);
+});
+
+test("dnd5e adapter resolves modern attack fields and spellcasting fallback abilities", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const { game } = createGameStub({
+    lang: "en",
+    systemId: "dnd5e",
+    translations: createTranslations()
+  });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+
+  const actor = {
+    system: {
+      abilities: { cha: { mod: 4 } },
+      attributes: { prof: 3, spellcasting: "cha" },
+      bonuses: { rsak: { attack: "1", damage: "0" } }
+    },
+    effects: [],
+    items: []
+  };
+
+  const item = {
+    name: "Eldritch Blast",
+    type: "spell",
+    actor,
+    system: {
+      range: { value: 120 },
+      availableAbilities: new Set(["cha"]),
+      source: { rules: "2024" }
+    }
+  };
+  const activity = {
+    type: "attack",
+    attack: {
+      ability: "spellcasting",
+      bonus: "1"
+    },
+    damage: { parts: [{ number: 1, denomination: 10, bonus: "0" }] },
+    availableAbilities: new Set(["cha"])
+  };
+
+  globalThis.fromUuid = async (uuid) => ({
+    "uuid:item": item,
+    "uuid:activity": activity
+  }[uuid] ?? null);
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+
+  const attackBreakdowns = await adapter.buildBreakdowns({
+    flags: {
+      dnd5e: {
+        activity: { uuid: "uuid:activity" },
+        item: { uuid: "uuid:item" },
+        roll: { type: "attack" }
+      }
+    },
+    rolls: [{
+      formula: "1d20 + 4 + 3 + 1",
+      total: 17,
+      terms: [
+        new DiceTerm("1d20", 9, { number: 1, faces: 20 }),
+        new OperatorTerm("+"),
+        new NumericTerm(4),
+        new OperatorTerm("+"),
+        new NumericTerm(3),
+        new OperatorTerm("+"),
+        new NumericTerm(1)
+      ]
+    }]
+  });
+
+  assert.equal(attackBreakdowns[0].modifiers.some((term) => term.sourceLabel === "CHA modifier"), true);
+  assert.equal(attackBreakdowns[0].modifiers.some((term) => term.sourceLabel === "Proficiency"), true);
+  assert.equal(attackBreakdowns[0].modifiers.some((term) => term.sourceLabel === "Eldritch Blast attack bonus"), true);
+
+  const damageBreakdowns = await adapter.buildBreakdowns({
+    flags: {
+      dnd5e: {
+        activity: { uuid: "uuid:activity" },
+        item: { uuid: "uuid:item" },
+        roll: { type: "damage" }
+      }
+    },
+    rolls: [{
+      formula: "1d10 + 4",
+      total: 12,
+      terms: [
+        new DiceTerm("1d10", 8, { number: 1, faces: 10 }),
+        new OperatorTerm("+"),
+        new NumericTerm(4)
+      ]
+    }]
+  });
+
+  assert.equal(damageBreakdowns[0].modifiers.some((term) => term.sourceLabel === "CHA modifier"), true);
 });
