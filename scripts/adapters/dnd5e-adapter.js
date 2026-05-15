@@ -453,6 +453,53 @@ function createTermSourceResolver(candidates) {
   };
 }
 
+async function resolveMessageItem(message) {
+  const itemUuid = message?.flags?.dnd5e?.item?.uuid;
+  if (itemUuid) {
+    const item = await fromUuid(itemUuid);
+    if (item) return item;
+  }
+
+  const actor = message?.getAssociatedActor?.() ?? null;
+  const itemId = message?.flags?.dnd5e?.item?.id;
+  if (actor && itemId) {
+    const item = actor.items?.get?.(itemId) ?? actor.items?.find?.((candidate) => candidate?.id === itemId) ?? null;
+    if (item) return item;
+  }
+
+  return null;
+}
+
+async function resolveMessageActivity(message, item, actor) {
+  const activityUuid = message?.flags?.dnd5e?.activity?.uuid;
+  if (activityUuid) {
+    const activity = await fromUuid(activityUuid);
+    if (activity) return activity;
+  }
+
+  const causeRelativeUuid = message?.system?.cause;
+  if (causeRelativeUuid && actor && typeof fromUuid === "function") {
+    const activity = await fromUuid(causeRelativeUuid, { relative: actor, strict: false });
+    if (activity) return activity;
+  }
+
+  const activityId = message?.flags?.dnd5e?.activity?.id;
+  if (item && activityId) {
+    const activity = item.system?.activities?.get?.(activityId)
+      ?? item.system?.activities?.find?.((candidate) => candidate?.id === activityId)
+      ?? null;
+    if (activity) return activity;
+  }
+
+  return null;
+}
+
+function resolveMessageRollType(message) {
+  return message?.flags?.dnd5e?.roll?.type
+    ?? message?.rolls?.find?.((roll) => typeof roll?.options?.rollType === "string")?.options?.rollType
+    ?? null;
+}
+
 export class Dnd5eRollAdapter extends GenericRollAdapter {
   constructor() {
     super();
@@ -466,14 +513,12 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
   async buildBreakdowns(message) {
     await ensureSystemTranslationsLoaded();
 
-    const activityUuid = message?.flags?.dnd5e?.activity?.uuid;
-    const itemUuid = message?.flags?.dnd5e?.item?.uuid;
-    const rollType = message?.flags?.dnd5e?.roll?.type;
-    if (!activityUuid || !itemUuid || !rollType) return super.buildBreakdowns(message);
+    const rollType = resolveMessageRollType(message);
+    if (!rollType) return super.buildBreakdowns(message);
 
-    const item = await fromUuid(itemUuid);
-    const activity = await fromUuid(activityUuid);
-    const actor = item?.actor;
+    const item = await resolveMessageItem(message);
+    const actor = item?.actor ?? message?.getAssociatedActor?.() ?? null;
+    const activity = await resolveMessageActivity(message, item, actor);
     if (!item || !activity || !actor) return super.buildBreakdowns(message);
 
     const candidates = rollType === "attack"

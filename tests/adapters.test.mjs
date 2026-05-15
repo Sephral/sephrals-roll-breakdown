@@ -550,3 +550,96 @@ test("dnd5e adapter resolves modern attack fields and spellcasting fallback abil
 
   assert.equal(damageBreakdowns[0].modifiers.some((term) => term.sourceLabel === "CHA modifier"), true);
 });
+
+test("dnd5e adapter resolves item and activity from ids and cause when uuids are missing", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const { game } = createGameStub({
+    lang: "en",
+    systemId: "dnd5e",
+    translations: createTranslations()
+  });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+
+  const activity = {
+    id: "attack-1",
+    type: "attack",
+    attack: {
+      ability: "cha",
+      bonus: "1"
+    }
+  };
+
+  const activities = new Map([[activity.id, activity]]);
+  activities.get = Map.prototype.get.bind(activities);
+
+  const items = [];
+  items.get = (id) => items.find((item) => item.id === id) ?? null;
+
+  const actor = {
+    system: {
+      abilities: { cha: { mod: 4 } },
+      attributes: { prof: 3 },
+      bonuses: { rsak: { attack: "0" } }
+    },
+    effects: [],
+    items
+  };
+
+  const item = {
+    id: "item-1",
+    uuid: "uuid:item",
+    name: "Eldritch Blast",
+    type: "spell",
+    actor,
+    system: {
+      range: { value: 120 },
+      activities,
+      source: { rules: "2024" }
+    }
+  };
+  items.push(item);
+
+  globalThis.fromUuid = async (uuid, options = {}) => {
+    if (uuid === ".Item.item-1.Activity.attack-1" && options.relative === actor) return activity;
+    return ({ "uuid:item": item }[uuid] ?? null);
+  };
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+  const breakdowns = await adapter.buildBreakdowns({
+    getAssociatedActor() {
+      return actor;
+    },
+    system: {
+      cause: ".Item.item-1.Activity.attack-1"
+    },
+    flags: {
+      dnd5e: {
+        activity: { id: "attack-1", type: "attack" },
+        item: { id: "item-1", type: "spell" }
+      }
+    },
+    rolls: [{
+      formula: "1d20 + 4 + 3 + 1",
+      total: 19,
+      options: { rollType: "attack" },
+      terms: [
+        new DiceTerm("1d20", 11, { number: 1, faces: 20 }),
+        new OperatorTerm("+"),
+        new NumericTerm(4),
+        new OperatorTerm("+"),
+        new NumericTerm(3),
+        new OperatorTerm("+"),
+        new NumericTerm(1)
+      ]
+    }]
+  });
+
+  assert.equal(breakdowns.length, 1);
+  assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "CHA modifier"), true);
+  assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "Proficiency"), true);
+  assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "Eldritch Blast attack bonus"), true);
+});
