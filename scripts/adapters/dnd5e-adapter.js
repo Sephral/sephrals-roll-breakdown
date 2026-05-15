@@ -733,6 +733,51 @@ function resolveMessageRollType(message, roll = null) {
     ?? null;
 }
 
+function resolveAdvantageState(roll) {
+  const advantageMode = roll?.options?.advantageMode;
+  const configMode = globalThis.CONFIG?.Dice?.D20Roll?.ADV_MODE;
+  if (advantageMode === configMode?.ADVANTAGE || advantageMode === 1) return "advantage";
+  if (advantageMode === configMode?.DISADVANTAGE || advantageMode === -1) return "disadvantage";
+  if (roll?.options?.advantage && !roll?.options?.disadvantage) return "advantage";
+  if (!roll?.options?.advantage && roll?.options?.disadvantage) return "disadvantage";
+  return "normal";
+}
+
+function getRollAttributions(message, roll, rollType) {
+  const directAttributions = Array.isArray(roll?.options?.attributions) ? roll.options.attributions : null;
+  if (directAttributions) return directAttributions;
+
+  if (rollType === "attack") {
+    const midiAttackRoll = message?.flags?.["midi-qol"]?.attackRoll;
+    if (Array.isArray(midiAttackRoll?.options?.attributions)) return midiAttackRoll.options.attributions;
+  }
+
+  return [];
+}
+
+function extractAdvantageContext(message, roll, rollType) {
+  const attributions = getRollAttributions(message, roll, rollType)
+    .filter((entry) => ["ADV", "DIS", "NOADV", "NODIS"].includes(entry?.type))
+    .map((entry) => ({
+      type: entry.type,
+      source: entry.source ?? null,
+      displayName: String(entry.displayName ?? entry.source ?? "").trim()
+    }))
+    .filter((entry) => entry.displayName.length > 0);
+
+  if (!attributions.length) return null;
+
+  const sourceRoll = rollType === "attack" && !Array.isArray(roll?.options?.attributions)
+    ? message?.flags?.["midi-qol"]?.attackRoll
+    : roll;
+  const state = resolveAdvantageState(sourceRoll ?? roll);
+
+  return {
+    state,
+    attributions
+  };
+}
+
 export class Dnd5eRollAdapter extends GenericRollAdapter {
   constructor() {
     super();
@@ -774,11 +819,22 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
               ? damageCandidates
               : null;
 
-        return parseRoll(roll, {
+        const breakdown = parseRoll(roll, {
           adapterId: this.id,
           rollIndex: index,
           termSourceResolver: candidates ? createTermSourceResolver(candidates) : null
         });
+
+        if (currentRollType === "damage" && breakdown.diceTerms.length > 0) {
+          breakdown.hasVisibleContent = true;
+        }
+
+        breakdown.advantageContext = extractAdvantageContext(message, roll, currentRollType);
+        if (breakdown.advantageContext) {
+          breakdown.hasVisibleContent = true;
+        }
+
+        return breakdown;
       })
       .filter((breakdown) => breakdown.hasVisibleContent);
   }

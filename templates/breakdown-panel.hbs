@@ -7,6 +7,21 @@
           <div class="srb-breakdown__roll-label">{{breakdown.rollLabel}}</div>
         {{/if}}
 
+        {{#if breakdown.advantageContext}}
+          <div class="srb-breakdown__section">
+            <ul class="srb-breakdown__list">
+              {{#each breakdown.advantageContext.attributions as |attribution|}}
+                <li class="srb-breakdown__item">
+                  <span class="srb-breakdown__item-main">
+                    {{attribution.label}}
+                    <span class="srb-breakdown__item-tag" {{#if attribution.tooltip}}data-tooltip="{{attribution.tooltip}}"{{/if}}>{{attribution.typeLabel}}</span>
+                  </span>
+                </li>
+              {{/each}}
+            </ul>
+          </div>
+        {{/if}}
+
         <div class="srb-breakdown__section">
           <div class="srb-breakdown__label">{{../labels.dice}}</div>
           {{#if breakdown.diceTerms.length}}

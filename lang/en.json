@@ -30,5 +30,11 @@
   "SRB.Chat.StatusExact": "Exact terms",
   "SRB.Chat.StatusDerived": "Derived terms",
   "SRB.Chat.StatusPartial": "Partial explanation",
-  "SRB.Chat.None": "None"
+  "SRB.Chat.None": "None",
+  "SRB.Chat.AdvantageSection": "Advantage",
+  "SRB.Chat.Advantage": "Advantage",
+  "SRB.Chat.Disadvantage": "Disadvantage",
+  "SRB.Chat.Normal": "Normal",
+  "SRB.Chat.SuppressedAdvantage": "Suppressed advantage",
+  "SRB.Chat.SuppressedDisadvantage": "Suppressed disadvantage"
 }

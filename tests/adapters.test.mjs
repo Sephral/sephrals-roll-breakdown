@@ -293,6 +293,87 @@ test("dnd5e adapter resolves attack roll sources including effects and ammunitio
   assert.equal(breakdowns[0].diceTerms.find((term) => term.sourceLabel === "Bless").sourceDetail.includes("Bless 2014"), true);
 });
 
+test("dnd5e adapter includes advantage attribution reasons from roll metadata", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const { game } = createGameStub({
+    lang: "en",
+    systemId: "dnd5e",
+    translations: createTranslations()
+  });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+
+  const actor = {
+    system: {
+      abilities: { str: { mod: 4 } },
+      attributes: { prof: 3 },
+      bonuses: { mwak: { attack: "1" } }
+    },
+    effects: [],
+    items: []
+  };
+  const item = {
+    name: "Longsword",
+    type: "weapon",
+    actor,
+    system: {
+      range: { value: 5 },
+      ammunition: { type: null },
+      source: { rules: "2014" }
+    }
+  };
+  const activity = {
+    attack: {
+      ability: "str"
+    },
+    type: "attack"
+  };
+
+  globalThis.fromUuid = async (uuid) => ({
+    "uuid:item": item,
+    "uuid:activity": activity
+  }[uuid] ?? null);
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+  const breakdowns = await adapter.buildBreakdowns({
+    flags: {
+      dnd5e: {
+        activity: { uuid: "uuid:activity", type: "attack" },
+        item: { uuid: "uuid:item" }
+      }
+    },
+    rolls: [{
+      formula: "1d20 + 4 + 3",
+      total: 19,
+      options: {
+        rollType: "attack",
+        advantageMode: 1,
+        attributions: [
+          { type: "ADV", source: "flanking", displayName: "Flanking" },
+          { type: "NOADV", source: "condition", displayName: "Suppressed by condition" }
+        ]
+      },
+      terms: [
+        new DiceTerm("1d20", 12, { number: 1, faces: 20 }),
+        new OperatorTerm("+"),
+        new NumericTerm(4),
+        new OperatorTerm("+"),
+        new NumericTerm(3)
+      ]
+    }]
+  });
+
+  assert.equal(breakdowns.length, 1);
+  assert.equal(breakdowns[0].advantageContext.state, "advantage");
+  assert.deepEqual(breakdowns[0].advantageContext.attributions, [
+    { type: "ADV", source: "flanking", displayName: "Flanking" },
+    { type: "NOADV", source: "condition", displayName: "Suppressed by condition" }
+  ]);
+});
+
 test("dnd5e adapter resolves mixed midi attack and damage rolls per roll type", async () => {
   resetGlobals();
   installRollEnvironment();
@@ -376,9 +457,97 @@ test("dnd5e adapter resolves mixed midi attack and damage rolls per roll type", 
   assert.equal(breakdowns.length, 2);
   assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "STR modifier" && term.sourceDetail?.includes("Ability STR Melee weapon attack")), true);
   assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "Proficiency"), true);
+  assert.equal(breakdowns[0].advantageContext, null);
   assert.equal(breakdowns[1].diceTerms.some((term) => term.sourceLabel === "Base damage"), true);
   assert.equal(breakdowns[1].modifiers.some((term) => term.sourceLabel === "STR modifier" && term.sourceDetail?.includes("Damage ability STR")), true);
   assert.equal(breakdowns[1].modifiers.some((term) => term.sourceLabel === "Actor damage bonus"), true);
+  assert.equal(breakdowns[1].advantageContext, null);
+});
+
+test("dnd5e adapter keeps pure dice damage rolls visible in mixed messages", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const { game } = createGameStub({
+    lang: "en",
+    systemId: "dnd5e",
+    translations: createTranslations()
+  });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+
+  const actor = {
+    system: {
+      abilities: { int: { mod: 4 } },
+      attributes: { prof: 3 },
+      bonuses: { rsak: { damage: "" } }
+    },
+    effects: [],
+    items: []
+  };
+
+  const item = {
+    name: "Fire Bolt",
+    type: "spell",
+    actor,
+    system: {
+      range: { value: 120 },
+      source: { rules: "2014" }
+    }
+  };
+  const activity = {
+    type: "attack",
+    attack: { ability: "spellcasting" },
+    availableAbilities: ["int"],
+    damage: { parts: [{ number: 2, denomination: 10, bonus: "0" }] }
+  };
+
+  globalThis.fromUuid = async (uuid) => ({
+    "uuid:item": item,
+    "uuid:activity": activity
+  }[uuid] ?? null);
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+  const breakdowns = await adapter.buildBreakdowns({
+    flags: {
+      dnd5e: {
+        activity: { uuid: "uuid:activity", type: "attack" },
+        item: { uuid: "uuid:item" }
+      },
+      "midi-qol": {
+        messageType: "attack"
+      }
+    },
+    rolls: [{
+      formula: "2d20kl + 4 + 3",
+      total: 13,
+      options: {
+        rollType: "attack",
+        advantageMode: -1,
+        attributions: [{ type: "DIS", source: "nearbyFoe", displayName: "Nearby foe" }]
+      },
+      terms: [
+        new DiceTerm("2d20kl", 6, { number: 2, faces: 20 }),
+        new OperatorTerm("+"),
+        new NumericTerm(4),
+        new OperatorTerm("+"),
+        new NumericTerm(3)
+      ]
+    }, {
+      formula: "2d10",
+      total: 14,
+      options: { rollType: "damage" },
+      terms: [new DiceTerm("2d10", 14, { number: 2, faces: 10 })]
+    }]
+  });
+
+  assert.equal(breakdowns.length, 2);
+  assert.equal(breakdowns[0].advantageContext.attributions[0].displayName, "Nearby foe");
+  assert.equal(breakdowns[1].diceTerms.length, 1);
+  assert.equal(breakdowns[1].diceTerms[0].sourceLabel, "Base damage");
+  assert.equal(breakdowns[1].modifiers.length, 0);
+  assert.equal(breakdowns[1].advantageContext, null);
 });
 
 test("dnd5e adapter resolves save activity messages by embedded damage roll type", async () => {

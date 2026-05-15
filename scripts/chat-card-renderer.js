@@ -23,6 +23,21 @@ function formatSignedNumber(value) {
   return value >= 0 ? `+${value}` : String(value);
 }
 
+function decorateAdvantageAttribution(attribution, labels) {
+  const typeLabels = {
+    ADV: labels.advantage,
+    DIS: labels.disadvantage,
+    NOADV: labels.suppressedAdvantage,
+    NODIS: labels.suppressedDisadvantage
+  };
+
+  return {
+    label: attribution.displayName,
+    typeLabel: typeLabels[attribution.type] ?? attribution.type,
+    tooltip: attribution.source ?? null
+  };
+}
+
 function getRootElement(html) {
   if (html instanceof HTMLElement) return html;
   if (html?.[0] instanceof HTMLElement) return html[0];
@@ -50,7 +65,13 @@ function buildTemplateData(message, breakdowns, options) {
     exactStatus: localize("Chat.StatusExact"),
     derivedStatus: localize("Chat.StatusDerived"),
     partialStatus: localize("Chat.StatusPartial"),
-    none: localize("Chat.None")
+    none: localize("Chat.None"),
+    advantageSection: localize("Chat.AdvantageSection"),
+    advantage: localize("Chat.Advantage"),
+    disadvantage: localize("Chat.Disadvantage"),
+    normal: localize("Chat.Normal"),
+    suppressedAdvantage: localize("Chat.SuppressedAdvantage"),
+    suppressedDisadvantage: localize("Chat.SuppressedDisadvantage")
   };
 
   return {
@@ -84,6 +105,12 @@ function buildTemplateData(message, breakdowns, options) {
         modifier.kind === "derived" ? labels.derivedModifier : options.showUnknown ? labels.unknownModifier : null
       )),
       computedTerms: breakdown.computedTerms.map((term) => decorateTerm(term, labels.computedTerm)),
+      advantageContext: breakdown.advantageContext
+        ? {
+            stateLabel: labels[breakdown.advantageContext.state] ?? labels.normal,
+            attributions: breakdown.advantageContext.attributions.map((attribution) => decorateAdvantageAttribution(attribution, labels))
+          }
+        : null,
       unresolvedTerms: options.showUnknown
         ? breakdown.unresolvedTerms.map((term) => decorateTerm(term, labels.unresolvedTerm))
         : [],

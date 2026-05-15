@@ -52,7 +52,12 @@ test("chat card renderer decorates template data and avoids duplicate markup", a
     "SRB.Chat.StatusExact": "Exact",
     "SRB.Chat.StatusDerived": "Derived status",
     "SRB.Chat.StatusPartial": "Partial",
-    "SRB.Chat.None": "None"
+    "SRB.Chat.None": "None",
+    "SRB.Chat.Advantage": "Advantage",
+    "SRB.Chat.Disadvantage": "Disadvantage",
+    "SRB.Chat.Normal": "Normal",
+    "SRB.Chat.SuppressedAdvantage": "Suppressed advantage",
+    "SRB.Chat.SuppressedDisadvantage": "Suppressed disadvantage"
   };
 
   const { game } = createGameStub({ translations });
@@ -80,6 +85,10 @@ test("chat card renderer decorates template data and avoids duplicate markup", a
     diceTerms: [{ sourceLabel: "External Module: Attack", sourceDetail: "d20" }],
     modifiers: [{ kind: "derived", value: 5, sourceLabel: null, sourceDetail: "bonus" }],
     computedTerms: [{ sourceLabel: null, sourceDetail: "computed detail" }],
+    advantageContext: {
+      state: "disadvantage",
+      attributions: [{ type: "DIS", source: "nearbyFoe", displayName: "Nearby foe" }]
+    },
     unresolvedTerms: [{ sourceLabel: null, sourceDetail: "unknown detail" }],
     totalStaticModifier: 5,
     rollTotal: 18
@@ -92,6 +101,7 @@ test("chat card renderer decorates template data and avoids duplicate markup", a
   assert.equal(capturedTemplateData.breakdowns[0].diceTerms[0].label, "Attack");
   assert.equal(capturedTemplateData.breakdowns[0].modifiers[0].label, "Derived");
   assert.equal(capturedTemplateData.breakdowns[0].computedTerms[0].label, "Computed term");
+  assert.equal(capturedTemplateData.breakdowns[0].advantageContext.attributions[0].typeLabel, "Disadvantage");
   assert.equal(capturedTemplateData.breakdowns[0].unresolvedTerms.length, 0);
   assert.equal(capturedTemplateData.breakdowns[0].totalStaticModifierText, "+5");
 
