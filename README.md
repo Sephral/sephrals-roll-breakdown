@@ -2,6 +2,12 @@
 
 Sephral's Roll Breakdown adds a compact explanation panel to supported roll chat messages in FoundryVTT.
 
+## Demo
+
+![SCBR demo](media/demo.gif)
+
+If the embedded preview is not available in your GitHub view, please check the media folder.
+
 ## Features
 
 - Compact breakdown panel rendered directly inside eligible chat messages
@@ -9,7 +15,6 @@ Sephral's Roll Breakdown adds a compact explanation panel to supported roll chat
 - Honest classification of complex roll parts without guessing hidden sources
 - Client-side settings for visibility, default expansion, and debug logging
 - Cross-version support for Foundry VTT v13 and v14
-- Generic parser foundation for future system-specific source mapping
 
 ## Usage
 
@@ -35,28 +40,3 @@ This keeps the output technically honest, but it also means some bonus sources s
 - `Show unknown terms` keeps unresolved or unlabeled terms visible.
 - `GM-only preview` hides the panel from players while testing.
 - `Debug logging` writes parser and rendering decisions to the browser console.
-
-## Validation
-
-Run these commands from the module folder:
-
-```bash
-npm run check
-npm run check:manifest
-npm run release:prepare
-```
-
-## License
-
-This module is free to use with Foundry Virtual Tabletop.
-
-You may use it in private games, online games, streamed games, community games,
-and games run by paid Game Masters.
-
-GitHub forks are welcome for personal use, issue reproduction, private changes,
-and pull requests.
-
-Please do not redistribute, repackage, sell, publish unofficial releases, or
-upload modified installable versions without permission.
-
-Future versions, premium editions, or related modules may become paid products.
