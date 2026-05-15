@@ -65,6 +65,10 @@ function formatSignedNumber(value) {
   return value >= 0 ? `+${value}` : String(value);
 }
 
+function hasMeaningfulModifier(modifier) {
+  return Number.isFinite(modifier?.value) && modifier.value !== 0;
+}
+
 function createUnresolvedTerm(term, operator) {
   const expression = getTermExpression(term);
   return {
@@ -289,9 +293,7 @@ export function parseRoll(roll, { adapterId = "generic", rollIndex = 0, termSour
   }
 
   breakdown.hasVisibleContent = Boolean(
-    breakdown.formula ||
-    breakdown.diceTerms.length ||
-    breakdown.modifiers.length ||
+    breakdown.modifiers.some((modifier) => hasMeaningfulModifier(modifier)) ||
     breakdown.computedTerms.length ||
     breakdown.unresolvedTerms.length
   );

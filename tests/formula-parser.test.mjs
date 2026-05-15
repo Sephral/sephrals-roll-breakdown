@@ -148,4 +148,26 @@ test("parseRoll handles unresolved numeric operators, derived totals, and empty 
 
   const emptyRoll = parser.parseRoll({ formula: "", terms: [] });
   assert.equal(emptyRoll.hasVisibleContent, false);
+
+  const diceOnlyRoll = parser.parseRoll({
+    formula: "1d6",
+    total: 6,
+    terms: [new DiceTerm("1d6", 6, { number: 1, faces: 6 })]
+  });
+  assert.equal(diceOnlyRoll.diceTerms.length, 1);
+  assert.equal(diceOnlyRoll.modifiers.length, 0);
+  assert.equal(diceOnlyRoll.hasVisibleContent, false);
+
+  const zeroModifierRoll = parser.parseRoll({
+    formula: "1d20 + 0",
+    total: 11,
+    terms: [
+      new DiceTerm("1d20", 11, { number: 1, faces: 20 }),
+      new OperatorTerm("+"),
+      new NumericTerm(0)
+    ]
+  });
+  assert.equal(zeroModifierRoll.modifiers.length, 1);
+  assert.equal(zeroModifierRoll.modifiers[0].value, 0);
+  assert.equal(zeroModifierRoll.hasVisibleContent, false);
 });

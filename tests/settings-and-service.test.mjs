@@ -157,6 +157,7 @@ test("roll breakdown service skips hidden cases and renders supported messages",
 
     await service.enhanceChatMessage({ id: "hidden", visible: false }, createRoot());
     await service.enhanceChatMessage({ id: "duplicate" }, createRoot({ hasBreakdown: true }));
+    await service.enhanceChatMessage({ id: "table", flags: { "core.RollTable": "table-1" } }, createRoot());
 
     settingsValues.enabled = false;
     await service.enhanceChatMessage({ id: "disabled" }, createRoot());
@@ -172,7 +173,7 @@ test("roll breakdown service skips hidden cases and renders supported messages",
     ]);
     assert.equal(rendererCalls.length, 1);
     assert.deepEqual(rendererCalls[0].options, { defaultExpanded: false, showUnknown: true });
-    assert.equal(consoleCalls.length, 5);
+    assert.equal(consoleCalls.length, 6);
   } finally {
     console.debug = originalDebug;
   }

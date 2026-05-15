@@ -127,6 +127,43 @@ function getRollContextDetail(item, rollType) {
   };
 }
 
+function getCheckContextLabel(rollType, rollId = null) {
+  if (rollType === "save") return localizeRule("Context.SAVE", null);
+  if (rollType === "concentration") return localizeRule("Context.CONCENTRATION", null);
+  if (rollType === "death") return localizeRule("Context.DEATH", null);
+  if (rollType === "skill") return rollId ? localizeRule("Context.SKILL", { skill: rollId }) : localizeRule("Context.SKILL_GENERIC", null);
+  if (rollType === "tool") return rollId ? localizeRule("Context.TOOL", { tool: rollId }) : localizeRule("Context.TOOL_GENERIC", null);
+  return localizeRule("Context.CHECK", null);
+}
+
+function getProficiencyLabel(multiplier) {
+  if (multiplier >= 2) return localizeRule("Expertise", null);
+  if (multiplier > 0 && multiplier < 1) return localizeRule("HalfProficiency", null);
+  return game.i18n.localize("DND5E.Proficiency") || "Proficiency";
+}
+
+function getActorCheckDetail(rollType, abilityLabel, rollId = null) {
+  if (rollType === "save") return localizeRule("SaveAbility", { ability: abilityLabel });
+  if (rollType === "concentration") return localizeRule("ConcentrationAbility", { ability: abilityLabel });
+  if (rollType === "death") return localizeRule("DeathSaveAbility", { ability: abilityLabel });
+  if (rollType === "skill") return localizeRule("SkillAbility", { ability: abilityLabel });
+  if (rollType === "tool") return localizeRule("ToolAbility", { ability: abilityLabel });
+  return localizeRule("CheckAbility", { ability: abilityLabel });
+}
+
+function resolveActorRollAbility(actor, rollType, rollFlags) {
+  if (rollType === "skill") return actor.system?.skills?.[rollFlags.skillId]?.ability;
+  if (rollType === "tool") return actor.system?.tools?.[rollFlags.toolId]?.ability;
+  if (rollType === "concentration") {
+    return actor.system?.attributes?.concentration?.ability
+      ?? CONFIG.DND5E?.defaultAbilities?.concentration
+      ?? rollFlags.ability;
+  }
+
+  if (rollType === "death") return null;
+  return rollFlags.ability;
+}
+
 function getFirstAvailableAbility(value) {
   if (!value) return null;
   if (typeof value === "string") {
@@ -187,6 +224,12 @@ function resolveActivityAbility(actor, item, activity) {
 
 function resolveActivityAttackBonus(activity) {
   return sanitizeExpression(activity?.attack?.bonus ?? activity?.attackBonus);
+}
+
+function matchesItemAttackBonusKey(changeKey, activityId) {
+  if (typeof changeKey !== "string") return false;
+  return changeKey === "system.attack.bonus"
+    || changeKey === `system.activities.${activityId}.attack.bonus`;
 }
 
 function buildBaseDamageCandidates(item, activity) {
@@ -322,6 +365,35 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
     }));
   }
 
+  const itemAttackBonus = sanitizeExpression(item?.system?.attack?.bonus);
+  if (itemAttackBonus) {
+    candidates.push(...createCandidate(`${item?.name ?? "Item"} attack bonus`, itemAttackBonus, {
+      sourceType: "item",
+      confidence: "exact",
+      detail: localizeRule("ItemAttackBonus", { item: item?.name ?? "Item" })
+    }));
+  }
+
+  const magicalAttackBonus = item?.system?.magicAvailable ? sanitizeExpression(item?.system?.magicalBonus) : "";
+  if (magicalAttackBonus) {
+    candidates.push(...createCandidate(`${item?.name ?? "Item"} attack bonus`, magicalAttackBonus, {
+      sourceType: "item",
+      confidence: "exact",
+      detail: localizeRule("ItemAttackBonus", { item: item?.name ?? "Item" })
+    }));
+  }
+
+  for (const effect of item?.effects ?? []) {
+    for (const change of effect.changes ?? []) {
+      if (!matchesItemAttackBonusKey(change?.key, activity?.id)) continue;
+      candidates.push(...createCandidate(effect.name, change.value, {
+        sourceType: "effect",
+        confidence: "exact",
+        detail: createEffectDetail(effect, "attack", item, actor)
+      }));
+    }
+  }
+
   for (const effect of actor?.effects ?? []) {
     for (const change of effect.changes ?? []) {
       if (change?.key !== effectKey) continue;
@@ -398,6 +470,163 @@ function buildDamageSourceCandidates(actor, item, activity) {
       sourceType: "actor",
       confidence: "derived",
       detail: detailText.actor
+    }));
+  }
+
+  return candidates;
+}
+
+function buildActorRollSourceCandidates(actor, message) {
+  const rollType = resolveMessageRollType(message);
+  const rollFlags = message?.flags?.dnd5e?.roll ?? {};
+  if (!["ability", "save", "skill", "tool", "concentration", "death"].includes(rollType) || !actor) return [];
+
+  const candidates = [];
+  const abilityId = resolveActorRollAbility(actor, rollType, rollFlags);
+  const abilityLabel = abilityId ? localizeAbilityLabel(abilityId) : null;
+  const ability = actor.system?.abilities?.[abilityId];
+  const rollId = rollType === "skill" ? rollFlags.skillId : rollType === "tool" ? rollFlags.toolId : null;
+  const contextLabel = getCheckContextLabel(rollType, rollId);
+
+  const abilityMod = toFiniteNumber(ability?.mod);
+  if (abilityId && abilityMod) {
+    candidates.push(...createCandidate(`${abilityLabel} modifier`, `${abilityMod}`, {
+      sourceType: "standard",
+      confidence: "exact",
+      detail: getActorCheckDetail(rollType, abilityLabel, rollId)
+    }));
+  }
+
+  if (rollType === "death") {
+    if (actor.flags?.dnd5e?.diamondSoul) {
+      const proficiencyBonus = toFiniteNumber(actor.system?.attributes?.prof);
+      if (proficiencyBonus) {
+        candidates.push(...createCandidate(game.i18n.localize("DND5E.Proficiency") || "Proficiency", `${proficiencyBonus}`, {
+          sourceType: "standard",
+          confidence: "exact",
+          detail: localizeRule("Proficiency", { context: contextLabel })
+        }));
+      }
+    }
+
+    const deathBonus = sanitizeExpression(actor.system?.attributes?.death?.bonuses?.save);
+    if (deathBonus) {
+      candidates.push(...createCandidate(localizeRule("DeathSaveBonusLabel", null), deathBonus, {
+        sourceType: "actor",
+        confidence: "exact",
+        detail: localizeRule("DeathSaveBonus", null)
+      }));
+    }
+
+    return candidates;
+  }
+
+  if (rollType === "ability" || rollType === "save" || rollType === "concentration") {
+    const proficiency = ability?.[`${rollType === "ability" ? "check" : "save"}Prof`];
+    if (proficiency?.hasProficiency) {
+      candidates.push(...createCandidate(getProficiencyLabel(proficiency.multiplier), proficiency.term, {
+        sourceType: "standard",
+        confidence: "exact",
+        detail: localizeRule("Proficiency", { context: contextLabel })
+      }));
+    }
+
+    const abilityBonus = sanitizeExpression(ability?.bonuses?.[rollType === "ability" ? "check" : "save"]);
+    if (abilityBonus) {
+      candidates.push(...createCandidate(`${abilityLabel} ${rollType === "ability" ? localizeRule("CheckBonusLabel", null) : localizeRule("SaveBonusLabel", null)}`, abilityBonus, {
+        sourceType: "actor",
+        confidence: "exact",
+        detail: getActorCheckDetail(rollType, abilityLabel, rollId)
+      }));
+    }
+
+    const globalBonus = sanitizeExpression(actor.system?.bonuses?.abilities?.[rollType === "ability" ? "check" : "save"]);
+    if (globalBonus) {
+      candidates.push(...createCandidate(rollType === "ability" ? localizeRule("GlobalCheckBonus", null) : localizeRule("GlobalSaveBonus", null), globalBonus, {
+        sourceType: "actor",
+        confidence: "derived",
+        detail: localizeRule("GlobalBonusContext", { context: contextLabel })
+      }));
+    }
+
+    if (rollType === "concentration") {
+      const concentrationBonus = sanitizeExpression(actor.system?.attributes?.concentration?.bonuses?.save);
+      if (concentrationBonus) {
+        candidates.push(...createCandidate(localizeRule("ConcentrationBonusLabel", null), concentrationBonus, {
+          sourceType: "actor",
+          confidence: "exact",
+          detail: localizeRule("ConcentrationBonus", null)
+        }));
+      }
+    }
+
+    const coverBonus = rollType === "save" && rollFlags.ability === "dex"
+      ? sanitizeExpression(actor.system?.attributes?.ac?.cover)
+      : "";
+    if (coverBonus) {
+      candidates.push(...createCandidate(localizeRule("Cover", null), coverBonus, {
+        sourceType: "actor",
+        confidence: "exact",
+        detail: localizeRule("CoverBonus", null)
+      }));
+    }
+
+    return candidates;
+  }
+
+  const relevant = rollType === "skill" ? actor.system?.skills?.[rollFlags.skillId] : actor.system?.tools?.[rollFlags.toolId];
+  const proficiency = relevant?.prof;
+  if (proficiency?.hasProficiency) {
+    candidates.push(...createCandidate(getProficiencyLabel(proficiency.multiplier), proficiency.term, {
+      sourceType: "standard",
+      confidence: "exact",
+      detail: localizeRule("Proficiency", { context: contextLabel })
+    }));
+  }
+
+  const relevantBonus = sanitizeExpression(relevant?.bonuses?.check);
+  if (relevantBonus) {
+    candidates.push(...createCandidate(
+      rollType === "skill"
+        ? (CONFIG.DND5E.skills?.[rollFlags.skillId]?.label ?? rollFlags.skillId ?? localizeRule("SkillBonusLabel", null))
+        : (CONFIG.DND5E.tools?.[rollFlags.toolId]?.label ?? rollFlags.toolId ?? localizeRule("ToolBonusLabel", null)),
+      relevantBonus,
+      {
+        sourceType: "actor",
+        confidence: "exact",
+        detail: localizeRule(rollType === "skill" ? "SkillBonus" : "ToolBonus", { context: contextLabel })
+      }
+    ));
+  }
+
+  const abilityCheckBonus = sanitizeExpression(ability?.bonuses?.check);
+  if (abilityCheckBonus) {
+    candidates.push(...createCandidate(`${abilityLabel} ${localizeRule("CheckBonusLabel", null)}`, abilityCheckBonus, {
+      sourceType: "actor",
+      confidence: "exact",
+      detail: getActorCheckDetail(rollType, abilityLabel, rollId)
+    }));
+  }
+
+  const typeBonus = sanitizeExpression(actor.system?.bonuses?.abilities?.[rollType]);
+  if (typeBonus) {
+    candidates.push(...createCandidate(
+      rollType === "skill" ? localizeRule("GlobalSkillBonus", null) : localizeRule("GlobalToolBonus", null),
+      typeBonus,
+      {
+        sourceType: "actor",
+        confidence: "derived",
+        detail: localizeRule("GlobalBonusContext", { context: contextLabel })
+      }
+    ));
+  }
+
+  const globalCheckBonus = sanitizeExpression(actor.system?.bonuses?.abilities?.check);
+  if (globalCheckBonus) {
+    candidates.push(...createCandidate(localizeRule("GlobalCheckBonus", null), globalCheckBonus, {
+      sourceType: "actor",
+      confidence: "derived",
+      detail: localizeRule("GlobalBonusContext", { context: contextLabel })
     }));
   }
 
@@ -494,9 +723,13 @@ async function resolveMessageActivity(message, item, actor) {
   return null;
 }
 
-function resolveMessageRollType(message) {
-  return message?.flags?.dnd5e?.roll?.type
-    ?? message?.rolls?.find?.((roll) => typeof roll?.options?.rollType === "string")?.options?.rollType
+function resolveMessageRollType(message, roll = null) {
+  return roll?.options?.rollType
+    ?? roll?.options?.["midi-qol"]?.rollType
+    ?? message?.flags?.dnd5e?.roll?.type
+    ?? message?.rolls?.find?.((candidate) => typeof candidate?.options?.rollType === "string")?.options?.rollType
+    ?? message?.flags?.dnd5e?.activity?.type
+    ?? message?.flags?.["midi-qol"]?.messageType
     ?? null;
 }
 
@@ -519,19 +752,34 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
     const item = await resolveMessageItem(message);
     const actor = item?.actor ?? message?.getAssociatedActor?.() ?? null;
     const activity = await resolveMessageActivity(message, item, actor);
-    if (!item || !activity || !actor) return super.buildBreakdowns(message);
-
-    const candidates = rollType === "attack"
+    const actorRollCandidates = actor && ["ability", "save", "skill", "tool", "concentration", "death"].includes(rollType)
+      ? buildActorRollSourceCandidates(actor, message)
+      : null;
+    const attackCandidates = item && activity && actor
       ? buildAttackSourceCandidates(actor, item, activity, message)
-      : buildDamageSourceCandidates(actor, item, activity, message);
+      : null;
+    const damageCandidates = item && activity && actor
+      ? buildDamageSourceCandidates(actor, item, activity, message)
+      : null;
 
     return (message?.rolls ?? [])
       .filter((roll) => Boolean(roll))
-      .map((roll, index) => parseRoll(roll, {
-        adapterId: this.id,
-        rollIndex: index,
-        termSourceResolver: createTermSourceResolver(candidates)
-      }))
+      .map((roll, index) => {
+        const currentRollType = resolveMessageRollType(message, roll) ?? rollType;
+        const candidates = ["ability", "save", "skill", "tool", "concentration", "death"].includes(currentRollType)
+          ? actorRollCandidates
+          : currentRollType === "attack"
+            ? attackCandidates
+            : currentRollType === "damage"
+              ? damageCandidates
+              : null;
+
+        return parseRoll(roll, {
+          adapterId: this.id,
+          rollIndex: index,
+          termSourceResolver: candidates ? createTermSourceResolver(candidates) : null
+        });
+      })
       .filter((breakdown) => breakdown.hasVisibleContent);
   }
 }
