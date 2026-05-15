@@ -1,0 +1,16 @@
+{
+  "name": "sephrals-roll-breakdown",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check scripts/srb.js && node --check scripts/settings.js && node --check scripts/roll-breakdown-service.js && node --check scripts/formula-parser.js && node --check scripts/chat-card-renderer.js && node --check scripts/adapters/generic-adapter.js && node --check scripts/adapters/dnd5e-adapter.js",
+    "check:manifest": "node build/validate-manifest.mjs",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "release:prepare": "node build/prepare-release.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

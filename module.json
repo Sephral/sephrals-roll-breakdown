@@ -1,0 +1,34 @@
+{
+  "id": "sephrals-roll-breakdown",
+  "title": "Sephral's Roll Breakdown",
+  "description": "Adds a compact, non-invasive breakdown panel to roll chat messages and explains dice, static modifiers, and unresolved formula terms.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": 13,
+    "verified": "14.361"
+  },
+  "authors": [
+    {
+      "name": "Sephral"
+    }
+  ],
+  "url": "https://github.com/Sephral/sephrals-roll-breakdown.git",
+  "esmodules": [
+    "scripts/srb.js"
+  ],
+  "styles": [
+    "styles/srb.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+<details class="srb-breakdown" data-message-id="{{messageId}}" {{#if expanded}}open{{/if}}>
+  <summary class="srb-breakdown__toggle">{{labels.toggle}}</summary>
+  <div class="srb-breakdown__panel">
+    {{#each breakdowns as |breakdown|}}
+      <section class="srb-breakdown__roll">
+        {{#if breakdown.rollLabel}}
+          <div class="srb-breakdown__roll-label">{{breakdown.rollLabel}}</div>
+        {{/if}}
+
+        <div class="srb-breakdown__section">
+          <div class="srb-breakdown__label">{{../labels.dice}}</div>
+          {{#if breakdown.diceTerms.length}}
+            <ul class="srb-breakdown__list">
+              {{#each breakdown.diceTerms as |term|}}
+                <li class="srb-breakdown__item">
+                  <span class="srb-breakdown__item-main">
+                    {{term.expression}}
+                    {{#if term.label}}
+                      <span class="srb-breakdown__item-tag" {{#if term.tooltip}}data-tooltip="{{term.tooltip}}" title="{{term.tooltip}}"{{/if}}>{{term.label}}</span>
+                    {{/if}}
+                  </span>
+                  {{#if term.totalText}}
+                    <span class="srb-breakdown__item-meta">= {{term.totalText}}</span>
+                  {{/if}}
+                </li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <span class="srb-breakdown__empty">{{../labels.none}}</span>
+          {{/if}}
+        </div>
+
+        <div class="srb-breakdown__section">
+          <div class="srb-breakdown__label">{{../labels.modifiers}}</div>
+          {{#if breakdown.modifiers.length}}
+            <ul class="srb-breakdown__list">
+              {{#each breakdown.modifiers as |modifier|}}
+                <li class="srb-breakdown__item">
+                  <span class="srb-breakdown__item-main">
+                    {{#if modifier.label}}
+                      <span class="srb-breakdown__item-tag" {{#if modifier.tooltip}}data-tooltip="{{modifier.tooltip}}" title="{{modifier.tooltip}}"{{/if}}>{{modifier.label}}</span>
+                    {{else}}
+                      {{modifier.expression}}
+                    {{/if}}
+                  </span>
+                  <span class="srb-breakdown__item-meta">{{modifier.valueText}}</span>
+                </li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <span class="srb-breakdown__empty">{{../labels.none}}</span>
+          {{/if}}
+        </div>
+
+        {{#if breakdown.computedTerms.length}}
+          <div class="srb-breakdown__section">
+            <div class="srb-breakdown__label">{{../labels.computedTerms}}</div>
+            <ul class="srb-breakdown__list">
+              {{#each breakdown.computedTerms as |term|}}
+                <li class="srb-breakdown__item">
+                  <span class="srb-breakdown__item-main">
+                    {{term.expression}}
+                    {{#if term.label}}
+                      <span class="srb-breakdown__item-tag" {{#if term.tooltip}}data-tooltip="{{term.tooltip}}" title="{{term.tooltip}}"{{/if}}>{{term.label}}</span>
+                    {{/if}}
+                  </span>
+                  <span class="srb-breakdown__item-meta">{{term.totalText}}</span>
+                </li>
+              {{/each}}
+            </ul>
+          </div>
+        {{/if}}
+
+        {{#if breakdown.unresolvedTerms.length}}
+          <div class="srb-breakdown__section srb-breakdown__section--muted">
+            <div class="srb-breakdown__label">{{../labels.unresolved}}</div>
+            <ul class="srb-breakdown__list">
+              {{#each breakdown.unresolvedTerms as |term|}}
+                <li class="srb-breakdown__item">
+                  <span class="srb-breakdown__item-main">
+                    {{term.expression}}
+                    <span class="srb-breakdown__item-tag" {{#if term.tooltip}}data-tooltip="{{term.tooltip}}" title="{{term.tooltip}}"{{/if}}>{{term.label}}</span>
+                  </span>
+                  <span class="srb-breakdown__item-meta">{{term.type}}</span>
+                </li>
+              {{/each}}
+            </ul>
+          </div>
+        {{/if}}
+
+        <div class="srb-breakdown__summary srb-breakdown__summary--footer">
+          <div class="srb-breakdown__summary-side">
+            {{#if breakdown.rollTotalText}}
+              <span class="srb-breakdown__pill srb-breakdown__pill--emphasis">{{../labels.rollTotal}} {{breakdown.rollTotalText}}</span>
+            {{/if}}
+            <span class="srb-breakdown__pill">{{../labels.staticModifier}} {{breakdown.totalStaticModifierText}}</span>
+          </div>
+        </div>
+      </section>
+    {{/each}}
+  </div>
+</details>

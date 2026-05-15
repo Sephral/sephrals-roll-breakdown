@@ -1,0 +1,206 @@
+.srb-breakdown {
+  margin-top: 0.5rem;
+  border: 1px solid rgba(106, 106, 106, 0.72);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.05));
+  overflow: hidden;
+}
+
+.srb-breakdown__toggle {
+  cursor: pointer;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-dark-primary, #222);
+  background: rgba(216, 208, 196, 0.85);
+  list-style: none;
+}
+
+.srb-breakdown__toggle::-webkit-details-marker {
+  display: none;
+}
+
+.srb-breakdown__panel {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem 0.7rem;
+}
+
+.srb-breakdown__roll {
+  display: grid;
+  gap: 0.7rem;
+  padding-top: 0.15rem;
+}
+
+.srb-breakdown__roll + .srb-breakdown__roll {
+  border-top: 1px solid rgba(106, 106, 106, 0.55);
+  padding-top: 0.65rem;
+}
+
+.srb-breakdown__roll-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.srb-breakdown__summary {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.srb-breakdown__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.srb-breakdown__summary-side {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.srb-breakdown__summary--footer {
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(106, 106, 106, 0.3);
+}
+
+.srb-breakdown__value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.srb-breakdown__section {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.srb-breakdown__section + .srb-breakdown__section {
+  padding-top: 0.15rem;
+}
+
+.srb-breakdown__section--muted {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(106, 106, 106, 0.45);
+}
+
+.srb-breakdown__empty {
+  font-size: 0.82rem;
+  opacity: 0.7;
+}
+
+.srb-breakdown__list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.srb-breakdown__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: start;
+  font-size: 0.82rem;
+}
+
+.srb-breakdown__item-main {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.srb-breakdown__item-meta {
+  flex: 0 0 auto;
+  margin-top: 0.05rem;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.srb-breakdown__item-tag {
+  position: relative;
+  display: inline-flex;
+  margin-left: 0.4rem;
+  margin-top: 0.15rem;
+  padding: 0.08rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(122, 74, 23, 0.18);
+}
+
+.srb-breakdown__item-tag[data-tooltip] {
+  cursor: help;
+}
+
+.srb-breakdown__item-tag[data-tooltip]:hover::after,
+.srb-breakdown__item-tag[data-tooltip]:focus-visible::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.35rem);
+  z-index: 2;
+  min-width: 12rem;
+  max-width: min(22rem, 70vw);
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.45rem;
+  background: rgba(34, 28, 22, 0.96);
+  color: #f6efe5;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: normal;
+  box-shadow: 0 0.3rem 0.75rem rgba(0, 0, 0, 0.22);
+}
+
+.srb-breakdown__item-tag[data-tooltip]:hover::before,
+.srb-breakdown__item-tag[data-tooltip]:focus-visible::before {
+  content: "";
+  position: absolute;
+  left: 0.7rem;
+  bottom: calc(100% + 0.05rem);
+  z-index: 2;
+  border-width: 0.3rem;
+  border-style: solid;
+  border-color: rgba(34, 28, 22, 0.96) transparent transparent transparent;
+}
+
+.srb-breakdown__pill {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: baseline;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(207, 198, 184, 0.75);
+  white-space: nowrap;
+}
+
+.srb-breakdown__pill--emphasis {
+  background: rgba(186, 164, 125, 0.34);
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .srb-breakdown__summary {
+    justify-content: flex-start;
+  }
+
+  .srb-breakdown__summary-side {
+    justify-content: flex-start;
+  }
+
+  .srb-breakdown__item-tag[data-tooltip]:hover::after,
+  .srb-breakdown__item-tag[data-tooltip]:focus-visible::after {
+    max-width: min(18rem, 80vw);
+  }
+}
