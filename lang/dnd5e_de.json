@@ -52,6 +52,6 @@
   "SRB.Rule.Ruleset.2024": "5.5e (2024)",
   "SRB.Rule.RulesetNote": "Regelwerk: {ruleset}",
   "SRB.Rule.FormulaSegment": "Formelsegment: {formula}",
-  "SRB.Rule.Known.BlessAttack": "Segen fügt Angriffswürfen 1d4 hinzu.",
-  "SRB.Rule.Known.BaneAttack": "Fluch zieht von Angriffswürfen 1d4 ab."
+  "SRB.Rule.Known.BlessAttack": "Bless fügt Angriffswürfen 1d4 hinzu.",
+  "SRB.Rule.Known.BaneAttack": "Bane zieht von Angriffswürfen 1d4 ab."
 }

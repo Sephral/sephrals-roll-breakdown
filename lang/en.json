@@ -1,4 +1,6 @@
 {
+  "SRB.Settings.Language.Name": "Language",
+  "SRB.Settings.Language.Hint": "Choose whether Roll Breakdown follows Foundry or uses a fixed module language.",
   "SRB.Settings.Enabled.Name": "Enable roll breakdowns",
   "SRB.Settings.Enabled.Hint": "Add the breakdown panel to eligible chat messages on this client.",
   "SRB.Settings.DefaultExpanded.Name": "Expanded by default",
@@ -11,6 +13,9 @@
   "SRB.Settings.GmOnly.Hint": "Keep the breakdown panel hidden for players while testing.",
   "SRB.Settings.Debug.Name": "Debug logging",
   "SRB.Settings.Debug.Hint": "Write roll breakdown decisions and parser details to the browser console.",
+  "SRB.Language.Default": "Follow Foundry",
+  "SRB.Language.De": "Deutsch",
+  "SRB.Language.En": "English",
   "SRB.Chat.Toggle": "Breakdown",
   "SRB.Chat.RollLabel": "Roll",
   "SRB.Chat.Status": "Status",

@@ -1,4 +1,6 @@
 {
+  "SRB.Settings.Language.Name": "Sprache",
+  "SRB.Settings.Language.Hint": "Festlegen, ob Roll Breakdown Foundry folgt oder eine feste Modulsprache verwendet.",
   "SRB.Settings.Enabled.Name": "Roll-Breakdowns aktivieren",
   "SRB.Settings.Enabled.Hint": "Fügt bei geeigneten Chatnachrichten auf diesem Client ein Breakdown-Panel hinzu.",
   "SRB.Settings.DefaultExpanded.Name": "Standardmäßig ausgeklappt",
@@ -11,6 +13,9 @@
   "SRB.Settings.GmOnly.Hint": "Blendet das Breakdown-Panel während des Testens für Spieler aus.",
   "SRB.Settings.Debug.Name": "Debug-Logging",
   "SRB.Settings.Debug.Hint": "Schreibt Entscheidungen und Parser-Details in die Browser-Konsole.",
+  "SRB.Language.Default": "Foundry folgen",
+  "SRB.Language.De": "Deutsch",
+  "SRB.Language.En": "English",
   "SRB.Chat.Toggle": "Breakdown",
   "SRB.Chat.RollLabel": "Wurf",
   "SRB.Chat.Status": "Status",

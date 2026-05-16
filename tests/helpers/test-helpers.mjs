@@ -20,6 +20,7 @@ export async function importStable(relativePath) {
 export function resetGlobals() {
   for (const key of [
     "game",
+    "ui",
     "foundry",
     "Hooks",
     "loadTemplates",
@@ -49,15 +50,26 @@ export function createGameStub({
   translations = {}
 } = {}) {
   const registrations = [];
+  const chatRenderCalls = [];
   const settings = {
     register(moduleId, key, data) {
+      this.settings.set(`${moduleId}.${key}`, data);
       registrations.push({ moduleId, key, data });
     },
     get(moduleId, key) {
-      return settingsValues[key];
+      if (Object.hasOwn(settingsValues, key)) return settingsValues[key];
+      return this.settings.get(`${moduleId}.${key}`)?.default;
     },
     settings: new Map(),
     menus: new Map()
+  };
+
+  const ui = {
+    chat: {
+      render(force) {
+        chatRenderCalls.push(force);
+      }
+    }
   };
 
   const game = {
@@ -75,7 +87,7 @@ export function createGameStub({
     user: { isGM: false }
   };
 
-  return { game, settings, settingsValues, registrations };
+  return { game, settings, settingsValues, registrations, ui, chatRenderCalls };
 }
 
 export function installHTMLElement() {

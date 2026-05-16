@@ -3,6 +3,11 @@ import test from "node:test";
 
 import { createGameStub, importFresh, importStable, installHTMLElement, resetGlobals } from "./helpers/test-helpers.mjs";
 
+async function flushPromises() {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 function createRoot({ hasBreakdown = false } = {}) {
   const BaseElement = globalThis.HTMLElement;
 
@@ -52,6 +57,8 @@ test("settings load system translations, cache results, and honor render permiss
   };
 
   const translations = {
+    "SRB.Settings.Language.Name": "Language",
+    "SRB.Settings.Language.Hint": "Language hint",
     "SRB.Settings.Enabled.Name": "Enabled name",
     "SRB.Settings.Enabled.Hint": "Enabled hint",
     "SRB.Settings.DefaultExpanded.Name": "Expanded name",
@@ -63,7 +70,10 @@ test("settings load system translations, cache results, and honor render permiss
     "SRB.Settings.GmOnly.Name": "GM name",
     "SRB.Settings.GmOnly.Hint": "GM hint",
     "SRB.Settings.Debug.Name": "Debug name",
-    "SRB.Settings.Debug.Hint": "Debug hint"
+    "SRB.Settings.Debug.Hint": "Debug hint",
+    "SRB.Language.Default": "Follow Foundry",
+    "SRB.Language.De": "Deutsch",
+    "SRB.Language.En": "English"
   };
 
   const { game, registrations, settingsValues } = createGameStub({
@@ -93,7 +103,12 @@ test("settings load system translations, cache results, and honor render permiss
   assert.equal(settings.localizeSystemTranslation("SRB.Rule.Missing"), "SRB.Rule.Missing");
 
   settings.registerSettings();
-  assert.equal(registrations.length, 6);
+  assert.equal(registrations.length, 7);
+  assert.deepEqual(registrations.find((entry) => entry.key === settings.SETTINGS.UI_LANGUAGE).data.choices, {
+    default: "Follow Foundry",
+    de: "Deutsch",
+    en: "English"
+  });
   assert.equal(registrations.find((entry) => entry.key === settings.SETTINGS.PLAYERS_VISIBLE).data.scope, "world");
   assert.equal(registrations.find((entry) => entry.key === settings.SETTINGS.GM_ONLY).data.scope, "world");
 
@@ -242,4 +257,69 @@ test("settings tolerate translation fetch failures and service handles array roo
 
   settingsValues.showUnknown = true;
   assert.deepEqual(settings.getRenderOptions(), { defaultExpanded: true, showUnknown: true });
+});
+
+test("settings language overrides load module translations and rerender chat on change", async () => {
+  resetGlobals();
+
+  const fetchCalls = [];
+  globalThis.fetch = async (url) => {
+    fetchCalls.push(String(url));
+    if (String(url).endsWith("/lang/de.json")) {
+      return {
+        ok: true,
+        async json() {
+          return {
+            "SRB.Chat.Toggle": "Aufschlüsselung"
+          };
+        }
+      };
+    }
+
+    if (String(url).endsWith("/lang/en.json")) {
+      return {
+        ok: true,
+        async json() {
+          return {
+            "SRB.Chat.Toggle": "Breakdown"
+          };
+        }
+      };
+    }
+
+    return { ok: true, async json() { return {}; } };
+  };
+
+  const { game, registrations, settingsValues, ui, chatRenderCalls } = createGameStub({
+    lang: "en",
+    systemId: "dnd5e",
+    settingsValues: {
+      uiLanguage: "default"
+    },
+    translations: {
+      "SRB.Settings.Language.Name": "Language",
+      "SRB.Settings.Language.Hint": "Language hint",
+      "SRB.Language.Default": "Follow Foundry",
+      "SRB.Language.De": "Deutsch",
+      "SRB.Language.En": "English",
+      "SRB.Chat.Toggle": "Breakdown"
+    }
+  });
+  globalThis.game = game;
+  globalThis.ui = ui;
+
+  const settings = await importFresh("scripts/settings.js");
+  settings.resetTranslationCaches();
+  settings.registerSettings();
+
+  assert.equal(settings.getModuleLanguage(), "en");
+
+  settingsValues.uiLanguage = "de";
+  await registrations.find((entry) => entry.key === settings.SETTINGS.UI_LANGUAGE).data.onChange("de");
+  await flushPromises();
+
+  assert.equal(settings.getModuleLanguage(), "de");
+  assert.equal(settings.localize("Chat.Toggle"), "Aufschlüsselung");
+  assert.equal(chatRenderCalls.at(-1), true);
+  assert.equal(fetchCalls.some((url) => url.endsWith("/lang/de.json")), true);
 });

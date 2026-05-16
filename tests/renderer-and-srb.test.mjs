@@ -155,7 +155,7 @@ test("srb registers hooks, initializes the correct adapter, and forwards render 
     assert.equal(typeof onHandlers.get("renderChatMessageHTML"), "function");
 
     await onceHandlers.get("init")();
-    assert.equal(registrations.length, 6);
+    assert.equal(registrations.length, 7);
     assert.deepEqual(templateLoads, [["modules/sephrals-roll-breakdown/templates/breakdown-panel.hbs"]]);
 
     await onHandlers.get("renderChatMessageHTML")({ id: "chat-1" }, { html: true });

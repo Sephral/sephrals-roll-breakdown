@@ -1,7 +1,7 @@
 import { GenericRollAdapter } from "./adapters/generic-adapter.js";
 import { ChatCardRenderer } from "./chat-card-renderer.js";
 import { RollBreakdownService } from "./roll-breakdown-service.js";
-import { ensureSystemTranslationsLoaded, MODULE_ID, registerSettings } from "./settings.js";
+import { ensureModuleTranslationsLoaded, ensureSystemTranslationsLoaded, MODULE_ID, registerSettings } from "./settings.js";
 import { Dnd5eRollAdapter } from "./adapters/dnd5e-adapter.js";
 
 function createAdapter() {
@@ -17,6 +17,7 @@ const service = new RollBreakdownService({
 Hooks.once("init", () => {
   service.adapter = createAdapter();
   registerSettings();
+  void ensureModuleTranslationsLoaded();
   void ensureSystemTranslationsLoaded();
   if (typeof loadTemplates === "function") {
     void loadTemplates([`modules/${MODULE_ID}/templates/breakdown-panel.hbs`]);
