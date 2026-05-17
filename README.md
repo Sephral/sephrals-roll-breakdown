@@ -4,6 +4,12 @@ Sephral's Roll Breakdown adds a compact explanation panel to supported roll chat
 
 It focuses on explaining what a roll is made of without inventing hidden sources. Dice, static modifiers, derived values, unresolved terms, and available upstream context are shown separately so the output stays technically honest.
 
+## Discord
+
+[![Join Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/7BjCgDYaBP)
+
+Questions, feedback, and module support are welcome on [Discord](https://discord.gg/7BjCgDYaBP).
+
 ## Demo
 
 ![SCBR demo](media/demo.gif)
