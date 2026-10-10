@@ -25,5 +25,12 @@ Hooks.once("init", () => {
 });
 
 Hooks.on("renderChatMessageHTML", (message, html) => {
+  // dnd5e rewrites the content of usage cards after this hook (e.g. Midi-QOL merged attack/damage cards),
+  // which would drop the panel again. In dnd5e worlds the system hook below handles every message instead.
+  if (game.system?.id === "dnd5e") return;
+  void service.enhanceChatMessage(message, html);
+});
+
+Hooks.on("dnd5e.renderChatMessage", (message, html) => {
   void service.enhanceChatMessage(message, html);
 });

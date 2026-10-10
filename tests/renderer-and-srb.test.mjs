@@ -153,12 +153,17 @@ test("srb registers hooks, initializes the correct adapter, and forwards render 
 
     assert.equal(typeof onceHandlers.get("init"), "function");
     assert.equal(typeof onHandlers.get("renderChatMessageHTML"), "function");
+    assert.equal(typeof onHandlers.get("dnd5e.renderChatMessage"), "function");
 
     await onceHandlers.get("init")();
     assert.equal(registrations.length, 7);
     assert.deepEqual(templateLoads, [["modules/sephrals-roll-breakdown/templates/breakdown-panel.hbs"]]);
 
-    await onHandlers.get("renderChatMessageHTML")({ id: "chat-1" }, { html: true });
+    // dnd5e replaces usage card content after the core hook, so only the system hook may render the panel.
+    await onHandlers.get("renderChatMessageHTML")({ id: "chat-core" }, { html: true });
+    assert.deepEqual(calls, []);
+
+    await onHandlers.get("dnd5e.renderChatMessage")({ id: "chat-1" }, { html: true });
     assert.deepEqual(calls, [{ messageId: "chat-1", html: { html: true }, adapterId: "dnd5e" }]);
   } finally {
     RollBreakdownService.prototype.enhanceChatMessage = originalEnhance;
