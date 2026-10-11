@@ -19,8 +19,10 @@ Hooks.once("init", () => {
   registerSettings();
   void ensureModuleTranslationsLoaded();
   void ensureSystemTranslationsLoaded();
-  if (typeof loadTemplates === "function") {
-    void loadTemplates([`modules/${MODULE_ID}/templates/breakdown-panel.hbs`]);
+  // The globals are deprecated since v13 and removed in v15.
+  const preloadTemplates = globalThis.foundry?.applications?.handlebars?.loadTemplates ?? globalThis.loadTemplates;
+  if (typeof preloadTemplates === "function") {
+    void preloadTemplates([`modules/${MODULE_ID}/templates/breakdown-panel.hbs`]);
   }
 });
 

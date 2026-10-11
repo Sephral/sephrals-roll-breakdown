@@ -186,7 +186,10 @@ export function registerSettings() {
 }
 
 export function localize(key, data = null) {
-  const template = moduleTranslationData.get(getTranslationCacheKey())?.[`SRB.${key}`];
+  // Bundled translations only override Foundry's own when a language was picked explicitly,
+  // so "Follow Foundry" keeps community translations from game.i18n.
+  const explicitLanguage = SUPPORTED_UI_LANGUAGES.includes(getPreferredLanguage());
+  const template = explicitLanguage ? moduleTranslationData.get(getTranslationCacheKey())?.[`SRB.${key}`] : undefined;
   if (typeof template === "string") return formatModuleTranslation(template, data);
   if (data) return game.i18n.format(`SRB.${key}`, data);
   return game.i18n.localize(`SRB.${key}`);

@@ -127,7 +127,8 @@ export class ChatCardRenderer {
 
     const messageContent = root.querySelector(".message-content") ?? root;
     const templateData = buildTemplateData(message, breakdowns, options);
-    const markup = await renderTemplate(TEMPLATE_PATH, templateData);
+    const render = globalThis.foundry?.applications?.handlebars?.renderTemplate ?? globalThis.renderTemplate;
+    const markup = await render(TEMPLATE_PATH, templateData);
     messageContent.insertAdjacentHTML("beforeend", markup);
     return true;
   }

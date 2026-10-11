@@ -322,4 +322,11 @@ test("settings language overrides load module translations and rerender chat on 
   assert.equal(settings.localize("Chat.Toggle"), "Aufschlüsselung");
   assert.equal(chatRenderCalls.at(-1), true);
   assert.equal(fetchCalls.some((url) => url.endsWith("/lang/de.json")), true);
+
+  // "Follow Foundry" with a language the module does not bundle uses Foundry's (community) translation.
+  settingsValues.uiLanguage = "default";
+  game.i18n.lang = "fr";
+  await settings.ensureModuleTranslationsLoaded("fr");
+  game.i18n.localize = (key) => (key === "SRB.Chat.Toggle" ? "Détail" : key);
+  assert.equal(settings.localize("Chat.Toggle"), "Détail");
 });
