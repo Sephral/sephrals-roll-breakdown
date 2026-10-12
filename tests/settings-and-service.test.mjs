@@ -63,12 +63,15 @@ test("settings load system translations, cache results, and honor render permiss
     "SRB.Settings.Enabled.Hint": "Enabled hint",
     "SRB.Settings.DefaultExpanded.Name": "Expanded name",
     "SRB.Settings.DefaultExpanded.Hint": "Expanded hint",
-    "SRB.Settings.PlayersVisible.Name": "Visible name",
-    "SRB.Settings.PlayersVisible.Hint": "Visible hint",
+    "SRB.Settings.Visibility.Name": "Visibility name",
+    "SRB.Settings.Visibility.Hint": "Visibility hint",
+    "SRB.Settings.HideNpcRolls.Name": "Hide NPC name",
+    "SRB.Settings.HideNpcRolls.Hint": "Hide NPC hint",
+    "SRB.Visibility.Gm": "GM only",
+    "SRB.Visibility.Owners": "Owners and GM",
+    "SRB.Visibility.All": "Everyone",
     "SRB.Settings.ShowUnknown.Name": "Unknown name",
     "SRB.Settings.ShowUnknown.Hint": "Unknown hint",
-    "SRB.Settings.GmOnly.Name": "GM name",
-    "SRB.Settings.GmOnly.Hint": "GM hint",
     "SRB.Settings.Debug.Name": "Debug name",
     "SRB.Settings.Debug.Hint": "Debug hint",
     "SRB.Language.Default": "Follow Foundry",
@@ -103,14 +106,26 @@ test("settings load system translations, cache results, and honor render permiss
   assert.equal(settings.localizeSystemTranslation("SRB.Rule.Missing"), "SRB.Rule.Missing");
 
   settings.registerSettings();
-  assert.equal(registrations.length, 7);
+  assert.equal(registrations.length, 9);
   assert.deepEqual(registrations.find((entry) => entry.key === settings.SETTINGS.UI_LANGUAGE).data.choices, {
     default: "Follow Foundry",
     de: "Deutsch",
     en: "English"
   });
-  assert.equal(registrations.find((entry) => entry.key === settings.SETTINGS.PLAYERS_VISIBLE).data.scope, "world");
-  assert.equal(registrations.find((entry) => entry.key === settings.SETTINGS.GM_ONLY).data.scope, "world");
+  const visibility = registrations.find((entry) => entry.key === settings.SETTINGS.VISIBILITY).data;
+  assert.equal(visibility.scope, "world");
+  assert.equal(visibility.config, true);
+  assert.equal(visibility.default, "all");
+  assert.deepEqual(visibility.choices, { gm: "GM only", owners: "Owners and GM", all: "Everyone" });
+  const hideNpcRolls = registrations.find((entry) => entry.key === settings.SETTINGS.HIDE_NPC_ROLLS).data;
+  assert.equal(hideNpcRolls.scope, "world");
+  assert.equal(hideNpcRolls.default, true);
+  // The replaced toggles stay registered but hidden, so their stored values remain readable.
+  for (const key of [settings.SETTINGS.PLAYERS_VISIBLE, settings.SETTINGS.GM_ONLY]) {
+    const legacy = registrations.find((entry) => entry.key === key).data;
+    assert.equal(legacy.scope, "world");
+    assert.equal(legacy.config, false);
+  }
 
   game.user.isGM = false;
   assert.equal(settings.shouldRenderForCurrentUser(), false);

@@ -4,11 +4,20 @@ export const SETTINGS = {
   UI_LANGUAGE: "uiLanguage",
   ENABLED: "enabled",
   DEFAULT_EXPANDED: "defaultExpanded",
-  PLAYERS_VISIBLE: "playersVisible",
+  VISIBILITY: "visibility",
+  HIDE_NPC_ROLLS: "hideNpcRolls",
   SHOW_UNKNOWN: "showUnknown",
-  GM_ONLY: "gmOnly",
-  DEBUG: "debug"
+  DEBUG: "debug",
+  // Replaced by VISIBILITY. Still registered (hidden) so stored values stay readable for the migration.
+  PLAYERS_VISIBLE: "playersVisible",
+  GM_ONLY: "gmOnly"
 };
+
+export const VISIBILITY_MODES = Object.freeze({
+  GM: "gm",
+  OWNERS: "owners",
+  ALL: "all"
+});
 
 const SUPPORTED_UI_LANGUAGES = Object.freeze(["en", "de"]);
 const DEFAULT_UI_LANGUAGE = "en";
@@ -179,10 +188,26 @@ export function registerSettings() {
 
   registerBooleanSetting(SETTINGS.ENABLED, "Settings.Enabled.Name", "Settings.Enabled.Hint", true);
   registerBooleanSetting(SETTINGS.DEFAULT_EXPANDED, "Settings.DefaultExpanded.Name", "Settings.DefaultExpanded.Hint", false);
-  registerBooleanSetting(SETTINGS.PLAYERS_VISIBLE, "Settings.PlayersVisible.Name", "Settings.PlayersVisible.Hint", true, "world");
+  game.settings.register(MODULE_ID, SETTINGS.VISIBILITY, {
+    name: localize("Settings.Visibility.Name"),
+    hint: localize("Settings.Visibility.Hint"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: VISIBILITY_MODES.ALL,
+    choices: {
+      [VISIBILITY_MODES.GM]: localize("Visibility.Gm"),
+      [VISIBILITY_MODES.OWNERS]: localize("Visibility.Owners"),
+      [VISIBILITY_MODES.ALL]: localize("Visibility.All")
+    }
+  });
+  registerBooleanSetting(SETTINGS.HIDE_NPC_ROLLS, "Settings.HideNpcRolls.Name", "Settings.HideNpcRolls.Hint", true, "world");
   registerBooleanSetting(SETTINGS.SHOW_UNKNOWN, "Settings.ShowUnknown.Name", "Settings.ShowUnknown.Hint", true);
-  registerBooleanSetting(SETTINGS.GM_ONLY, "Settings.GmOnly.Name", "Settings.GmOnly.Hint", false, "world");
   registerBooleanSetting(SETTINGS.DEBUG, "Settings.Debug.Name", "Settings.Debug.Hint", false);
+
+  for (const [key, defaultValue] of [[SETTINGS.PLAYERS_VISIBLE, true], [SETTINGS.GM_ONLY, false]]) {
+    game.settings.register(MODULE_ID, key, { scope: "world", config: false, type: Boolean, default: defaultValue });
+  }
 }
 
 export function localize(key, data = null) {
@@ -210,11 +235,48 @@ export function isDebugEnabled() {
   return Boolean(getSetting(SETTINGS.DEBUG));
 }
 
+function hasStoredWorldValue(settingKey) {
+  try {
+    return Boolean(game.settings.get(MODULE_ID, settingKey, { document: true })?._id);
+  } catch {
+    return false;
+  }
+}
+
+// Both old world toggles hid the panel from players, so either one maps to "GM only".
+function getLegacyVisibilityMode() {
+  const gmOnly = getRegisteredSettingValue(SETTINGS.GM_ONLY, false);
+  const playersVisible = getRegisteredSettingValue(SETTINGS.PLAYERS_VISIBLE, true);
+  return gmOnly || !playersVisible ? VISIBILITY_MODES.GM : VISIBILITY_MODES.ALL;
+}
+
+export function getVisibilityMode() {
+  // Until a GM has run the migration, the old toggles still decide.
+  if (!hasStoredWorldValue(SETTINGS.VISIBILITY)) return getLegacyVisibilityMode();
+  const mode = getRegisteredSettingValue(SETTINGS.VISIBILITY, VISIBILITY_MODES.ALL);
+  return Object.values(VISIBILITY_MODES).includes(mode) ? mode : VISIBILITY_MODES.ALL;
+}
+
+export function shouldHideNpcRolls() {
+  return Boolean(getRegisteredSettingValue(SETTINGS.HIDE_NPC_ROLLS, true));
+}
+
+export async function migrateLegacyVisibility() {
+  if (!game.user?.isActiveGM || hasStoredWorldValue(SETTINGS.VISIBILITY)) return false;
+
+  try {
+    await game.settings.set(MODULE_ID, SETTINGS.VISIBILITY, getLegacyVisibilityMode());
+    return true;
+  } catch (error) {
+    console.warn("[SRB] Could not migrate the visibility setting.", error);
+    return false;
+  }
+}
+
 export function shouldRenderForCurrentUser() {
   if (!getSetting(SETTINGS.ENABLED)) return false;
   if (game.user?.isGM) return true;
-  if (getSetting(SETTINGS.GM_ONLY)) return false;
-  return Boolean(getSetting(SETTINGS.PLAYERS_VISIBLE));
+  return getVisibilityMode() !== VISIBILITY_MODES.GM;
 }
 
 export function getRenderOptions() {

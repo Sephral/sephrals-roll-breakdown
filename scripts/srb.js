@@ -1,8 +1,17 @@
 import { GenericRollAdapter } from "./adapters/generic-adapter.js";
 import { ChatCardRenderer } from "./chat-card-renderer.js";
 import { RollBreakdownService } from "./roll-breakdown-service.js";
-import { ensureModuleTranslationsLoaded, ensureSystemTranslationsLoaded, MODULE_ID, registerSettings } from "./settings.js";
+import {
+  ensureModuleTranslationsLoaded,
+  ensureSystemTranslationsLoaded,
+  migrateLegacyVisibility,
+  MODULE_ID,
+  registerSettings
+} from "./settings.js";
 import { Dnd5eRollAdapter } from "./adapters/dnd5e-adapter.js";
+
+// How long the core hook waits for dnd5e's own render hook before it renders the panel itself.
+const SYSTEM_HOOK_GRACE_MS = 1000;
 
 function createAdapter() {
   if (game.system?.id === "dnd5e") return new Dnd5eRollAdapter();
@@ -13,6 +22,9 @@ const service = new RollBreakdownService({
   adapter: new GenericRollAdapter(),
   renderer: new ChatCardRenderer()
 });
+
+// Chat elements that dnd5e.renderChatMessage has already handed to the service.
+const systemHookElements = new WeakSet();
 
 Hooks.once("init", () => {
   service.adapter = createAdapter();
@@ -26,13 +38,29 @@ Hooks.once("init", () => {
   }
 });
 
+Hooks.once("ready", () => {
+  void migrateLegacyVisibility();
+});
+
 Hooks.on("renderChatMessageHTML", (message, html) => {
+  if (game.system?.id !== "dnd5e") {
+    void service.enhanceChatMessage(message, html);
+    return;
+  }
+
   // dnd5e rewrites the content of usage cards after this hook (e.g. Midi-QOL merged attack/damage cards),
   // which would drop the panel again. In dnd5e worlds the system hook below handles every message instead.
-  if (game.system?.id === "dnd5e") return;
-  void service.enhanceChatMessage(message, html);
+  // Safety net: if that hook does not fire for a roll message (e.g. renamed in a later dnd5e version),
+  // render from here once dnd5e is done with the card.
+  if (!message?.rolls?.length || !html || typeof html !== "object") return;
+  setTimeout(() => {
+    if (systemHookElements.has(html)) return;
+    service.log("dnd5e.renderChatMessage did not fire, using the core render hook.", { messageId: message.id });
+    void service.enhanceChatMessage(message, html);
+  }, SYSTEM_HOOK_GRACE_MS);
 });
 
 Hooks.on("dnd5e.renderChatMessage", (message, html) => {
+  if (html && typeof html === "object") systemHookElements.add(html);
   void service.enhanceChatMessage(message, html);
 });

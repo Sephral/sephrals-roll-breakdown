@@ -44,7 +44,7 @@ function getRootElement(html) {
   return null;
 }
 
-function buildTemplateData(message, breakdowns, options) {
+function buildTemplateData(message, breakdowns, options, expanded) {
   const labels = {
     toggle: localize("Chat.Toggle"),
     rollLabel: localize("Chat.RollLabel"),
@@ -76,7 +76,7 @@ function buildTemplateData(message, breakdowns, options) {
 
   return {
     messageId: message.id,
-    expanded: options.defaultExpanded,
+    expanded,
     labels,
     breakdowns: breakdowns.map((breakdown, index) => ({
       rollLabel: breakdowns.length > 1 ? `${labels.rollLabel} ${index + 1}` : null,
@@ -121,15 +121,29 @@ function buildTemplateData(message, breakdowns, options) {
 }
 
 export class ChatCardRenderer {
+  constructor() {
+    // Open state per message id for this client session. A message has one panel that holds all of its rolls,
+    // and every re-render (Midi-QOL updates, chat log refresh, popout) builds that panel anew.
+    this.openPanels = new Map();
+  }
+
   async appendBreakdown(message, html, breakdowns, options) {
     const root = getRootElement(html);
-    if (!root || root.querySelector(`.srb-breakdown[data-message-id="${message.id}"]`)) return false;
+    const selector = `.srb-breakdown[data-message-id="${message.id}"]`;
+    if (!root || root.querySelector(selector)) return false;
 
-    const messageContent = root.querySelector(".message-content") ?? root;
-    const templateData = buildTemplateData(message, breakdowns, options);
+    const expanded = this.openPanels.get(message.id) ?? options.defaultExpanded;
+    const templateData = buildTemplateData(message, breakdowns, options, expanded);
     const render = globalThis.foundry?.applications?.handlebars?.renderTemplate ?? globalThis.renderTemplate;
     const markup = await render(TEMPLATE_PATH, templateData);
+
+    // Checked again after the await: two render passes for the same card (system hook and core fallback) may overlap.
+    if (root.querySelector(selector)) return false;
+    const messageContent = root.querySelector(".message-content") ?? root;
     messageContent.insertAdjacentHTML("beforeend", markup);
+
+    const panel = root.querySelector(selector);
+    panel?.addEventListener?.("toggle", () => this.openPanels.set(message.id, panel.open));
     return true;
   }
 }

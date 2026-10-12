@@ -51,14 +51,23 @@ export function createGameStub({
 } = {}) {
   const registrations = [];
   const chatRenderCalls = [];
+  const setCalls = [];
   const settings = {
     register(moduleId, key, data) {
       this.settings.set(`${moduleId}.${key}`, data);
       registrations.push({ moduleId, key, data });
     },
-    get(moduleId, key) {
-      if (Object.hasOwn(settingsValues, key)) return settingsValues[key];
-      return this.settings.get(`${moduleId}.${key}`)?.default;
+    // Values in settingsValues count as stored, everything else falls back to the registered default.
+    get(moduleId, key, { document = false } = {}) {
+      const stored = Object.hasOwn(settingsValues, key);
+      const value = stored ? settingsValues[key] : this.settings.get(`${moduleId}.${key}`)?.default;
+      if (document) return { _id: stored ? `setting-${key}` : null, key: `${moduleId}.${key}`, value };
+      return value;
+    },
+    async set(moduleId, key, value) {
+      setCalls.push({ moduleId, key, value });
+      settingsValues[key] = value;
+      return value;
     },
     settings: new Map(),
     menus: new Map()
@@ -84,10 +93,10 @@ export function createGameStub({
       }
     },
     settings,
-    user: { isGM: false }
+    user: { isGM: false, isActiveGM: false }
   };
 
-  return { game, settings, settingsValues, registrations, ui, chatRenderCalls };
+  return { game, settings, settingsValues, registrations, setCalls, ui, chatRenderCalls };
 }
 
 export function installHTMLElement() {

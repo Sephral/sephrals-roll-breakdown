@@ -1,4 +1,11 @@
-import { getRenderOptions, isDebugEnabled, shouldRenderForCurrentUser } from "./settings.js";
+import {
+  getRenderOptions,
+  getVisibilityMode,
+  isDebugEnabled,
+  shouldHideNpcRolls,
+  shouldRenderForCurrentUser,
+  VISIBILITY_MODES
+} from "./settings.js";
 
 function getRootElement(html) {
   if (html instanceof HTMLElement) return html;
@@ -10,6 +17,29 @@ function canSeeMessageContent(message) {
   if (!message) return false;
   if (message.visible === false) return false;
   if (message.isContentVisible === false) return false;
+  return true;
+}
+
+// Core's speakerActor resolves the speaker token or actor and falls back to the author's assigned character.
+function getSpeakerActor(message) {
+  return message?.speakerActor ?? null;
+}
+
+// NPC rolls come from actors no player owns. GM rolls without a player owned speaker count as well.
+function isNpcOrGmRoll(message) {
+  const actor = getSpeakerActor(message);
+  if (actor) return !actor.hasPlayerOwner;
+  return Boolean(message?.author?.isGM);
+}
+
+function isOwnRoll(message) {
+  return Boolean(message?.isAuthor || getSpeakerActor(message)?.isOwner);
+}
+
+function canSeeBreakdown(message) {
+  if (game.user?.isGM) return true;
+  if (shouldHideNpcRolls() && isNpcOrGmRoll(message)) return false;
+  if (getVisibilityMode() === VISIBILITY_MODES.OWNERS) return isOwnRoll(message);
   return true;
 }
 
@@ -42,6 +72,11 @@ export class RollBreakdownService {
       return;
     }
 
+    if (!canSeeBreakdown(message)) {
+      this.log("Skipping message because its breakdown is hidden from the current user.", { messageId: message?.id });
+      return;
+    }
+
     if (root.querySelector(".srb-breakdown")) {
       this.log("Skipping message because a breakdown is already present.", { messageId: message?.id });
       return;
@@ -69,3 +104,5 @@ export class RollBreakdownService {
     }
   }
 }
+
+export const __test__ = { canSeeBreakdown, isNpcOrGmRoll, isOwnRoll };

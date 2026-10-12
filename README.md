@@ -42,6 +42,8 @@ If the embedded preview is not available in your GitHub view, please check the m
 - When modules such as Midi-QOL attach attribution data to the attack roll, visible Advantage and Disadvantage causes can be listed inside the breakdown
 - Generic support for other systems through roll-term parsing when no dedicated adapter exists
 - Client-side and world-level settings for visibility, default expansion, and debug logging
+- NPC and GM roll breakdowns can stay hidden from players so monster bonuses remain secret
+- An opened panel stays open when the chat card updates or the chat log redraws
 
 ## Usage
 
@@ -111,7 +113,7 @@ Useful reports usually include:
 
 - `Enable roll breakdowns` enables the module on the current client.
 - `Expanded by default` opens the breakdown automatically for new supported messages.
-- `Visible to players` is a world setting that allows non-GM users to see the breakdown panel.
+- `Breakdown visibility` is a world setting that decides who sees the panel: `GM only`, `Owners and GM` or `Everyone`. Owners are players who made the roll or own the speaking actor. Existing worlds keep their previous choice.
+- `Hide NPC and GM rolls from players` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a player owned speaker. This keeps monster bonuses secret.
 - `Show unknown terms` keeps unresolved or unlabeled terms visible.
-- `GM-only preview` is a world setting that hides the panel from players while testing.
 - `Debug logging` writes parser and rendering decisions to the browser console.
