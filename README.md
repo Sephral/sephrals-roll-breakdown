@@ -1,125 +1,49 @@
 # Sephral's Roll Breakdown
 
-Sephral's Roll Breakdown adds a compact explanation panel to supported roll chat messages in Foundry VTT.
-
-It focuses on explaining what a roll is made of without inventing hidden sources. Dice, static modifiers, derived values, unresolved terms, and available upstream context are shown separately so the output stays technically honest.
-
-## Foundry VTT
+**"Wait, why is my attack +9?"** Roll Breakdown answers that right on the chat card: every die, every modifier and, in D&D 5e, the reasons for advantage and disadvantage.
 
 [![Foundry VTT package](https://img.shields.io/badge/Foundry%20VTT-Package%20page-fe6a1f?logo=foundryvirtualtabletop&logoColor=white)](https://foundryvtt.com/packages/sephrals-roll-breakdown)
-
-Install the module from the package browser in Foundry VTT or open its [package page on foundryvtt.com](https://foundryvtt.com/packages/sephrals-roll-breakdown).
-
-## Discord
-
 [![Join Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/7BjCgDYaBP)
-
-Questions, feedback, and module support are welcome on [Discord](https://discord.gg/7BjCgDYaBP).
-
-## More modules
-
 [![More modules by Sephral](https://img.shields.io/badge/GitHub-More%20modules%20by%20Sephral-181717?logo=github&logoColor=white)](https://github.com/Sephral)
 
-More modules by Sephral for Foundry VTT are listed on [github.com/Sephral](https://github.com/Sephral).
+![Roll Breakdown demo](media/demo.gif)
 
-## Demo
+*The demo uses Quillathe, one of the premade heroes of the D&D 5e system, with Bless and Archery as active effects.*
 
-![SCBR demo](media/demo.gif)
+## Highlights
 
-If the embedded preview is not available in your GitHub view, please check the media folder.
+* **Every number explained:** a compact panel on the chat card shows the dice, the modifiers and every other part of the formula.
+* **Made for D&D 5e:** attacks, damage, saves, ability, skill and tool checks, concentration and death saves, each with its real sources.
+* **Why advantage?** When modules like MidiQOL record the reasons, the panel lists them, such as flanking, a prone target or long range.
+* **Honest by design:** the panel only shows what the roll really contains. It never guesses a source.
+* **Monster bonuses stay secret:** players see no breakdown on NPC and GM rolls, unless you want them to.
+* **Out of the way:** the panel stays folded until someone opens it, and an open panel stays open while the chat updates.
+* **Any system:** other systems get a general breakdown of dice and modifiers.
 
-## Overview
+## How it works
 
-- Adds a non-invasive breakdown panel directly to eligible chat messages
-- Separates dice terms, static modifiers, computed terms, and unresolved terms
-- Uses a dedicated D&D5e adapter where reliable metadata is available
-- Shows Advantage and Disadvantage reasons when upstream roll data exposes them
-- Falls back to a generic parser for other systems and custom roll messages
-- Avoids rendering empty or trivial breakdowns when no meaningful explanation can be shown
-- Supports Foundry VTT v13 and v14
-- Includes English and German translations
+1. Enable the module.
+2. Roll as usual.
+3. Click **Breakdown** on the chat card.
 
-## Features
+You decide who sees the panel: only the GM, the GM and the owner of the roll, or everyone.
 
-- Compact breakdown panel rendered directly inside eligible chat messages
-- Honest classification of complex roll parts without guessing hidden sources
-- D&D5e-specific source resolution for supported attack, damage, save, skill, tool, concentration, and death save rolls
-- Mixed D&D5e chat messages with separate attack and damage rolls are resolved per roll instead of being treated as one shared formula
-- When modules such as Midi-QOL attach attribution data to the attack roll, visible Advantage and Disadvantage causes can be listed inside the breakdown
-- Generic support for other systems through roll-term parsing when no dedicated adapter exists
-- Client-side and world-level settings for visibility, default expansion, and debug logging
-- NPC and GM roll breakdowns can stay hidden from players so monster bonuses remain secret
-- An opened panel stays open when the chat card updates or the chat log redraws
+## Install
 
-## Usage
+Search for **Roll Breakdown** in Foundry's module browser or open the [package page](https://foundryvtt.com/packages/sephrals-roll-breakdown).
 
-1. Enable the module in Foundry.
-2. Trigger any supported roll chat message.
-3. Open the `Breakdown` section on the chat card to inspect dice, modifiers, computed terms, and unresolved terms.
-4. For supported D&D5e attack rolls, check the top of the panel for concrete Advantage or Disadvantage reasons when the upstream message includes them.
+Foundry VTT v13 and v14 · any game system, extra details for D&D 5e · English and German
 
-## Supported systems
+## Help it get better
 
-The module currently provides its best support for `dnd5e` and is optimized around D&D5e roll data and message structures.
+A modifier shows up as unknown? Post a screenshot of the chat card on [Discord](https://discord.gg/7BjCgDYaBP) and help teach the breakdown something new.
 
-Other systems can still benefit from the generic parser, but there is no guarantee that all modifiers, labels, or custom roll structures can be resolved correctly without a dedicated adapter.
+## Learn more
 
-## D&D5e focus
+The [manual](MANUAL.md) lists every setting, explains what can be resolved and what cannot, and what a helpful bug report contains.
 
-The module is currently optimized for real D&D5e play and message structures.
+Looking for more? See [all modules by Sephral](https://github.com/Sephral).
 
-Supported D&D5e roll families currently include:
+## License
 
-- Attack rolls
-- Damage rolls
-- Saving throws
-- Ability checks
-- Skill checks
-- Tool checks
-- Concentration saves
-- Death saves
-
-This does not mean complete coverage. D&D5e chat messages can still vary by system version, activity type, automation module, and custom table setup.
-
-## Advantage and Disadvantage reasons
-
-If the roll data contains explicit attribution entries, the breakdown can show why an attack was rolled with Advantage or Disadvantage.
-
-Typical examples depend on the upstream module stack and may include things like nearby foes, flanking, visibility, stealth, prone targets, long range, or similar combat state reasons.
-
-The module does not infer these reasons on its own. It only renders causes that are actually present in the upstream roll metadata.
-
-## Current behavior and limits
-
-- The module reads existing roll data from `message.rolls` and `roll.terms`.
-- Static numeric terms are summarized directly.
-- Computed terms such as math functions are shown as derived instead of being mislabeled.
-- Symbolic or opaque terms remain marked as unknown or unresolved when no reliable source is available.
-- Modifier names from systems or third-party modules are only shown when they are explicitly present in the roll data.
-- Advantage and Disadvantage causes are only available when an upstream system or module writes them into the roll metadata.
-- The module is currently optimized for D&D5e roll data and message structures.
-- Complete coverage is not guaranteed, especially when systems or third-party modules generate roll data in custom formats.
-
-This keeps the output technically honest, but it also means some bonus sources such as effect names or module-provided context may still appear as generic derived or unknown terms until dedicated system adapters are added.
-
-## Feedback and parser improvements
-
-If you want to help improve the parser further, I am happy to extend it when users can provide concrete examples, screenshots, exported chat message data, or other reproducible information about missing or mislabeled roll parts.
-
-There is no guarantee of completeness. The parser is intentionally conservative, and I would rather leave a term unresolved than label it incorrectly.
-
-Useful reports usually include:
-
-- The game system and Foundry version
-- The involved module stack, especially roll-altering modules
-- A screenshot of the affected chat card
-- The raw `ChatMessage` data or a reproducible example world setup
-
-## Settings
-
-- `Enable roll breakdowns` enables the module on the current client.
-- `Expanded by default` opens the breakdown automatically for new supported messages.
-- `Breakdown visibility` is a world setting that decides who sees the panel: `GM only`, `Owners and GM` or `Everyone`. Owners are players who made the roll or own the speaking actor. Existing worlds keep their previous choice.
-- `Hide NPC and GM rolls from players` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a player owned speaker. This keeps monster bonuses secret.
-- `Show unknown terms` keeps unresolved or unlabeled terms visible.
-- `Debug logging` writes parser and rendering decisions to the browser console.
+See [LICENSE.md](LICENSE.md).

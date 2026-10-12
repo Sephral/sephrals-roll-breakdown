@@ -1,7 +1,7 @@
 {
   "id": "sephrals-roll-breakdown",
   "title": "Sephral's Roll Breakdown",
-  "description": "Adds a compact, non-invasive breakdown panel to roll chat messages and explains dice, static modifiers, and unresolved formula terms.",
+  "description": "Shows where every number of a roll comes from, right on the chat card: dice, modifiers and every part of the formula. In D&D 5e also the reasons for advantage and disadvantage.",
   "version": "1.0.2",
   "compatibility": {
     "minimum": 13,
