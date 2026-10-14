@@ -30,6 +30,21 @@ function localizeRule(key, data) {
   return localizeSystemTranslation(`SRB.Rule.${key}`, data);
 }
 
+// Source labels in the panel. The English text stays as fallback, so a missing translation never shows a raw key.
+function localizeRuleLabel(key, data, fallback) {
+  const localized = localizeRule(key, data);
+  return localized && localized !== `SRB.Rule.${key}` ? localized : fallback;
+}
+
+function abilityModifierLabel(abilityLabel) {
+  return localizeRuleLabel("AbilityModifierLabel", { ability: abilityLabel }, `${abilityLabel} modifier`);
+}
+
+function itemAttackBonusLabel(item) {
+  const name = item?.name ?? "Item";
+  return localizeRuleLabel("ItemAttackBonusLabel", { item: name }, `${name} attack bonus`);
+}
+
 function localizeVersionedRule(key, rulesVersion, data) {
   if (rulesVersion) {
     const localized = localizeSystemTranslation(`SRB.Rule.${key}.${rulesVersion}`, data);
@@ -240,7 +255,7 @@ function buildBaseDamageCandidates(item, activity) {
     const bonusFormula = sanitizeExpression(part.bonus);
 
     if (diceFormula) {
-      candidates.push(...createCandidate("Base damage", diceFormula, {
+      candidates.push(...createCandidate(localizeRuleLabel("BaseDamageLabel", null, "Base damage"), diceFormula, {
         sourceType: "item",
         confidence: "exact",
         detail: localizeRule("BaseDamage", { item: item?.name ?? "Item" })
@@ -248,7 +263,7 @@ function buildBaseDamageCandidates(item, activity) {
     }
 
     if (bonusFormula) {
-      candidates.push(...createCandidate("Base bonus", bonusFormula, {
+      candidates.push(...createCandidate(localizeRuleLabel("BaseBonusLabel", null, "Base bonus"), bonusFormula, {
         sourceType: "item",
         confidence: "exact",
         detail: localizeRule("BaseBonus", { item: item?.name ?? "Item" })
@@ -340,7 +355,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
   const abilityKey = resolveActivityAbility(actor, item, activity);
   const abilityMod = toFiniteNumber(actor?.system?.abilities?.[abilityKey]?.mod);
   if (abilityKey && abilityMod) {
-    candidates.push(...createCandidate(`${localizeAbilityLabel(abilityKey)} modifier`, `${abilityMod}`, {
+    candidates.push(...createCandidate(abilityModifierLabel(localizeAbilityLabel(abilityKey)), `${abilityMod}`, {
       sourceType: "standard",
       confidence: "exact",
       detail: localizeRule("AttackAbility", { ability: localizeAbilityLabel(abilityKey), context: contextLabel })
@@ -358,7 +373,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
 
   const attackBonus = resolveActivityAttackBonus(activity);
   if (attackBonus) {
-    candidates.push(...createCandidate(`${item?.name ?? "Item"} attack bonus`, attackBonus, {
+    candidates.push(...createCandidate(itemAttackBonusLabel(item), attackBonus, {
       sourceType: "item",
       confidence: "exact",
       detail: localizeRule("ItemAttackBonus", { item: item?.name ?? "Item" })
@@ -367,7 +382,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
 
   const itemAttackBonus = sanitizeExpression(item?.system?.attack?.bonus);
   if (itemAttackBonus) {
-    candidates.push(...createCandidate(`${item?.name ?? "Item"} attack bonus`, itemAttackBonus, {
+    candidates.push(...createCandidate(itemAttackBonusLabel(item), itemAttackBonus, {
       sourceType: "item",
       confidence: "exact",
       detail: localizeRule("ItemAttackBonus", { item: item?.name ?? "Item" })
@@ -376,7 +391,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
 
   const magicalAttackBonus = item?.system?.magicAvailable ? sanitizeExpression(item?.system?.magicalBonus) : "";
   if (magicalAttackBonus) {
-    candidates.push(...createCandidate(`${item?.name ?? "Item"} attack bonus`, magicalAttackBonus, {
+    candidates.push(...createCandidate(itemAttackBonusLabel(item), magicalAttackBonus, {
       sourceType: "item",
       confidence: "exact",
       detail: localizeRule("ItemAttackBonus", { item: item?.name ?? "Item" })
@@ -407,7 +422,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
 
   const actorBonus = sanitizeExpression(actor?.system?.bonuses?.[bucket]?.attack);
   if (actorBonus) {
-    candidates.push(...createCandidate("Actor attack bonus", actorBonus, {
+    candidates.push(...createCandidate(localizeRuleLabel("ActorAttackBonusLabel", null, "Actor attack bonus"), actorBonus, {
       sourceType: "actor",
       confidence: "derived",
       detail: detailText.actor
@@ -457,7 +472,7 @@ function buildDamageSourceCandidates(actor, item, activity) {
   const abilityKey = resolveActivityAbility(actor, item, activity);
   const abilityMod = toFiniteNumber(actor?.system?.abilities?.[abilityKey]?.mod);
   if (abilityKey && abilityMod) {
-    candidates.push(...createCandidate(`${localizeAbilityLabel(abilityKey)} modifier`, `${abilityMod}`, {
+    candidates.push(...createCandidate(abilityModifierLabel(localizeAbilityLabel(abilityKey)), `${abilityMod}`, {
       sourceType: "standard",
       confidence: "exact",
       detail: localizeRule("DamageAbility", { ability: localizeAbilityLabel(abilityKey) })
@@ -466,7 +481,7 @@ function buildDamageSourceCandidates(actor, item, activity) {
 
   const actorBonus = sanitizeExpression(actor?.system?.bonuses?.[bucket]?.damage);
   if (actorBonus) {
-    candidates.push(...createCandidate("Actor damage bonus", actorBonus, {
+    candidates.push(...createCandidate(localizeRuleLabel("ActorDamageBonusLabel", null, "Actor damage bonus"), actorBonus, {
       sourceType: "actor",
       confidence: "derived",
       detail: detailText.actor
@@ -490,7 +505,7 @@ function buildActorRollSourceCandidates(actor, message) {
 
   const abilityMod = toFiniteNumber(ability?.mod);
   if (abilityId && abilityMod) {
-    candidates.push(...createCandidate(`${abilityLabel} modifier`, `${abilityMod}`, {
+    candidates.push(...createCandidate(abilityModifierLabel(abilityLabel), `${abilityMod}`, {
       sourceType: "standard",
       confidence: "exact",
       detail: getActorCheckDetail(rollType, abilityLabel, rollId)

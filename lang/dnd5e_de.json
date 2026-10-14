@@ -53,5 +53,11 @@
   "SRB.Rule.RulesetNote": "Regelwerk: {ruleset}",
   "SRB.Rule.FormulaSegment": "Formelsegment: {formula}",
   "SRB.Rule.Known.BlessAttack": "Bless fügt Angriffswürfen 1d4 hinzu.",
-  "SRB.Rule.Known.BaneAttack": "Bane zieht von Angriffswürfen 1d4 ab."
+  "SRB.Rule.Known.BaneAttack": "Bane zieht von Angriffswürfen 1d4 ab.",
+  "SRB.Rule.AbilityModifierLabel": "{ability}-Modifikator",
+  "SRB.Rule.BaseDamageLabel": "Grundschaden",
+  "SRB.Rule.BaseBonusLabel": "Fester Bonus",
+  "SRB.Rule.ItemAttackBonusLabel": "Angriffsbonus von {item}",
+  "SRB.Rule.ActorAttackBonusLabel": "Angriffsbonus des Akteurs",
+  "SRB.Rule.ActorDamageBonusLabel": "Schadensbonus des Akteurs"
 }

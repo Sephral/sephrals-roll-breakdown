@@ -1418,3 +1418,48 @@ test("dnd5e adapter resolves death save sources without item or activity context
   assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "Proficiency"), true);
   assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "death save bonus"), true);
 });
+test("dnd5e adapter source labels follow the module translations", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const translations = {
+    ...createTranslations(),
+    "SRB.Rule.AbilityModifierLabel": "{ability}-Modifikator",
+    "SRB.Rule.BaseDamageLabel": "Grundschaden",
+    "SRB.Rule.ItemAttackBonusLabel": "Angriffsbonus von {item}",
+    "SRB.Rule.ActorAttackBonusLabel": "Angriffsbonus des Akteurs",
+    "SRB.Rule.ActorDamageBonusLabel": "Schadensbonus des Akteurs"
+  };
+  // Own language code: the system translations are cached per language
+  const { game } = createGameStub({ lang: "qa-labels", systemId: "dnd5e", translations });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return translations; } });
+
+  const actor = {
+    system: { abilities: { str: { mod: 3 } }, attributes: { prof: 2 }, bonuses: { mwak: { attack: "1", damage: "1" } } },
+    effects: [],
+    items: []
+  };
+  const item = { name: "Dagger", type: "weapon", actor, system: { range: { value: 5 }, ammunition: { type: null }, magicalBonus: 1 } };
+  const activity = { type: "attack", attack: { ability: "str", bonus: "" }, damage: { parts: [{ number: 1, denomination: 4, bonus: "0" }] } };
+  globalThis.fromUuid = async (uuid) => ({ "uuid:item": item, "uuid:activity": activity }[uuid] ?? null);
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const breakdowns = await new Dnd5eRollAdapter().buildBreakdowns({
+    flags: { dnd5e: { activity: { uuid: "uuid:activity", type: "attack" }, item: { uuid: "uuid:item" } } },
+    rolls: [{
+      formula: "1d20 + 3 + 1 + 1", total: 18, options: { rollType: "attack" },
+      terms: [new DiceTerm("1d20", 13, { number: 1, faces: 20 }), new OperatorTerm("+"), new NumericTerm(3), new OperatorTerm("+"), new NumericTerm(1), new OperatorTerm("+"), new NumericTerm(1)]
+    }, {
+      formula: "1d4 + 3 + 1", total: 6, options: { rollType: "damage" },
+      terms: [new DiceTerm("1d4", 2, { number: 1, faces: 4 }), new OperatorTerm("+"), new NumericTerm(3), new OperatorTerm("+"), new NumericTerm(1)]
+    }]
+  });
+
+  const labels = breakdowns.flatMap((breakdown) => [...breakdown.diceTerms, ...breakdown.modifiers].map((term) => term.sourceLabel));
+  assert.equal(labels.includes("STR-Modifikator"), true);
+  assert.equal(labels.includes("Grundschaden"), true);
+  assert.equal(labels.includes("Schadensbonus des Akteurs"), true);
+  assert.equal(labels.some((label) => /^(Angriffsbonus des Akteurs|Angriffsbonus von Dagger)$/.test(label ?? "")), true);
+  assert.equal(labels.some((label) => /modifier|Base damage|Actor .* bonus/.test(label ?? "")), false);
+});

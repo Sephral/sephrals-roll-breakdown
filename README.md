@@ -18,7 +18,8 @@
 * **Honest by design:** the panel only shows what the roll really contains. It never guesses a source.
 * **Monster bonuses stay secret:** players see no breakdown on NPC and GM rolls, unless you want them to.
 * **Out of the way:** the panel stays folded until someone opens it, and an open panel stays open while the chat updates.
-* **Any system:** other systems get a general breakdown of dice and modifiers.
+* **Made for Crucible too:** see which boons and banes changed which die, where every bonus comes from, the result against the DC and how the damage adds up.
+* **More systems:** Pathfinder 2e and Savage Worlds show their named modifiers and results, every other system gets a general breakdown of dice and modifiers.
 
 ## How it works
 

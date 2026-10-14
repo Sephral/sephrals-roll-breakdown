@@ -174,7 +174,7 @@ test("srb falls back to the generic adapter when the current system is not dnd5e
   resetGlobals();
   installHTMLElement();
 
-  const { game } = createGameStub({ systemId: "pf2e" });
+  const { game } = createGameStub({ systemId: "worldbuilding" });
   globalThis.game = game;
   globalThis.fetch = async () => ({ ok: false, async json() { return {}; } });
 

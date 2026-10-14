@@ -1,3 +1,4 @@
+import { normalizeBreakdown } from "./adapter-registry.js";
 import { MODULE_ID, localize } from "./settings.js";
 
 const TEMPLATE_PATH = `modules/${MODULE_ID}/templates/breakdown-panel.hbs`;
@@ -14,8 +15,14 @@ function decorateTerm(term, fallbackLabel = null) {
     ...term,
     label,
     detail: term.sourceDetail,
-    tooltip: term.sourceDetail ?? null
+    tooltip: term.sourceDetail ?? null,
+    notes: Array.isArray(term.notes) ? term.notes.filter((note) => typeof note === "string" && note.trim()) : [],
+    muted: Boolean(term.muted)
   };
+}
+
+function getSections(breakdown, placement) {
+  return breakdown.sections.filter((section) => section.placement === placement);
 }
 
 function formatSignedNumber(value) {
@@ -44,7 +51,8 @@ function getRootElement(html) {
   return null;
 }
 
-function buildTemplateData(message, breakdowns, options, expanded) {
+function buildTemplateData(message, rawBreakdowns, options, expanded) {
+  const breakdowns = rawBreakdowns.map(normalizeBreakdown);
   const labels = {
     toggle: localize("Chat.Toggle"),
     rollLabel: localize("Chat.RollLabel"),
@@ -79,7 +87,7 @@ function buildTemplateData(message, breakdowns, options, expanded) {
     expanded,
     labels,
     breakdowns: breakdowns.map((breakdown, index) => ({
-      rollLabel: breakdowns.length > 1 ? `${labels.rollLabel} ${index + 1}` : null,
+      rollLabel: breakdown.title ?? (breakdowns.length > 1 ? `${labels.rollLabel} ${index + 1}` : null),
       formula: breakdown.formula,
       confidenceLabel:
         breakdown.sourceConfidence === "partial"
@@ -111,6 +119,9 @@ function buildTemplateData(message, breakdowns, options, expanded) {
             attributions: breakdown.advantageContext.attributions.map((attribution) => decorateAdvantageAttribution(attribution, labels))
           }
         : null,
+      topSections: getSections(breakdown, "top"),
+      bottomSections: getSections(breakdown, "bottom"),
+      pills: breakdown.pills,
       unresolvedTerms: options.showUnknown
         ? breakdown.unresolvedTerms.map((term) => decorateTerm(term, labels.unresolvedTerm))
         : [],

@@ -53,5 +53,11 @@
   "SRB.Rule.RulesetNote": "Ruleset: {ruleset}",
   "SRB.Rule.FormulaSegment": "Formula segment: {formula}",
   "SRB.Rule.Known.BlessAttack": "Bless adds 1d4 to attack rolls.",
-  "SRB.Rule.Known.BaneAttack": "Bane subtracts 1d4 from attack rolls."
+  "SRB.Rule.Known.BaneAttack": "Bane subtracts 1d4 from attack rolls.",
+  "SRB.Rule.AbilityModifierLabel": "{ability} modifier",
+  "SRB.Rule.BaseDamageLabel": "Base damage",
+  "SRB.Rule.BaseBonusLabel": "Base bonus",
+  "SRB.Rule.ItemAttackBonusLabel": "{item} attack bonus",
+  "SRB.Rule.ActorAttackBonusLabel": "Actor attack bonus",
+  "SRB.Rule.ActorDamageBonusLabel": "Actor damage bonus"
 }

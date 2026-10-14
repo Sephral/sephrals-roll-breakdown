@@ -357,7 +357,7 @@ test("in dnd5e worlds the core hook only steps in when the system hook stays sil
 });
 
 test("outside dnd5e the core hook renders right away and ready runs the migration", async () => {
-  const env = await loadSrbWithTimers("pf2e");
+  const env = await loadSrbWithTimers("worldbuilding");
   try {
     env.onHandlers.get("renderChatMessageHTML")({ id: "generic", rolls: [{}] }, { element: "generic" });
     assert.deepEqual(env.calls.map((call) => call.messageId), ["generic"]);

@@ -21,26 +21,71 @@ function canSeeMessageContent(message) {
 }
 
 // Core's speakerActor resolves the speaker token or actor and falls back to the author's assigned character.
-function getSpeakerActor(message) {
-  return message?.speakerActor ?? null;
+// Some systems post rolls without a speaker (Crucible skill checks keep the actor in the roll data), so the
+// adapter may name the rolling actor first.
+function getSpeakerActor(message, adapter = null) {
+  let adapterActor = null;
+  try {
+    adapterActor = typeof adapter?.getMessageActor === "function" ? adapter.getMessageActor(message) : null;
+  } catch {
+    adapterActor = null;
+  }
+  return adapterActor ?? message?.speakerActor ?? null;
 }
 
 // NPC rolls come from actors no player owns. GM rolls without a player owned speaker count as well.
-function isNpcOrGmRoll(message) {
-  const actor = getSpeakerActor(message);
+function isNpcOrGmRoll(message, adapter = null) {
+  const actor = getSpeakerActor(message, adapter);
   if (actor) return !actor.hasPlayerOwner;
   return Boolean(message?.author?.isGM);
 }
 
-function isOwnRoll(message) {
-  return Boolean(message?.isAuthor || getSpeakerActor(message)?.isOwner);
+function isOwnRoll(message, adapter = null) {
+  return Boolean(message?.isAuthor || getSpeakerActor(message, adapter)?.isOwner);
 }
 
-function canSeeBreakdown(message) {
-  if (game.user?.isGM) return true;
-  if (shouldHideNpcRolls() && isNpcOrGmRoll(message)) return false;
-  if (getVisibilityMode() === VISIBILITY_MODES.OWNERS) return isOwnRoll(message);
+// Actors per roll index when the adapter says a message holds rolls of several actors (Crucible initiative
+// reports and group checks), else null.
+function getRollActors(message, adapter = null) {
+  if (typeof adapter?.getRollActors !== "function") return null;
+  let actors = null;
+  try {
+    actors = adapter.getRollActors(message);
+  } catch {
+    actors = null;
+  }
+  return Array.isArray(actors) && actors.some(Boolean) ? actors : null;
+}
+
+function canSeeWholeMessage(message, adapter = null) {
+  if (shouldHideNpcRolls() && isNpcOrGmRoll(message, adapter)) return false;
+  if (getVisibilityMode() === VISIBILITY_MODES.OWNERS) return isOwnRoll(message, adapter);
   return true;
+}
+
+// The NPC and owner rules for the actor of one roll. A roll without an actor follows the message.
+function canSeeActorRoll(message, actor, adapter = null) {
+  if (!actor) return canSeeWholeMessage(message, adapter);
+  if (shouldHideNpcRolls() && !actor.hasPlayerOwner) return false;
+  if (getVisibilityMode() === VISIBILITY_MODES.OWNERS) return Boolean(actor.isOwner);
+  return true;
+}
+
+function canSeeBreakdown(message, adapter = null) {
+  if (game.user?.isGM) return true;
+  // Rolls of several actors are decided roll by roll once the breakdowns exist
+  if (getRollActors(message, adapter)) return true;
+  return canSeeWholeMessage(message, adapter);
+}
+
+function filterVisibleBreakdowns(message, breakdowns, adapter = null) {
+  if (game.user?.isGM) return breakdowns;
+  const actors = getRollActors(message, adapter);
+  if (!actors) return breakdowns;
+  return breakdowns.filter((breakdown) => {
+    const actor = Number.isInteger(breakdown?.rollIndex) ? actors[breakdown.rollIndex] : null;
+    return canSeeActorRoll(message, actor, adapter);
+  });
 }
 
 function isAutomaticRollTableMessage(message) {
@@ -72,7 +117,7 @@ export class RollBreakdownService {
       return;
     }
 
-    if (!canSeeBreakdown(message)) {
+    if (!canSeeBreakdown(message, this.adapter)) {
       this.log("Skipping message because its breakdown is hidden from the current user.", { messageId: message?.id });
       return;
     }
@@ -87,13 +132,22 @@ export class RollBreakdownService {
       return;
     }
 
-    if (!this.adapter.supportsMessage(message)) {
-      this.log("Skipping message because no supported rolls were found.", { messageId: message?.id });
+    // Adapters can come from other modules, so one failing adapter must not break the chat log.
+    let breakdowns;
+    try {
+      if (!this.adapter.supportsMessage(message)) {
+        this.log("Skipping message because no supported rolls were found.", { messageId: message?.id });
+        return;
+      }
+
+      breakdowns = await this.adapter.buildBreakdowns(message);
+      if (Array.isArray(breakdowns)) breakdowns = filterVisibleBreakdowns(message, breakdowns, this.adapter);
+    } catch (error) {
+      console.warn(`[SRB] The roll breakdown adapter "${this.adapter?.id ?? "unknown"}" failed for message ${message?.id}.`, error);
       return;
     }
 
-    const breakdowns = await this.adapter.buildBreakdowns(message);
-    if (!breakdowns.length) {
+    if (!Array.isArray(breakdowns) || !breakdowns.length) {
       this.log("Skipping message because no visible breakdown content was produced.", { messageId: message?.id });
       return;
     }
@@ -105,4 +159,4 @@ export class RollBreakdownService {
   }
 }
 
-export const __test__ = { canSeeBreakdown, isNpcOrGmRoll, isOwnRoll };
+export const __test__ = { canSeeBreakdown, canSeeActorRoll, filterVisibleBreakdowns, getRollActors, isNpcOrGmRoll, isOwnRoll };

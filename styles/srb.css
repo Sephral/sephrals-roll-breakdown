@@ -142,6 +142,19 @@
   cursor: help;
 }
 
+.srb-breakdown__item-tag--note {
+  background: rgba(23, 74, 122, 0.16);
+}
+
+.srb-breakdown__item--muted {
+  opacity: 0.6;
+}
+
+.srb-breakdown__item-main[data-tooltip],
+.srb-breakdown__pill[data-tooltip] {
+  cursor: help;
+}
+
 .srb-breakdown__pill {
   display: inline-flex;
   gap: 0.25rem;
@@ -155,6 +168,15 @@
 .srb-breakdown__pill--emphasis {
   background: rgba(186, 164, 125, 0.34);
   font-weight: 700;
+}
+
+/* Crucible renders its chat cards with light text on a dark background. */
+.crucible .srb-breakdown__pill {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.crucible .srb-breakdown__pill--emphasis {
+  background: rgba(186, 164, 125, 0.34);
 }
 
 @media (max-width: 520px) {

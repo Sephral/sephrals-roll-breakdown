@@ -1,0 +1,17 @@
+{
+  "SRB.Swade.TraitDie": "Eigenschaftswürfel",
+  "SRB.Swade.WildDie": "Wild Die",
+  "SRB.Swade.WildDieHint": "Der höhere Wert aus Eigenschaftswürfel und Wild Die zählt",
+  "SRB.Swade.Dropped": "Verworfen",
+  "SRB.Swade.Aced": "Explodiert",
+  "SRB.Swade.TargetNumber": "MW {tn}",
+  "SRB.Swade.Outcome.CriticalFailure": "Kritischer Fehlschlag",
+  "SRB.Swade.Outcome.Failure": "Fehlschlag",
+  "SRB.Swade.Outcome.Success": "Erfolg",
+  "SRB.Swade.Outcome.Raise.one": "{count} Steigerung",
+  "SRB.Swade.Outcome.Raise.other": "{count} Steigerungen",
+  "SRB.Swade.NotCounted": "Nicht gezählt",
+  "SRB.Swade.NotCountedHint": "Im Wurfdialog abgeschaltet",
+  "SRB.Swade.ArmorPiercing": "PB {ap}",
+  "SRB.Swade.HeavyWeapon": "Schwere Waffe"
+}

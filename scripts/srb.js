@@ -1,4 +1,8 @@
+import { AdapterRegistry, createApi } from "./adapter-registry.js";
+import { CrucibleRollAdapter } from "./adapters/crucible-adapter.js";
 import { GenericRollAdapter } from "./adapters/generic-adapter.js";
+import { Pf2eRollAdapter } from "./adapters/pf2e-adapter.js";
+import { SwadeRollAdapter } from "./adapters/swade-adapter.js";
 import { ChatCardRenderer } from "./chat-card-renderer.js";
 import { RollBreakdownService } from "./roll-breakdown-service.js";
 import {
@@ -11,11 +15,40 @@ import {
 import { Dnd5eRollAdapter } from "./adapters/dnd5e-adapter.js";
 
 // How long the core hook waits for dnd5e's own render hook before it renders the panel itself.
+// Systems such as Crucible finish their chat card after the render hook. The panel waits until the card is
+// in the chat log, at most for this grace period.
 const SYSTEM_HOOK_GRACE_MS = 1000;
+const CARD_POLL_MS = 50;
+
+const registry = new AdapterRegistry();
+registry.register("dnd5e", new Dnd5eRollAdapter());
+registry.register("crucible", new CrucibleRollAdapter());
+registry.register("pf2e", new Pf2eRollAdapter());
+registry.register("swade", new SwadeRollAdapter());
 
 function createAdapter() {
-  if (game.system?.id === "dnd5e") return new Dnd5eRollAdapter();
-  return new GenericRollAdapter();
+  return registry.resolve(game.system?.id, new GenericRollAdapter());
+}
+
+const api = createApi({
+  registry,
+  onRegister(systemId, adapter) {
+    // Adapters registered after init take over right away for the running system.
+    if (systemId === game.system?.id) service.adapter = adapter;
+  }
+});
+
+function whenCardIsFinished(html, callback) {
+  const root = html?.[0] ?? html;
+  const startedAt = Date.now();
+  const check = () => {
+    if (root?.isConnected || Date.now() - startedAt >= SYSTEM_HOOK_GRACE_MS) {
+      callback();
+      return;
+    }
+    setTimeout(check, CARD_POLL_MS);
+  };
+  setTimeout(check, 0);
 }
 
 const service = new RollBreakdownService({
@@ -28,6 +61,8 @@ const systemHookElements = new WeakSet();
 
 Hooks.once("init", () => {
   service.adapter = createAdapter();
+  const module = game.modules?.get?.(MODULE_ID);
+  if (module) module.api = api;
   registerSettings();
   void ensureModuleTranslationsLoaded();
   void ensureSystemTranslationsLoaded();
@@ -44,6 +79,10 @@ Hooks.once("ready", () => {
 
 Hooks.on("renderChatMessageHTML", (message, html) => {
   if (game.system?.id !== "dnd5e") {
+    if (service.adapter?.waitForCard && html && typeof html === "object") {
+      whenCardIsFinished(html, () => void service.enhanceChatMessage(message, html));
+      return;
+    }
     void service.enhanceChatMessage(message, html);
     return;
   }

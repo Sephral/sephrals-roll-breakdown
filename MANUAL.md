@@ -13,7 +13,11 @@ An opened panel stays open when the chat card updates or the chat log redraws. R
 
 ## Supported systems
 
-Roll Breakdown works best with D&D 5e, where it can name the sources of most bonuses.
+Roll Breakdown has its own breakdown for D&D 5e, Crucible, Pathfinder 2e and Savage Worlds. Every other system gets a general breakdown of dice and modifiers.
+
+### D&D 5e
+
+Roll Breakdown names the sources of most D&D 5e bonuses.
 
 Supported D&D 5e rolls:
 
@@ -30,7 +34,36 @@ When a chat card holds an attack roll and a damage roll, each of them gets its o
 
 Chat cards can still differ by system version, activity type and automation modules, so not every bonus can always be named.
 
-Other systems get a general breakdown of dice and modifiers. Labels and special roll types of those systems may not be recognized.
+### Crucible
+
+Works with skill checks, attacks with weapons, spells and skills, group checks and the initiative report of each round.
+
+* **Dice:** each of the three dice with its size. A die that boons made larger or banes made smaller says how many of them changed it.
+* **Boons and banes:** every source the roll lists, such as Flanked or Prone, with the number it adds.
+* **Bonuses:** ability bonus, skill bonus and enchantment, with the abilities, the skill or the weapon behind them. These labels only appear when the bonuses and dice add up to the roll total.
+* **Result:** success, failure or a critical result. For attacks the result against the defense, such as Hit, Glance, Dodge or Parry.
+* **Damage:** overflow, base, action bonus, resistance or vulnerability and the total, the same parts as in the roll details of the system.
+* **Targets:** on action cards each roll is titled with its target.
+
+The DC, the defense value and the margin are shown to the GM only, the same way the Crucible card hides them from players. Initiative rolls show their result without a DC, and unaware or incapacitated combatants show their fixed initiative. On the initiative report and on group checks, players see the rolls of their own heroes, and the visibility settings apply to each roll. Players get no breakdown for combatants that are hidden from them.
+
+### Pathfinder 2e
+
+* **Checks and attacks:** the single bonus of the roll is split into its named modifiers, each with its type (status, circumstance, item and so on). This happens only when the modifiers add up to that bonus. Modifiers that did not count, for example because a higher bonus of the same type applies, are listed separately.
+* **Fortune and misfortune:** rolling twice and roll substitutions are listed with their source.
+* **Result:** degree of success, DC and margin. Players see the DC and the result only when the Pathfinder 2e settings show them to players.
+* **Damage:** the dice per damage type, each damage part, extra dice and the damage modifiers, and whether a critical hit doubled the dice or the damage.
+
+When Pathfinder 2e hides the breakdown of a roll from players, Roll Breakdown hides it too.
+
+### Savage Worlds
+
+* **Trait rolls:** trait die and Wild Die, which die counted, aces, the named modifiers, the target number and the result with its raises. Modifiers that were switched off in the roll dialog are listed as not counted.
+* **Damage rolls:** aces, armor piercing and heavy weapons.
+
+### Other systems
+
+Other systems get a general breakdown of dice and modifiers. Labels and special roll types of those systems may not be recognized. Modules can add support for further systems, see [Adding a system](#adding-a-system).
 
 ## Advantage and Disadvantage reasons
 
@@ -57,9 +90,48 @@ Names of bonuses from the system or from other modules only appear when the roll
 * `Enable roll breakdowns` turns the module on or off for you.
 * `Expanded by default` opens the breakdown automatically for new supported messages.
 * `Breakdown visibility` is a world setting that decides who sees the panel: `GM only`, `Owners and GM` or `Everyone`. Owners are players who made the roll or own the speaking actor. Existing worlds keep their previous choice.
-* `Hide NPC and GM rolls from players` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret.
+* `Hide NPC and GM rolls from players` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret. On cards with rolls of several actors, such as the Crucible initiative report or a group check, this applies to each roll.
 * `Show unknown terms` keeps unresolved parts visible.
 * `Debug logging` writes extra information to the browser console for bug reports.
+
+## Adding a system
+
+Other modules can teach the breakdown a new game system, or replace a built-in one, with an adapter. Register it in the `setup` hook or later:
+
+```js
+Hooks.once("setup", () => {
+  const api = game.modules.get("sephrals-roll-breakdown")?.api;
+  api?.registerAdapter("my-system", {
+    supportsMessage(message) {
+      return message.rolls.length > 0;
+    },
+    async buildBreakdowns(message) {
+      return message.rolls.map((roll) => {
+        const breakdown = api.parseRoll(roll);
+        breakdown.pills = [{ text: "DC 12" }];
+        return breakdown;
+      });
+    }
+  });
+});
+```
+
+An adapter has two functions:
+
+* `supportsMessage(message)` returns `true` when the chat message has rolls the adapter can explain.
+* `buildBreakdowns(message)` returns (or resolves to) a list with one entry per roll that should appear in the panel. An empty list means no panel.
+
+`api.parseRoll(roll)` returns the general breakdown of a roll, a good starting point. Each entry in the list can contain:
+
+* `title`: a heading for this roll, for example the target.
+* `formula`, `rollTotal` and `totalStaticModifier`: the formula, the total and the sum of the fixed modifiers.
+* `diceTerms`: dice with `expression`, `totalText`, an optional label `sourceLabel` with the explanation `sourceDetail`, extra tags in `notes` and `muted` for dice that did not count.
+* `modifiers`: fixed modifiers with `value`, `valueText`, `sourceLabel` and `sourceDetail`.
+* `computedTerms` and `unresolvedTerms`: parts of the formula that are computed or not explained.
+* `sections`: extra lists with `label`, `placement` (`"top"` above the dice, otherwise below the modifiers) and `items`, each item with `text`, `tag`, `value`, `tooltip` and `muted`.
+* `pills`: short facts in the footer, each with `text`, `tooltip` and `emphasis`.
+
+Missing fields are filled with empty values. An adapter that sets `waitForCard: true` gets the chat card only after the system has finished drawing it. An optional `getMessageActor(message)` returns the actor who rolled when the chat message names no speaker, so the visibility settings treat the roll as that actor's roll. `api.getAdapter(systemId)` returns the adapter registered for a system. When an adapter fails, the chat card stays as it is and the error appears in the browser console.
 
 ## Help improve the breakdown
 

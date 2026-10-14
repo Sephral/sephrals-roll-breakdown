@@ -329,9 +329,17 @@ test("settings language overrides load module translations and rerender chat on 
 
   assert.equal(settings.getModuleLanguage(), "en");
 
+  // Messages that already show a panel are rendered again in the new language
+  const updatedMessages = [];
+  ui.chat.updateMessage = async (message) => updatedMessages.push(message.id);
+  game.messages = new Map([["m1", { id: "m1" }], ["m2", { id: "m2" }]]);
+  globalThis.document = { querySelectorAll: () => [{ dataset: { messageId: "m1" } }, { dataset: { messageId: "m1" } }, { dataset: {} }] };
+
   settingsValues.uiLanguage = "de";
   await registrations.find((entry) => entry.key === settings.SETTINGS.UI_LANGUAGE).data.onChange("de");
   await flushPromises();
+  delete globalThis.document;
+  assert.deepEqual(updatedMessages, ["m1"]);
 
   assert.equal(settings.getModuleLanguage(), "de");
   assert.equal(settings.localize("Chat.Toggle"), "Aufschlüsselung");

@@ -153,8 +153,15 @@ function formatModuleTranslation(template, data) {
   });
 }
 
+// Rendering the chat log does not redraw its messages, so messages that show a panel are rendered again.
 function refreshLocalizedUi() {
   ui?.chat?.render?.(true);
+  const panels = globalThis.document?.querySelectorAll?.(".srb-breakdown[data-message-id]") ?? [];
+  const messageIds = new Set(Array.from(panels, (panel) => panel?.dataset?.messageId).filter(Boolean));
+  for (const messageId of messageIds) {
+    const message = game.messages?.get?.(messageId);
+    if (message) void ui?.chat?.updateMessage?.(message);
+  }
 }
 
 function registerBooleanSetting(key, nameKey, hintKey, defaultValue, scope = "client") {

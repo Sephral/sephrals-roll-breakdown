@@ -22,17 +22,43 @@
           </div>
         {{/if}}
 
+        {{#each breakdown.topSections as |section|}}
+          <div class="srb-breakdown__section">
+            {{#if section.label}}
+              <div class="srb-breakdown__label">{{section.label}}</div>
+            {{/if}}
+            <ul class="srb-breakdown__list">
+              {{#each section.items as |item|}}
+                <li class="srb-breakdown__item{{#if item.muted}} srb-breakdown__item--muted{{/if}}">
+                  <span class="srb-breakdown__item-main" {{#unless item.tag}}{{#if item.tooltip}}data-tooltip="{{item.tooltip}}"{{/if}}{{/unless}}>
+                    {{item.text}}
+                    {{#if item.tag}}
+                      <span class="srb-breakdown__item-tag" {{#if item.tooltip}}data-tooltip="{{item.tooltip}}"{{/if}}>{{item.tag}}</span>
+                    {{/if}}
+                  </span>
+                  {{#if item.value}}
+                    <span class="srb-breakdown__item-meta">{{item.value}}</span>
+                  {{/if}}
+                </li>
+              {{/each}}
+            </ul>
+          </div>
+        {{/each}}
+
         <div class="srb-breakdown__section">
           <div class="srb-breakdown__label">{{../labels.dice}}</div>
           {{#if breakdown.diceTerms.length}}
             <ul class="srb-breakdown__list">
               {{#each breakdown.diceTerms as |term|}}
-                <li class="srb-breakdown__item">
+                <li class="srb-breakdown__item{{#if term.muted}} srb-breakdown__item--muted{{/if}}">
                   <span class="srb-breakdown__item-main">
                     {{term.expression}}
                     {{#if term.label}}
                       <span class="srb-breakdown__item-tag" {{#if term.tooltip}}data-tooltip="{{term.tooltip}}"{{/if}}>{{term.label}}</span>
                     {{/if}}
+                    {{#each term.notes as |note|}}
+                      <span class="srb-breakdown__item-tag srb-breakdown__item-tag--note">{{note}}</span>
+                    {{/each}}
                   </span>
                   {{#if term.totalText}}
                     <span class="srb-breakdown__item-meta">= {{term.totalText}}</span>
@@ -86,6 +112,29 @@
           </div>
         {{/if}}
 
+        {{#each breakdown.bottomSections as |section|}}
+          <div class="srb-breakdown__section">
+            {{#if section.label}}
+              <div class="srb-breakdown__label">{{section.label}}</div>
+            {{/if}}
+            <ul class="srb-breakdown__list">
+              {{#each section.items as |item|}}
+                <li class="srb-breakdown__item{{#if item.muted}} srb-breakdown__item--muted{{/if}}">
+                  <span class="srb-breakdown__item-main" {{#unless item.tag}}{{#if item.tooltip}}data-tooltip="{{item.tooltip}}"{{/if}}{{/unless}}>
+                    {{item.text}}
+                    {{#if item.tag}}
+                      <span class="srb-breakdown__item-tag" {{#if item.tooltip}}data-tooltip="{{item.tooltip}}"{{/if}}>{{item.tag}}</span>
+                    {{/if}}
+                  </span>
+                  {{#if item.value}}
+                    <span class="srb-breakdown__item-meta">{{item.value}}</span>
+                  {{/if}}
+                </li>
+              {{/each}}
+            </ul>
+          </div>
+        {{/each}}
+
         {{#if breakdown.unresolvedTerms.length}}
           <div class="srb-breakdown__section srb-breakdown__section--muted">
             <div class="srb-breakdown__label">{{../labels.unresolved}}</div>
@@ -105,6 +154,9 @@
 
         <div class="srb-breakdown__summary srb-breakdown__summary--footer">
           <div class="srb-breakdown__summary-side">
+            {{#each breakdown.pills as |pill|}}
+              <span class="srb-breakdown__pill{{#if pill.emphasis}} srb-breakdown__pill--emphasis{{/if}}" {{#if pill.tooltip}}data-tooltip="{{pill.tooltip}}"{{/if}}>{{pill.text}}</span>
+            {{/each}}
             {{#if breakdown.rollTotalText}}
               <span class="srb-breakdown__pill srb-breakdown__pill--emphasis">{{../labels.rollTotal}} {{breakdown.rollTotalText}}</span>
             {{/if}}

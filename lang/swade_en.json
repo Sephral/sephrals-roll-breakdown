@@ -1,0 +1,17 @@
+{
+  "SRB.Swade.TraitDie": "Trait die",
+  "SRB.Swade.WildDie": "Wild Die",
+  "SRB.Swade.WildDieHint": "The higher of trait die and Wild Die counts",
+  "SRB.Swade.Dropped": "Dropped",
+  "SRB.Swade.Aced": "Aced",
+  "SRB.Swade.TargetNumber": "TN {tn}",
+  "SRB.Swade.Outcome.CriticalFailure": "Critical failure",
+  "SRB.Swade.Outcome.Failure": "Failure",
+  "SRB.Swade.Outcome.Success": "Success",
+  "SRB.Swade.Outcome.Raise.one": "{count} raise",
+  "SRB.Swade.Outcome.Raise.other": "{count} raises",
+  "SRB.Swade.NotCounted": "Not counted",
+  "SRB.Swade.NotCountedHint": "Switched off in the roll dialog",
+  "SRB.Swade.ArmorPiercing": "AP {ap}",
+  "SRB.Swade.HeavyWeapon": "Heavy weapon"
+}

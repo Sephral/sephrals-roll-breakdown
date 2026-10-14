@@ -267,6 +267,12 @@ export function parseRoll(roll, { adapterId = "generic", rollIndex = 0, termSour
     pendingOperator = "+";
   }
 
+  return summarizeBreakdown(breakdown);
+}
+
+// Recomputes counts, confidence and visibility after the term lists changed. System adapters call it after
+// replacing parsed terms with the labeled parts the roll data provides.
+export function summarizeBreakdown(breakdown) {
   const labeledTermCount = [...breakdown.diceTerms, ...breakdown.modifiers, ...breakdown.computedTerms, ...breakdown.unresolvedTerms].filter(
     (term) => Boolean(term.sourceLabel)
   ).length;
