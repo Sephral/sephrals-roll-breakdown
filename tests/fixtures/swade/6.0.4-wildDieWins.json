@@ -1,0 +1,123 @@
+{
+  "source": "swade 6.0.4, live capture of \"wildDieWins\"",
+  "speaker": {
+    "alias": "Red",
+    "isWildcard": true
+  },
+  "rollClasses": [
+    "TraitRoll"
+  ],
+  "rolls": [
+    {
+      "class": "TraitRoll",
+      "options": {
+        "rollType": "trait",
+        "modifiers": [],
+        "groupRoll": false,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "{1d4x[Athletics],1dw6}kh",
+      "terms": [
+        {
+          "class": "PoolTerm",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d4x[Athletics]",
+            "1dw6"
+          ],
+          "modifiers": [
+            "kh"
+          ],
+          "rolls": [
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d4x[Athletics]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Athletics"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 4,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 1,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 1,
+              "evaluated": true
+            },
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1dw6",
+              "terms": [
+                {
+                  "class": "WildDie",
+                  "options": {
+                    "flavor": "Wild Die"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 6,
+                      "active": true,
+                      "exploded": true
+                    },
+                    {
+                      "result": 4,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 10,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 1,
+              "active": false,
+              "discarded": true
+            },
+            {
+              "result": 10,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 10,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "messageMode": "public",
+      "targets": [
+        {
+          "name": "Thug"
+        }
+      ]
+    }
+  }
+}

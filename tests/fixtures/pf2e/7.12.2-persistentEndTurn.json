@@ -1,0 +1,81 @@
+{
+  "source": "pf2e 7.12.2, live capture of \"persistentEndTurn\"",
+  "speaker": {
+    "alias": "Goblin Warrior",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "DamageRoll"
+  ],
+  "rolls": [
+    {
+      "class": "DamageRoll",
+      "options": {
+        "evaluatePersistent": true,
+        "critRule": "double-damage",
+        "degreeOfSuccess": null,
+        "showBreakdown": true
+      },
+      "dice": [],
+      "formula": "{(1d6)[persistent,fire]}",
+      "terms": [
+        {
+          "class": "InstancePool",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "(1d6)[persistent,fire]"
+          ],
+          "modifiers": [],
+          "rolls": [
+            {
+              "class": "DamageInstance",
+              "options": {
+                "flavor": "persistent,fire",
+                "evaluatePersistent": true
+              },
+              "dice": [],
+              "formula": "(1d6)[persistent,fire]",
+              "terms": [
+                {
+                  "class": "Grouping",
+                  "options": {
+                    "flavor": "persistent,fire"
+                  },
+                  "evaluated": true,
+                  "term": {
+                    "class": "Die",
+                    "options": {},
+                    "evaluated": true,
+                    "number": 1,
+                    "faces": 6,
+                    "modifiers": [],
+                    "results": [
+                      {
+                        "result": 1,
+                        "active": true
+                      }
+                    ]
+                  }
+                }
+              ],
+              "total": 1,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 1,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 1,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {}
+  }
+}

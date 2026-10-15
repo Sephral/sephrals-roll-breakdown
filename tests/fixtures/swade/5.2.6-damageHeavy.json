@@ -1,0 +1,86 @@
+{
+  "source": "swade 5.2.6, live capture of \"damageHeavy\"",
+  "speaker": {
+    "alias": "Red",
+    "isWildcard": true
+  },
+  "rollClasses": [
+    "DamageRoll"
+  ],
+  "rolls": [
+    {
+      "class": "DamageRoll",
+      "options": {
+        "rollType": "damage",
+        "modifiers": [
+          {
+            "label": "SRB Called Shot",
+            "value": "+4",
+            "ignore": false
+          }
+        ],
+        "acing": true,
+        "ap": 10,
+        "isHeavyWeapon": true,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "3d10x[Base Damage] + 4[SRB Called Shot]",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "Base Damage"
+          },
+          "evaluated": true,
+          "number": 3,
+          "faces": 10,
+          "modifiers": [
+            "x"
+          ],
+          "results": [
+            {
+              "result": 2,
+              "active": true
+            },
+            {
+              "result": 10,
+              "active": true,
+              "exploded": true
+            },
+            {
+              "result": 9,
+              "active": true
+            },
+            {
+              "result": 8,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": "SRB Called Shot"
+          },
+          "evaluated": true,
+          "number": 4
+        }
+      ],
+      "total": 33,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "rollMode": "publicroll",
+      "targets": []
+    }
+  }
+}

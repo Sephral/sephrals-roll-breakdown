@@ -21,6 +21,7 @@
   "SRB.Pf2e.Outcome.Failure": "Fehlschlag",
   "SRB.Pf2e.Outcome.CriticalFailure": "Kritischer Fehlschlag",
   "SRB.Pf2e.Persistent": "Anhaltend",
+  "SRB.Pf2e.PersistentHint": "Anhaltender Schaden: zählt nicht zu dieser Summe, er wird am Ende jedes Zuges gewürfelt",
   "SRB.Pf2e.DamageParts": "Schadensteile",
   "SRB.Pf2e.ExtraDice": "Zusätzliche Würfel",
   "SRB.Pf2e.Critical": "Kritischer Treffer",

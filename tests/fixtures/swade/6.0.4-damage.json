@@ -1,0 +1,77 @@
+{
+  "source": "swade 6.0.4, live capture of \"damage\"",
+  "speaker": {
+    "alias": "Red",
+    "isWildcard": true
+  },
+  "rollClasses": [
+    "DamageRoll"
+  ],
+  "rolls": [
+    {
+      "class": "DamageRoll",
+      "options": {
+        "rollType": "damage",
+        "modifiers": [],
+        "acing": true,
+        "ap": 0,
+        "isHeavyWeapon": false,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "1d8x[Strength] + 1d8x[Base Damage]",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "Strength"
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 8,
+          "modifiers": [
+            "x"
+          ],
+          "results": [
+            {
+              "result": 4,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "Base Damage"
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 8,
+          "modifiers": [
+            "x"
+          ],
+          "results": [
+            {
+              "result": 4,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 8,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "messageMode": "public",
+      "targets": []
+    }
+  }
+}

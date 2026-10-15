@@ -105,8 +105,10 @@ test("swade trait roll outcomes follow the system rules for target number and cr
   assert.equal(getTraitOutcome(3, dice([3, 2]), 4).key, "Failure");
   assert.equal(getTraitOutcome(7, dice([7, 2]), 4).key, "Success");
   assert.deepEqual(getTraitOutcome(12, dice([12, 2]), 4), { key: "Raise", raises: 2 });
-  // An extra without Wild Die fails critically on a single 1.
-  assert.equal(getTraitOutcome(1, [{ total: 1, wild: false }], 4).key, "CriticalFailure");
+  // A single 1 of an Extra is only a possible critical failure until the confirmation die shows a 1 as well.
+  assert.equal(getTraitOutcome(1, [{ total: 1, wild: false }], 4).key, "PossibleCriticalFailure");
+  assert.equal(getTraitOutcome(1, [{ total: 1, wild: false }], 4, { wildcard: false, confirmations: [1] }).key, "CriticalFailure");
+  assert.equal(getTraitOutcome(1, [{ total: 1, wild: false }], 4, { wildcard: false, confirmations: [3] }).key, "Failure");
   // The trait die shows 1 but the Wild Die does not: no critical failure.
   assert.equal(getTraitOutcome(5, dice([1, 5]), 4).key, "Success");
 });

@@ -1,0 +1,138 @@
+{
+  "source": "swade 5.2.6, live capture of \"soak\"",
+  "speaker": {
+    "alias": "Red",
+    "isWildcard": true
+  },
+  "rollClasses": [
+    "TraitRoll"
+  ],
+  "rolls": [
+    {
+      "class": "TraitRoll",
+      "options": {
+        "rollType": "trait",
+        "modifiers": [
+          {
+            "label": "Soak Modifier",
+            "value": 1,
+            "ignore": false
+          }
+        ],
+        "groupRoll": false,
+        "rerollable": false
+      },
+      "dice": [],
+      "formula": "{1d8x[Vigor],1dw6}kh + 1[Soak Modifier]",
+      "terms": [
+        {
+          "class": "PoolTerm",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d8x[Vigor]",
+            "1dw6"
+          ],
+          "modifiers": [
+            "kh"
+          ],
+          "rolls": [
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d8x[Vigor]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Vigor"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 8,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 6,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 6,
+              "evaluated": true
+            },
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1dw6",
+              "terms": [
+                {
+                  "class": "WildDie",
+                  "options": {
+                    "flavor": "Wild Die"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 3,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 3,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 6,
+              "active": true
+            },
+            {
+              "result": 3,
+              "active": false,
+              "discarded": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": "Soak Modifier"
+          },
+          "evaluated": true,
+          "number": 1
+        }
+      ],
+      "total": 7,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "rollMode": "publicroll",
+      "targets": [
+        {
+          "name": "Thug"
+        }
+      ]
+    }
+  }
+}

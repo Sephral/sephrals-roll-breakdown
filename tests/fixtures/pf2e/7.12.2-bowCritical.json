@@ -1,0 +1,137 @@
+{
+  "source": "pf2e 7.12.2, live capture of \"bowCritical\"",
+  "speaker": {
+    "alias": "Valeros",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "DamageRoll"
+  ],
+  "rolls": [
+    {
+      "class": "DamageRoll",
+      "options": {
+        "degreeOfSuccess": 3,
+        "critRule": "double-damage",
+        "showBreakdown": true
+      },
+      "dice": [],
+      "formula": "{(2 * 1d6 + 1d10)[piercing]}",
+      "terms": [
+        {
+          "class": "InstancePool",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "(2 * 1d6 + 1d10)[piercing]"
+          ],
+          "modifiers": [],
+          "rolls": [
+            {
+              "class": "DamageInstance",
+              "options": {
+                "flavor": "piercing"
+              },
+              "dice": [],
+              "formula": "(2 * 1d6 + 1d10)[piercing]",
+              "terms": [
+                {
+                  "class": "Grouping",
+                  "options": {
+                    "flavor": "piercing"
+                  },
+                  "evaluated": true,
+                  "term": {
+                    "class": "ArithmeticExpression",
+                    "options": {},
+                    "evaluated": true,
+                    "operator": "+",
+                    "operands": [
+                      {
+                        "class": "ArithmeticExpression",
+                        "options": {},
+                        "evaluated": true,
+                        "operator": "*",
+                        "operands": [
+                          {
+                            "class": "NumericTerm",
+                            "options": {},
+                            "evaluated": true,
+                            "number": 2
+                          },
+                          {
+                            "class": "Die",
+                            "options": {},
+                            "evaluated": true,
+                            "number": 1,
+                            "faces": 6,
+                            "modifiers": [],
+                            "results": [
+                              {
+                                "result": 5,
+                                "active": true
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "class": "Die",
+                        "options": {},
+                        "evaluated": true,
+                        "number": 1,
+                        "faces": 10,
+                        "modifiers": [],
+                        "results": [
+                          {
+                            "result": 8,
+                            "active": true
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "total": 18,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 18,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 18,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "damage-roll",
+        "outcome": "criticalSuccess",
+        "unadjustedOutcome": null,
+        "dc": null,
+        "substitutions": []
+      },
+      "modifiers": [],
+      "dice": [
+        {
+          "slug": "deadly-d10",
+          "label": "Deadly d10",
+          "diceNumber": 1,
+          "dieSize": "d10",
+          "critical": true,
+          "category": null,
+          "damageType": null,
+          "enabled": true,
+          "ignored": false
+        }
+      ]
+    }
+  }
+}

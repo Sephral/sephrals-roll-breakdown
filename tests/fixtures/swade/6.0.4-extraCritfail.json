@@ -1,0 +1,84 @@
+{
+  "source": "swade 6.0.4, live capture of \"extraCritfail\"",
+  "speaker": {
+    "alias": "Thug",
+    "isWildcard": false
+  },
+  "rollClasses": [
+    "TraitRoll"
+  ],
+  "rolls": [
+    {
+      "class": "TraitRoll",
+      "options": {
+        "rollType": "trait",
+        "modifiers": [],
+        "groupRoll": false,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "{1d4x[Notice]}kh",
+      "terms": [
+        {
+          "class": "PoolTerm",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d4x[Notice]"
+          ],
+          "modifiers": [
+            "kh"
+          ],
+          "rolls": [
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d4x[Notice]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Notice"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 4,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 1,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 1,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 1,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 1,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "messageMode": "public",
+      "targets": [
+        {
+          "name": "Red"
+        }
+      ]
+    }
+  }
+}

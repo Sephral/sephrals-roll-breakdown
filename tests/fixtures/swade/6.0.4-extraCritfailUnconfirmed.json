@@ -1,0 +1,114 @@
+{
+  "source": "swade 6.0.4, live capture of \"extraCritfailUnconfirmed\"",
+  "speaker": {
+    "alias": "Thug",
+    "isWildcard": false
+  },
+  "rollClasses": [
+    "SwadeRoll",
+    "TraitRoll"
+  ],
+  "rolls": [
+    {
+      "class": "SwadeRoll",
+      "options": {
+        "critfailConfirmationRoll": true
+      },
+      "dice": [],
+      "formula": "1d6[Confirmation Die]",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "Confirmation Die"
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 6,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 4,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 4,
+      "evaluated": true
+    },
+    {
+      "class": "TraitRoll",
+      "options": {
+        "rollType": "trait",
+        "modifiers": [],
+        "groupRoll": false,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "{1d6x[Shooting]}kh",
+      "terms": [
+        {
+          "class": "PoolTerm",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d6x[Shooting]"
+          ],
+          "modifiers": [
+            "kh"
+          ],
+          "rolls": [
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d6x[Shooting]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Shooting"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 1,
+                      "active": true,
+                      "hidden": true
+                    }
+                  ]
+                }
+              ],
+              "total": 1,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 1,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 1,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "messageMode": "public",
+      "targets": [
+        {
+          "name": "Red"
+        }
+      ]
+    }
+  }
+}

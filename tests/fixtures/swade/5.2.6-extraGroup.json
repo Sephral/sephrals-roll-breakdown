@@ -1,0 +1,120 @@
+{
+  "source": "swade 5.2.6, live capture of \"extraGroup\"",
+  "speaker": {
+    "alias": "Thug",
+    "isWildcard": false
+  },
+  "rollClasses": [
+    "TraitRoll"
+  ],
+  "rolls": [
+    {
+      "class": "TraitRoll",
+      "options": {
+        "rollType": "trait",
+        "modifiers": [],
+        "groupRoll": true,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "{1d4x[Notice],1dw6}kh",
+      "terms": [
+        {
+          "class": "PoolTerm",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d4x[Notice]",
+            "1dw6"
+          ],
+          "modifiers": [
+            "kh"
+          ],
+          "rolls": [
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d4x[Notice]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Notice"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 4,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 1,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 1,
+              "evaluated": true
+            },
+            {
+              "class": "TraitRoll",
+              "options": {
+                "rollType": "trait"
+              },
+              "dice": [],
+              "formula": "1dw6",
+              "terms": [
+                {
+                  "class": "WildDie",
+                  "options": {
+                    "flavor": "Wild Die"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 1,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 1,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 1,
+              "active": false,
+              "discarded": true
+            },
+            {
+              "result": 1,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 1,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "rollMode": "publicroll",
+      "targets": [
+        {
+          "name": "Red"
+        }
+      ]
+    }
+  }
+}

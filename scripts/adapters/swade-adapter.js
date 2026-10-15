@@ -1,5 +1,5 @@
 import { GenericRollAdapter } from "./generic-adapter.js";
-import { getTermType, parseRoll, summarizeBreakdown, toFiniteNumber } from "../formula-parser.js";
+import { getTermType, isDiceTerm, parseRoll, summarizeBreakdown, toFiniteNumber } from "../formula-parser.js";
 import { ensureSystemTranslationsLoaded } from "../settings.js";
 import {
   countText,
@@ -11,8 +11,9 @@ import {
   systemText
 } from "./system-adapter-utils.js";
 
-// Data shapes follow the SWADE system source: TraitRoll is a kept highest PoolTerm of the trait die and the
+// Data shapes follow the SWADE system source: TraitRoll is a kept highest PoolTerm of the trait dice and the
 // Wild Die (class WildDie), followed by labeled modifier terms; roll.options holds modifiers and targetNumber.
+// Extras confirm a critical failure with an extra SwadeRoll (options.critfailConfirmationRoll) in the same message.
 const DEFAULT_TARGET_NUMBER = 4;
 const RAISE_STEP = 4;
 
@@ -35,6 +36,19 @@ function isWildDie(die) {
   return isInstanceOf(die, null, "WildDie");
 }
 
+// An exploding die that rolled its maximum at least once
+function hasAced(die, total = null) {
+  if (Array.isArray(die?.results) && die.results.some((result) => result?.exploded)) return true;
+  const faces = toFiniteNumber(die?.faces);
+  const number = toFiniteNumber(die?.number) ?? 1;
+  return faces !== null && total !== null && total > faces * number;
+}
+
+// The die without its flavor, e.g. "2d8x" instead of "2d8x[Base Damage]"
+function dieExpression(expression) {
+  return String(expression ?? "").replace(/\[[^\]]*\]$/, "");
+}
+
 function getPoolDice(pool) {
   return pool.rolls.map((poolRoll, index) => {
     const die = poolRoll?.dice?.[0] ?? poolRoll?.terms?.[0] ?? null;
@@ -47,22 +61,45 @@ function getPoolDice(pool) {
       wild: isWildDie(die),
       label: typeof die?.flavor === "string" && die.flavor.trim() ? die.flavor.trim() : null,
       discarded: Boolean(pool.results?.[index]?.discarded),
-      aced: faces !== null && total !== null && total > faces
+      aced: hasAced(die, total)
     };
   });
 }
 
-// TraitRoll#isCritfail and #successes
-export function getTraitOutcome(total, dice, targetNumber) {
-  if (total === null) return null;
+// TraitRoll#isCritfail: most dice show a 1 (with a Wild Die, the Wild Die must be one of them)
+function isRollCritfail(dice) {
   const ones = dice.filter((entry) => entry.total === 1).length;
   const majority = ones > dice.length / 2;
   const wild = dice.find((entry) => entry.wild);
-  const critfail = wild ? majority && wild.total === 1 : majority;
-  if (critfail) return { key: "CriticalFailure", raises: 0 };
+  return wild ? majority && wild.total === 1 : majority;
+}
+
+// SwadeChatMessage#isCritfail and #hasConfirmedCritfail: Wild Cards, group rolls and rolls with several dice fail
+// critically right away. A single die of an Extra is only a possible critical failure until a confirmation die is
+// rolled, and only a 1 on that die confirms it.
+function getCritfailState(dice, { wildcard = null, confirmations = [] } = {}) {
+  if (!dice.length || !isRollCritfail(dice)) return null;
+  if (wildcard === true || dice.length > 1) return "CriticalFailure";
+  if (!confirmations.length) return "PossibleCriticalFailure";
+  return confirmations.every((total) => total === 1) ? "CriticalFailure" : null;
+}
+
+// TraitRoll#successes for one result
+function getResultOutcome(total, targetNumber) {
   if (total < targetNumber) return { key: "Failure", raises: 0 };
   if (total < targetNumber + RAISE_STEP) return { key: "Success", raises: 0 };
   return { key: "Raise", raises: Math.floor((total - targetNumber) / RAISE_STEP) };
+}
+
+export function getTraitOutcome(total, dice, targetNumber, critfailContext = {}) {
+  if (total === null) return null;
+  const critfail = getCritfailState(dice, critfailContext);
+  if (critfail) return { key: critfail, raises: 0 };
+  return getResultOutcome(total, targetNumber);
+}
+
+function outcomeText(outcome) {
+  return outcome.key === "Raise" ? countText("Swade.Outcome.Raise", outcome.raises) : systemText(`Swade.Outcome.${outcome.key}`);
 }
 
 function buildIgnoredSection(roll) {
@@ -78,7 +115,21 @@ function buildIgnoredSection(roll) {
   return createSection(systemText("Swade.NotCounted"), items);
 }
 
-export function buildSwadeTraitBreakdown(roll, { rollIndex = 0 } = {}) {
+// With a rate of fire above 1 every kept trait die is a result of its own: the die plus all modifiers.
+function buildResultsSection(dice, modifierTotal, targetNumber, critfail) {
+  const kept = dice.filter((entry) => !entry.discarded && entry.total !== null);
+  if (kept.length < 2) return null;
+  return createSection(systemText("Swade.Results"), kept.map((entry) => {
+    const result = entry.total + modifierTotal;
+    return createItem({
+      text: entry.label ?? systemText(entry.wild ? "Swade.WildDie" : "Swade.TraitDie"),
+      tag: critfail ? null : outcomeText(getResultOutcome(result, targetNumber)),
+      value: String(result)
+    });
+  }));
+}
+
+export function buildSwadeTraitBreakdown(roll, { rollIndex = 0, wildcard = null, confirmations = [] } = {}) {
   const breakdown = parseRoll(roll, { adapterId: "swade", rollIndex });
   const pool = getPoolTerm(roll);
   const dice = pool ? getPoolDice(pool) : [];
@@ -103,40 +154,61 @@ export function buildSwadeTraitBreakdown(roll, { rollIndex = 0 } = {}) {
 
   const total = toFiniteNumber(roll?.total);
   const targetNumber = toFiniteNumber(roll?.options?.targetNumber) ?? DEFAULT_TARGET_NUMBER;
-  const outcome = dice.length ? getTraitOutcome(total, dice, targetNumber) : null;
+  const critfail = getCritfailState(dice, { wildcard, confirmations });
+  const kept = dice.filter((entry) => !entry.discarded);
   const pills = [createPill(systemText("Swade.TargetNumber", { tn: targetNumber }))];
-  if (outcome) {
-    const text = outcome.key === "Raise"
-      ? countText("Swade.Outcome.Raise", outcome.raises)
-      : systemText(`Swade.Outcome.${outcome.key}`);
-    pills.push(createPill(text, { emphasis: true }));
+  let resultsSection = null;
+
+  if (kept.length > 1 && total !== null) {
+    // The sum of several kept dice is no result in SWADE, so the panel lists each result instead of a total.
+    const modifierTotal = total - kept.reduce((sum, entry) => sum + (entry.total ?? 0), 0);
+    resultsSection = buildResultsSection(dice, modifierTotal, targetNumber, critfail);
+    breakdown.rollTotal = null;
+    if (critfail) pills.push(createPill(systemText(`Swade.Outcome.${critfail}`), { emphasis: true, tooltip: critfailHint(critfail) }));
+  } else if (dice.length) {
+    const outcome = getTraitOutcome(total, dice, targetNumber, { wildcard, confirmations });
+    if (outcome) pills.push(createPill(outcomeText(outcome), { emphasis: true, tooltip: critfailHint(outcome.key) }));
   }
 
   return finalizeBreakdown(breakdown, {
-    sections: [buildIgnoredSection(roll)],
+    sections: [resultsSection, buildIgnoredSection(roll)],
     pills,
     forceVisible: breakdown.diceTerms.length > 0
   });
 }
 
+function critfailHint(key) {
+  return key === "PossibleCriticalFailure" ? systemText("Swade.PossibleCriticalFailureHint") : null;
+}
+
 export function buildSwadeDamageBreakdown(roll, { rollIndex = 0 } = {}) {
   const breakdown = parseRoll(roll, { adapterId: "swade", rollIndex });
-  for (const term of breakdown.diceTerms) {
-    if (Number.isFinite(term.faces) && Number.isFinite(term.number) && Number.isFinite(term.total) && term.total > term.faces * term.number) {
-      term.notes = [systemText("Swade.Aced")];
-    }
-  }
+  // Top level dice in formula order, the same order the generic parse lists them in
+  const dice = (roll?.terms ?? []).filter((term) => isDiceTerm(term));
+  breakdown.diceTerms.forEach((term, index) => {
+    term.expression = dieExpression(term.expression);
+    if (hasAced(dice[index], term.total)) term.notes = [systemText("Swade.Aced")];
+  });
 
   const pills = [];
   const ap = toFiniteNumber(roll?.options?.ap);
   if (ap) pills.push(createPill(systemText("Swade.ArmorPiercing", { ap })));
   if (roll?.options?.isHeavyWeapon) pills.push(createPill(systemText("Swade.HeavyWeapon")));
 
+  // Strength die plus weapon die is the usual melee damage, and an ace is worth explaining as well.
+  const explains = breakdown.modifiers.length > 0 || breakdown.diceTerms.length > 1 || breakdown.diceTerms.some((term) => term.notes?.length);
   return finalizeBreakdown(breakdown, {
     sections: [buildIgnoredSection(roll)],
     pills,
-    forceVisible: breakdown.diceTerms.length > 0 && breakdown.modifiers.length > 0
+    forceVisible: breakdown.diceTerms.length > 0 && explains
   });
+}
+
+function getConfirmationTotals(message) {
+  return (message?.rolls ?? [])
+    .filter((roll) => roll?.options?.critfailConfirmationRoll)
+    .map((roll) => toFiniteNumber(roll.total))
+    .filter((total) => total !== null);
 }
 
 export class SwadeRollAdapter extends GenericRollAdapter {
@@ -151,10 +223,15 @@ export class SwadeRollAdapter extends GenericRollAdapter {
 
   async buildBreakdowns(message) {
     await ensureSystemTranslationsLoaded();
+    const confirmations = getConfirmationTotals(message);
+    const isWildcard = message?.speakerActor?.isWildcard;
+    const wildcard = typeof isWildcard === "boolean" ? isWildcard : null;
     return (message?.rolls ?? [])
       .map((roll, index) => {
         if (!roll) return null;
-        if (isTraitRoll(roll)) return buildSwadeTraitBreakdown(roll, { rollIndex: index });
+        // The confirmation die of an Extra is part of the trait roll's result
+        if (roll.options?.critfailConfirmationRoll) return null;
+        if (isTraitRoll(roll)) return buildSwadeTraitBreakdown(roll, { rollIndex: index, wildcard, confirmations });
         if (isDamageRoll(roll)) return buildSwadeDamageBreakdown(roll, { rollIndex: index });
         return parseRoll(roll, { adapterId: this.id, rollIndex: index });
       })

@@ -1,0 +1,122 @@
+{
+  "source": "pf2e 7.12.2, live capture of \"rerollKeepHigher\"",
+  "speaker": {
+    "alias": "Valeros",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "CheckRoll"
+  ],
+  "rolls": [
+    {
+      "class": "CheckRoll",
+      "options": {
+        "type": "skill-check",
+        "action": null,
+        "dice": "1d20",
+        "isReroll": true,
+        "totalModifier": 3,
+        "damaging": false,
+        "showBreakdown": true,
+        "degreeOfSuccess": 2
+      },
+      "dice": [],
+      "formula": "1d20 + 3",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 3,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 3
+        }
+      ],
+      "total": 6,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "skill-check",
+        "outcome": "success",
+        "unadjustedOutcome": "failure",
+        "rollTwice": false,
+        "isReroll": true,
+        "dc": {
+          "value": 3
+        },
+        "substitutions": []
+      },
+      "modifiers": [
+        {
+          "slug": "cha",
+          "label": "Charisma",
+          "modifier": 0,
+          "type": "ability",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "modifier"
+        },
+        {
+          "slug": "proficiency",
+          "label": "Trained",
+          "modifier": 3,
+          "type": "proficiency",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "srb-heroism",
+          "label": "SRB Heroism",
+          "modifier": 1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "frightened",
+          "label": "Frightened 1",
+          "modifier": -1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        }
+      ]
+    }
+  }
+}

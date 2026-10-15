@@ -1,0 +1,86 @@
+{
+  "source": "pf2e 8.6.1, live capture of \"spellDamage\"",
+  "speaker": {
+    "alias": "Ezren",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "DamageRoll"
+  ],
+  "rolls": [
+    {
+      "class": "DamageRoll",
+      "options": {
+        "showBreakdown": true
+      },
+      "dice": [],
+      "formula": "{2d4[electricity]}",
+      "terms": [
+        {
+          "class": "InstancePool",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "2d4[electricity]"
+          ],
+          "modifiers": [],
+          "rolls": [
+            {
+              "class": "DamageInstance",
+              "options": {
+                "flavor": "electricity"
+              },
+              "dice": [],
+              "formula": "2d4[electricity]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "electricity"
+                  },
+                  "evaluated": true,
+                  "number": 2,
+                  "faces": 4,
+                  "modifiers": [],
+                  "results": [
+                    {
+                      "result": 2,
+                      "active": true
+                    },
+                    {
+                      "result": 1,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 3,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 3,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 3,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "damage-roll",
+        "outcome": null,
+        "unadjustedOutcome": null,
+        "dc": null,
+        "substitutions": []
+      },
+      "modifiers": [],
+      "dice": []
+    }
+  }
+}

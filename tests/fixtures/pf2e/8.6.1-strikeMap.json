@@ -1,0 +1,179 @@
+{
+  "source": "pf2e 8.6.1, live capture of \"strikeMap\"",
+  "speaker": {
+    "alias": "Valeros",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "CheckRoll"
+  ],
+  "rolls": [
+    {
+      "class": "CheckRoll",
+      "options": {
+        "type": "attack-roll",
+        "action": "strike",
+        "dice": "1d20",
+        "isReroll": false,
+        "totalModifier": 7,
+        "damaging": true,
+        "showBreakdown": true,
+        "degreeOfSuccess": 2
+      },
+      "dice": [],
+      "formula": "1d20 + 7",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 11,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 7
+        }
+      ],
+      "total": 18,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "attack-roll",
+        "outcome": "success",
+        "unadjustedOutcome": "success",
+        "rollTwice": false,
+        "isReroll": false,
+        "dc": {
+          "slug": "armor",
+          "value": 16,
+          "scope": "attack"
+        },
+        "substitutions": []
+      },
+      "modifiers": [
+        {
+          "slug": "str",
+          "label": "Strength",
+          "modifier": 4,
+          "type": "ability",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "modifier"
+        },
+        {
+          "slug": "proficiency",
+          "label": "Expert",
+          "modifier": 5,
+          "type": "proficiency",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "weapon-potency",
+          "label": "Weapon Potency",
+          "modifier": 1,
+          "type": "item",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "double-slice",
+          "label": "Double Slice",
+          "modifier": -2,
+          "type": "untyped",
+          "enabled": false,
+          "ignored": true,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        },
+        {
+          "slug": "srb-bless",
+          "label": "SRB Bless",
+          "modifier": 1,
+          "type": "status",
+          "enabled": false,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "srb-heroism",
+          "label": "SRB Heroism",
+          "modifier": 1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "srb-aid",
+          "label": "SRB Aid",
+          "modifier": 2,
+          "type": "circumstance",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "frightened",
+          "label": "Frightened 1",
+          "modifier": -1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        },
+        {
+          "slug": "multiple-attack-penalty",
+          "label": "Multiple Attack Penalty",
+          "modifier": -5,
+          "type": "untyped",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        }
+      ]
+    }
+  }
+}

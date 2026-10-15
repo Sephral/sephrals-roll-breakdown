@@ -1,0 +1,106 @@
+{
+  "source": "swade 6.0.4, live capture of \"damageRaise\"",
+  "speaker": {
+    "alias": "Red",
+    "isWildcard": true
+  },
+  "rollClasses": [
+    "DamageRoll"
+  ],
+  "rolls": [
+    {
+      "class": "DamageRoll",
+      "options": {
+        "rollType": "damage",
+        "modifiers": [
+          {
+            "label": "Bonus Damage",
+            "value": "+1d6x"
+          }
+        ],
+        "acing": true,
+        "ap": 0,
+        "isHeavyWeapon": false,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "1d8x[Strength] + 1d8x[Base Damage] + 1d6x[Bonus Damage]",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "Strength"
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 8,
+          "modifiers": [
+            "x"
+          ],
+          "results": [
+            {
+              "result": 5,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "Base Damage"
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 8,
+          "modifiers": [
+            "x"
+          ],
+          "results": [
+            {
+              "result": 1,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "Bonus Damage"
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 6,
+          "modifiers": [
+            "x"
+          ],
+          "results": [
+            {
+              "result": 4,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 10,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "messageMode": "public",
+      "targets": []
+    }
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "source": "swade 5.2.6, live capture of \"fightingMods\"",
+  "speaker": {
+    "alias": "Red",
+    "isWildcard": true
+  },
+  "rollClasses": [
+    "TraitRoll"
+  ],
+  "rolls": [
+    {
+      "class": "TraitRoll",
+      "options": {
+        "rollType": "trait",
+        "modifiers": [
+          {
+            "label": "SRB Gang Up",
+            "value": "+2",
+            "ignore": false
+          },
+          {
+            "label": "SRB Cover",
+            "value": "-2",
+            "ignore": true
+          },
+          {
+            "label": "Multi-Action Penalty",
+            "value": -2
+          }
+        ],
+        "groupRoll": false,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "{1d8x[Fighting],1dw6}kh + 2[SRB Gang Up] - 2[Multi-Action Penalty]",
+      "terms": [
+        {
+          "class": "PoolTerm",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d8x[Fighting]",
+            "1dw6"
+          ],
+          "modifiers": [
+            "kh"
+          ],
+          "rolls": [
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d8x[Fighting]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Fighting"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 8,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 7,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 7,
+              "evaluated": true
+            },
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1dw6",
+              "terms": [
+                {
+                  "class": "WildDie",
+                  "options": {
+                    "flavor": "Wild Die"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 1,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 1,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 7,
+              "active": true
+            },
+            {
+              "result": 1,
+              "active": false,
+              "discarded": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": "SRB Gang Up"
+          },
+          "evaluated": true,
+          "number": 2
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "-"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": "Multi-Action Penalty"
+          },
+          "evaluated": true,
+          "number": 2
+        }
+      ],
+      "total": 7,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "rollMode": "publicroll",
+      "targets": [
+        {
+          "name": "Thug"
+        }
+      ]
+    }
+  }
+}

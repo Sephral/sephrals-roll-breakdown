@@ -21,6 +21,7 @@
   "SRB.Pf2e.Outcome.Failure": "Failure",
   "SRB.Pf2e.Outcome.CriticalFailure": "Critical failure",
   "SRB.Pf2e.Persistent": "Persistent",
+  "SRB.Pf2e.PersistentHint": "Persistent damage: not part of this total, it is rolled at the end of each turn",
   "SRB.Pf2e.DamageParts": "Damage parts",
   "SRB.Pf2e.ExtraDice": "Extra dice",
   "SRB.Pf2e.Critical": "Critical hit",

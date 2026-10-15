@@ -1,0 +1,129 @@
+{
+  "source": "pf2e 7.12.2, live capture of \"saveReflex\"",
+  "speaker": {
+    "alias": "Valeros",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "CheckRoll"
+  ],
+  "rolls": [
+    {
+      "class": "CheckRoll",
+      "options": {
+        "type": "saving-throw",
+        "action": null,
+        "dice": "2d20kl",
+        "isReroll": false,
+        "totalModifier": 7,
+        "damaging": false,
+        "showBreakdown": true,
+        "degreeOfSuccess": 1
+      },
+      "dice": [],
+      "formula": "2d20kl + 7",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 2,
+          "faces": 20,
+          "modifiers": [
+            "kl"
+          ],
+          "results": [
+            {
+              "result": 17,
+              "active": false,
+              "discarded": true
+            },
+            {
+              "result": 5,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 7
+        }
+      ],
+      "total": 12,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "saving-throw",
+        "outcome": "failure",
+        "unadjustedOutcome": "failure",
+        "rollTwice": "keep-lower",
+        "isReroll": false,
+        "dc": {
+          "value": 16
+        },
+        "substitutions": []
+      },
+      "modifiers": [
+        {
+          "slug": "dex",
+          "label": "Dexterity",
+          "modifier": 2,
+          "type": "ability",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "modifier"
+        },
+        {
+          "slug": "proficiency",
+          "label": "Expert",
+          "modifier": 5,
+          "type": "proficiency",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "srb-heroism",
+          "label": "SRB Heroism",
+          "modifier": 1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "frightened",
+          "label": "Frightened 1",
+          "modifier": -1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        }
+      ]
+    }
+  }
+}

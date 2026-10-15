@@ -1,0 +1,83 @@
+{
+  "source": "pf2e 8.6.1, live capture of \"npcDamage\"",
+  "speaker": {
+    "alias": "Goblin Warrior",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "DamageRoll"
+  ],
+  "rolls": [
+    {
+      "class": "DamageRoll",
+      "options": {
+        "degreeOfSuccess": 2,
+        "showBreakdown": false
+      },
+      "dice": [],
+      "formula": "{1d6[slashing]}",
+      "terms": [
+        {
+          "class": "InstancePool",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d6[slashing]"
+          ],
+          "modifiers": [],
+          "rolls": [
+            {
+              "class": "DamageInstance",
+              "options": {
+                "flavor": "slashing"
+              },
+              "dice": [],
+              "formula": "1d6[slashing]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "slashing"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [],
+                  "results": [
+                    {
+                      "result": 5,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 5,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 5,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 5,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "damage-roll",
+        "outcome": "success",
+        "unadjustedOutcome": null,
+        "dc": null,
+        "substitutions": []
+      },
+      "modifiers": [],
+      "dice": []
+    }
+  }
+}

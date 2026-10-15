@@ -1,0 +1,122 @@
+{
+  "source": "pf2e 8.6.1, live capture of \"saveAdjusted\"",
+  "speaker": {
+    "alias": "Valeros",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "CheckRoll"
+  ],
+  "rolls": [
+    {
+      "class": "CheckRoll",
+      "options": {
+        "type": "saving-throw",
+        "action": null,
+        "dice": "1d20",
+        "isReroll": false,
+        "totalModifier": 7,
+        "damaging": false,
+        "showBreakdown": true,
+        "degreeOfSuccess": 3
+      },
+      "dice": [],
+      "formula": "1d20 + 7",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 12,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 7
+        }
+      ],
+      "total": 19,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "saving-throw",
+        "outcome": "criticalSuccess",
+        "unadjustedOutcome": "success",
+        "rollTwice": false,
+        "isReroll": false,
+        "dc": {
+          "value": 16
+        },
+        "substitutions": []
+      },
+      "modifiers": [
+        {
+          "slug": "con",
+          "label": "Constitution",
+          "modifier": 2,
+          "type": "ability",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "modifier"
+        },
+        {
+          "slug": "proficiency",
+          "label": "Expert",
+          "modifier": 5,
+          "type": "proficiency",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "srb-heroism",
+          "label": "SRB Heroism",
+          "modifier": 1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "frightened",
+          "label": "Frightened 1",
+          "modifier": -1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        }
+      ]
+    }
+  }
+}

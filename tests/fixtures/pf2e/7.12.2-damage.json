@@ -1,0 +1,174 @@
+{
+  "source": "pf2e 7.12.2, live capture of \"damage\"",
+  "speaker": {
+    "alias": "Valeros",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "DamageRoll"
+  ],
+  "rolls": [
+    {
+      "class": "DamageRoll",
+      "options": {
+        "degreeOfSuccess": 2,
+        "showBreakdown": true
+      },
+      "dice": [],
+      "formula": "{(2d8 + 4)[slashing],1d6[fire]}",
+      "terms": [
+        {
+          "class": "InstancePool",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "(2d8 + 4)[slashing]",
+            "1d6[fire]"
+          ],
+          "modifiers": [],
+          "rolls": [
+            {
+              "class": "DamageInstance",
+              "options": {
+                "flavor": "slashing"
+              },
+              "dice": [],
+              "formula": "(2d8 + 4)[slashing]",
+              "terms": [
+                {
+                  "class": "Grouping",
+                  "options": {
+                    "flavor": "slashing"
+                  },
+                  "evaluated": true,
+                  "term": {
+                    "class": "ArithmeticExpression",
+                    "options": {},
+                    "evaluated": true,
+                    "operator": "+",
+                    "operands": [
+                      {
+                        "class": "Die",
+                        "options": {},
+                        "evaluated": true,
+                        "number": 2,
+                        "faces": 8,
+                        "modifiers": [],
+                        "results": [
+                          {
+                            "result": 7,
+                            "active": true
+                          },
+                          {
+                            "result": 6,
+                            "active": true
+                          }
+                        ]
+                      },
+                      {
+                        "class": "NumericTerm",
+                        "options": {},
+                        "evaluated": true,
+                        "number": 4
+                      }
+                    ]
+                  }
+                }
+              ],
+              "total": 17,
+              "evaluated": true
+            },
+            {
+              "class": "DamageInstance",
+              "options": {
+                "flavor": "fire"
+              },
+              "dice": [],
+              "formula": "1d6[fire]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "fire"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [],
+                  "results": [
+                    {
+                      "result": 2,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 2,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 17,
+              "active": true
+            },
+            {
+              "result": 2,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 19,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "damage-roll",
+        "outcome": "success",
+        "unadjustedOutcome": null,
+        "dc": null,
+        "substitutions": []
+      },
+      "modifiers": [
+        {
+          "slug": "str",
+          "label": "Strength",
+          "modifier": 4,
+          "type": "ability",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "modifier"
+        }
+      ],
+      "dice": [
+        {
+          "slug": "flaming",
+          "label": "Flaming",
+          "diceNumber": 1,
+          "dieSize": "d6",
+          "critical": null,
+          "category": null,
+          "damageType": "fire",
+          "enabled": true,
+          "ignored": false
+        },
+        {
+          "slug": "flaming",
+          "label": "Flaming",
+          "diceNumber": 1,
+          "dieSize": "d10",
+          "critical": true,
+          "category": "persistent",
+          "damageType": "fire",
+          "enabled": true,
+          "ignored": false
+        }
+      ]
+    }
+  }
+}

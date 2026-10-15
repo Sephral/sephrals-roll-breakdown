@@ -1,0 +1,153 @@
+{
+  "source": "pf2e 8.6.1, live capture of \"skill\"",
+  "speaker": {
+    "alias": "Valeros",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "CheckRoll"
+  ],
+  "rolls": [
+    {
+      "class": "CheckRoll",
+      "options": {
+        "type": "skill-check",
+        "action": null,
+        "dice": "10",
+        "isReroll": false,
+        "totalModifier": 7,
+        "damaging": false,
+        "showBreakdown": true,
+        "degreeOfSuccess": 2
+      },
+      "dice": [],
+      "formula": "10 + 7",
+      "terms": [
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 10
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 7
+        }
+      ],
+      "total": 17,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "skill-check",
+        "outcome": "success",
+        "unadjustedOutcome": "success",
+        "rollTwice": false,
+        "isReroll": false,
+        "dc": {
+          "value": 15
+        },
+        "substitutions": [
+          {
+            "slug": "assurance",
+            "label": "Assurance",
+            "value": 10,
+            "required": false,
+            "selected": false,
+            "effectType": "fortune"
+          },
+          {
+            "slug": "srb-assurance",
+            "label": "SRB Assurance",
+            "value": 10,
+            "required": true,
+            "selected": true,
+            "effectType": "fortune"
+          }
+        ]
+      },
+      "modifiers": [
+        {
+          "slug": "str",
+          "label": "Strength",
+          "modifier": 4,
+          "type": "ability",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "modifier"
+        },
+        {
+          "slug": "proficiency",
+          "label": "Trained",
+          "modifier": 3,
+          "type": "proficiency",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "armor-check-penalty",
+          "label": "Armor Check Penalty",
+          "modifier": -2,
+          "type": "untyped",
+          "enabled": false,
+          "ignored": true,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        },
+        {
+          "slug": "no-crowbar",
+          "label": "No Crowbar",
+          "modifier": -2,
+          "type": "item",
+          "enabled": false,
+          "ignored": true,
+          "hideIfDisabled": true,
+          "critical": null,
+          "kind": "penalty"
+        },
+        {
+          "slug": "srb-heroism",
+          "label": "SRB Heroism",
+          "modifier": 1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "frightened",
+          "label": "Frightened 1",
+          "modifier": -1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        }
+      ]
+    }
+  }
+}

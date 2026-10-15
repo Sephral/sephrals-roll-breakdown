@@ -50,16 +50,25 @@ The DC, the defense value and the margin are shown to the GM only, the same way 
 ### Pathfinder 2e
 
 * **Checks and attacks:** the single bonus of the roll is split into its named modifiers, each with its type (status, circumstance, item and so on). This happens only when the modifiers add up to that bonus. Modifiers that did not count, for example because a higher bonus of the same type applies, are listed separately.
-* **Fortune and misfortune:** rolling twice and roll substitutions are listed with their source.
-* **Result:** degree of success, DC and margin. Players see the DC and the result only when the Pathfinder 2e settings show them to players.
-* **Damage:** the dice per damage type, each damage part, extra dice and the damage modifiers, and whether a critical hit doubled the dice or the damage.
+* **Fortune and misfortune:** rolling twice and roll substitutions are listed with their source. A substitution such as Assurance takes the place of the die.
+* **Result:** degree of success, DC and margin. When a rule changed the degree of success, the result names the degree before it. A reroll shows the result of the roll that was kept. Players see the DC and the result only when the Pathfinder 2e settings show them to players.
+* **Damage:** the dice per damage type, each damage part, extra dice and the damage modifiers, and whether a critical hit doubled the dice or the damage. Extra dice and modifiers that only count on a critical hit appear only on critical hits.
+* **Persistent damage:** a hit lists the persistent damage without a result, because Pathfinder 2e rolls it at the end of each turn. That roll then gets its own breakdown.
 
 When Pathfinder 2e hides the breakdown of a roll from players, Roll Breakdown hides it too.
+
+Tested with Pathfinder 2e 7.12.2 on Foundry 13 and 8.6.1 on Foundry 14.
 
 ### Savage Worlds
 
 * **Trait rolls:** trait die and Wild Die, which die counted, aces, the named modifiers, the target number and the result with its raises. Modifiers that were switched off in the roll dialog are listed as not counted.
-* **Damage rolls:** aces, armor piercing and heavy weapons.
+* **Rate of fire:** with more than one trait die every kept die is a result of its own, each with its raises, the same way the chat card shows them.
+* **Critical failures:** Wild Cards and group rolls fail critically right away. For an Extra the panel shows a possible critical failure until the confirmation die is rolled, and only a 1 on that die confirms it.
+* **Damage rolls:** the Strength die and the weapon dice with their aces, armor piercing and heavy weapons.
+
+Initiative in Savage Worlds uses action cards instead of dice, so it gets no breakdown.
+
+Tested with Savage Worlds 5.2.6 on Foundry 13 and 6.0.4 on Foundry 14.
 
 ### Other systems
 

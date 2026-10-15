@@ -256,7 +256,10 @@ test("pf2e shows fortune, misfortune and roll substitutions", async () => {
       ["Assurance", "Fortune", "10"],
       ["Fortune and misfortune cancel out", null, null]
     ]);
-    assert.deepEqual(assurance.modifiers.map((entry) => [entry.sourceLabel ?? null, entry.value]), [[null, 10], ["Expert", 7]]);
+    // The substituted value takes the place of the d20.
+    assert.deepEqual(assurance.diceTerms.map((term) => [term.expression, term.sourceLabel, term.sourceDetail, term.totalText]), [["10", "Assurance", "Fortune", "10"]]);
+    assert.deepEqual(assurance.modifiers.map((entry) => [entry.sourceLabel ?? null, entry.value]), [["Expert", 7]]);
+    assert.equal(assurance.totalStaticModifier, 7);
   } finally {
     cleanup();
   }
@@ -284,15 +287,16 @@ test("pf2e damage rolls list dice per damage type, the instances and the listed 
     };
 
     const [breakdown] = await adapter.buildBreakdowns(message);
-    assert.deepEqual(breakdown.diceTerms.map((term) => [term.expression, term.sourceLabel, term.totalText]), [["1d8", "Slashing", "5"], ["1d6", "Fire", "3"]]);
-    assert.equal(breakdown.diceTerms[1].sourceDetail, "Persistent");
+    // Persistent damage is neither counted nor shown before it is rolled at the end of a turn.
+    assert.deepEqual(breakdown.diceTerms.map((term) => [term.expression, term.sourceLabel, term.totalText, term.muted]), [["1d8", "Slashing", "5", false], ["1d6", "Fire", null, true]]);
+    assert.match(breakdown.diceTerms[1].sourceDetail, /^Persistent damage/);
     assert.deepEqual(breakdown.computedTerms, []);
     assert.deepEqual(breakdown.modifiers.map((entry) => [entry.sourceLabel, entry.value]), [["Strength", 4]]);
 
     const parts = breakdown.sections.find((section) => section.label === "Damage parts");
-    assert.deepEqual(parts.items.map((item) => [item.text, item.tag, item.value]), [["(1d8 + 4)", "Slashing", "18"], ["1d6", "Fire, Persistent", "3"]]);
+    assert.deepEqual(parts.items.map((item) => [item.text, item.tag, item.value, item.muted]), [["(1d8 + 4)", "Slashing", "18", false], ["1d6", "Fire, Persistent", null, true]]);
     const extra = breakdown.sections.find((section) => section.label === "Extra dice");
-    assert.deepEqual(extra.items.map((item) => [item.text, item.tag, item.value]), [["Flaming", "Fire", "1d6"]]);
+    assert.deepEqual(extra.items.map((item) => [item.text, item.tag, item.value]), [["Flaming", "Fire, Persistent", "1d6"]]);
     assert.deepEqual(breakdown.pills.map((pill) => [pill.text, pill.tooltip]), [["Critical hit", "Damage is doubled"]]);
 
     globalThis.game.system.id = "dnd5e";

@@ -1,0 +1,157 @@
+{
+  "source": "swade 6.0.4, live capture of \"woundsFatigue\"",
+  "speaker": {
+    "alias": "Red",
+    "isWildcard": true
+  },
+  "rollClasses": [
+    "TraitRoll"
+  ],
+  "rolls": [
+    {
+      "class": "TraitRoll",
+      "options": {
+        "rollType": "trait",
+        "modifiers": [
+          {
+            "label": "Fatigue",
+            "value": -1,
+            "ignore": false
+          },
+          {
+            "label": "Wounds",
+            "value": -2,
+            "ignore": false
+          }
+        ],
+        "groupRoll": false,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "{1d4x[Notice],1dw6}kh - 1[Fatigue] - 2[Wounds]",
+      "terms": [
+        {
+          "class": "PoolTerm",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d4x[Notice]",
+            "1dw6"
+          ],
+          "modifiers": [
+            "kh"
+          ],
+          "rolls": [
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d4x[Notice]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Notice"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 4,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 3,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 3,
+              "evaluated": true
+            },
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1dw6",
+              "terms": [
+                {
+                  "class": "WildDie",
+                  "options": {
+                    "flavor": "Wild Die"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 4,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 4,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 3,
+              "active": false,
+              "discarded": true
+            },
+            {
+              "result": 4,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "-"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": "Fatigue"
+          },
+          "evaluated": true,
+          "number": 1
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "-"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": "Wounds"
+          },
+          "evaluated": true,
+          "number": 2
+        }
+      ],
+      "total": 1,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "messageMode": "public",
+      "targets": [
+        {
+          "name": "Thug"
+        }
+      ]
+    }
+  }
+}

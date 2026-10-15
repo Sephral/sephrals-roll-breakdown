@@ -1,0 +1,168 @@
+{
+  "source": "pf2e 7.12.2, live capture of \"strikeNat20\"",
+  "speaker": {
+    "alias": "Valeros",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "CheckRoll"
+  ],
+  "rolls": [
+    {
+      "class": "CheckRoll",
+      "options": {
+        "type": "attack-roll",
+        "action": "strike",
+        "dice": "1d20",
+        "isReroll": false,
+        "totalModifier": 12,
+        "damaging": true,
+        "showBreakdown": true,
+        "degreeOfSuccess": 3
+      },
+      "dice": [],
+      "formula": "1d20 + 12",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 20,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 12
+        }
+      ],
+      "total": 32,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "attack-roll",
+        "outcome": "criticalSuccess",
+        "unadjustedOutcome": "criticalSuccess",
+        "rollTwice": false,
+        "isReroll": false,
+        "dc": {
+          "slug": "armor",
+          "value": 17,
+          "scope": "attack"
+        },
+        "substitutions": []
+      },
+      "modifiers": [
+        {
+          "slug": "str",
+          "label": "Strength",
+          "modifier": 4,
+          "type": "ability",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "modifier"
+        },
+        {
+          "slug": "proficiency",
+          "label": "Expert",
+          "modifier": 5,
+          "type": "proficiency",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "weapon-potency",
+          "label": "Weapon Potency",
+          "modifier": 1,
+          "type": "item",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "double-slice",
+          "label": "Double Slice",
+          "modifier": -2,
+          "type": "untyped",
+          "enabled": false,
+          "ignored": true,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        },
+        {
+          "slug": "srb-bless",
+          "label": "SRB Bless",
+          "modifier": 1,
+          "type": "status",
+          "enabled": false,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "srb-heroism",
+          "label": "SRB Heroism",
+          "modifier": 1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "srb-aid",
+          "label": "SRB Aid",
+          "modifier": 2,
+          "type": "circumstance",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "bonus"
+        },
+        {
+          "slug": "frightened",
+          "label": "Frightened 1",
+          "modifier": -1,
+          "type": "status",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "penalty"
+        }
+      ]
+    }
+  }
+}

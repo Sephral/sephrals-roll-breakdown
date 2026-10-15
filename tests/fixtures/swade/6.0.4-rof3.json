@@ -1,0 +1,189 @@
+{
+  "source": "swade 6.0.4, live capture of \"rof3\"",
+  "speaker": {
+    "alias": "Red",
+    "isWildcard": true
+  },
+  "rollClasses": [
+    "TraitRoll"
+  ],
+  "rolls": [
+    {
+      "class": "TraitRoll",
+      "options": {
+        "rollType": "trait",
+        "modifiers": [],
+        "groupRoll": false,
+        "rerollable": true
+      },
+      "dice": [],
+      "formula": "{1d8x[Shooting],1d8x[Shooting],1d8x[Shooting],1dw6}kh3",
+      "terms": [
+        {
+          "class": "PoolTerm",
+          "options": {},
+          "evaluated": true,
+          "terms": [
+            "1d8x[Shooting]",
+            "1d8x[Shooting]",
+            "1d8x[Shooting]",
+            "1dw6"
+          ],
+          "modifiers": [
+            "kh3"
+          ],
+          "rolls": [
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d8x[Shooting]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Shooting"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 8,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 2,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 2,
+              "evaluated": true
+            },
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d8x[Shooting]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Shooting"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 8,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 8,
+                      "active": true,
+                      "exploded": true
+                    },
+                    {
+                      "result": 4,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 12,
+              "evaluated": true
+            },
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1d8x[Shooting]",
+              "terms": [
+                {
+                  "class": "Die",
+                  "options": {
+                    "flavor": "Shooting"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 8,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 7,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 7,
+              "evaluated": true
+            },
+            {
+              "class": "Roll",
+              "options": {},
+              "dice": [],
+              "formula": "1dw6",
+              "terms": [
+                {
+                  "class": "WildDie",
+                  "options": {
+                    "flavor": "Wild Die"
+                  },
+                  "evaluated": true,
+                  "number": 1,
+                  "faces": 6,
+                  "modifiers": [
+                    "x"
+                  ],
+                  "results": [
+                    {
+                      "result": 4,
+                      "active": true
+                    }
+                  ]
+                }
+              ],
+              "total": 4,
+              "evaluated": true
+            }
+          ],
+          "results": [
+            {
+              "result": 2,
+              "active": false,
+              "discarded": true
+            },
+            {
+              "result": 12,
+              "active": true
+            },
+            {
+              "result": 7,
+              "active": true
+            },
+            {
+              "result": 4,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 23,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "swade": {
+      "messageMode": "public",
+      "targets": [
+        {
+          "name": "Thug"
+        }
+      ]
+    }
+  }
+}

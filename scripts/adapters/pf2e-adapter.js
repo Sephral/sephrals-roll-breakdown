@@ -77,6 +77,33 @@ function buildNotCountedSection(modifiers) {
   return createSection(systemText("Pf2e.NotCounted"), items);
 }
 
+function getSelectedSubstitution(context) {
+  return Array.isArray(context?.substitutions) ? context.substitutions.find((entry) => entry?.selected) ?? null : null;
+}
+
+function effectLabel(effectType) {
+  return systemText(effectType === "misfortune" ? "Pf2e.Misfortune" : "Pf2e.Fortune");
+}
+
+// A roll substitution (e.g. Assurance) replaces the d20 with a fixed number, the first term of the formula.
+function moveSubstitutionToDice(breakdown, substitution) {
+  const value = toFiniteNumber(substitution?.value);
+  const first = breakdown.modifiers[0];
+  if (value === null || !first || first.sourceLabel || first.value !== value) return;
+  breakdown.modifiers.shift();
+  breakdown.totalStaticModifier -= value;
+  breakdown.diceTerms.unshift({
+    expression: String(value),
+    total: value,
+    totalText: String(value),
+    faces: null,
+    number: null,
+    sourceLabel: localizeLabel(substitution.label) ?? substitution.slug ?? null,
+    sourceDetail: effectLabel(substitution.effectType),
+    confidence: "exact"
+  });
+}
+
 function buildFortuneSection(context) {
   const effects = new Set();
   const items = [];
@@ -89,12 +116,12 @@ function buildFortuneSection(context) {
     }));
   }
 
-  const substitution = Array.isArray(context?.substitutions) ? context.substitutions.find((entry) => entry?.selected) : null;
+  const substitution = getSelectedSubstitution(context);
   if (substitution) {
     effects.add(substitution.effectType);
     items.push(createItem({
       text: localizeLabel(substitution.label) ?? substitution.slug,
-      tag: systemText(substitution.effectType === "misfortune" ? "Pf2e.Misfortune" : "Pf2e.Fortune"),
+      tag: effectLabel(substitution.effectType),
       value: substitution.value === undefined ? null : String(substitution.value)
     }));
   }
@@ -103,6 +130,27 @@ function buildFortuneSection(context) {
     items.push(createItem({ text: systemText("Pf2e.Cancelled"), muted: true }));
   }
   return createSection(null, items, { placement: "top" });
+}
+
+const DEGREES = ["criticalFailure", "failure", "success", "criticalSuccess"];
+
+// DegreeOfSuccess#unadjusted: the degree of the total against the DC, one step better on a natural 20 and one step
+// worse on a natural 1, before rule elements adjust it.
+function calculateUnadjustedOutcome(roll, dcValue) {
+  const total = toFiniteNumber(roll?.total);
+  if (total === null || dcValue === null) return null;
+  const d20 = (roll?.dice ?? []).find((die) => toFiniteNumber(die?.faces) === 20);
+  const dieResult = toFiniteNumber(d20?.total);
+  let degree = total - dcValue >= 10 ? 3 : dcValue - total >= 10 ? 0 : total >= dcValue ? 2 : 1;
+  if (dieResult === 20) degree = Math.min(degree + 1, 3);
+  else if (dieResult === 1) degree = Math.max(degree - 1, 0);
+  return DEGREES[degree];
+}
+
+function getUnadjustedOutcome(roll, context, dcValue) {
+  // A reroll updates the outcome but keeps the unadjusted outcome of the first roll.
+  if (context?.isReroll) return calculateUnadjustedOutcome(roll, dcValue);
+  return context?.unadjustedOutcome ?? null;
 }
 
 function buildCheckPills(roll, context, isGM) {
@@ -121,7 +169,7 @@ function buildCheckPills(roll, context, isGM) {
 
   const outcomeKey = OUTCOME_KEYS[context?.outcome];
   if (outcomeKey && showOutcome) {
-    const unadjusted = OUTCOME_KEYS[context?.unadjustedOutcome];
+    const unadjusted = OUTCOME_KEYS[getUnadjustedOutcome(roll, context, dcValue)];
     pills.push(createPill(systemText(`Pf2e.Outcome.${outcomeKey}`), {
       emphasis: true,
       tooltip: unadjusted && unadjusted !== outcomeKey
@@ -155,6 +203,11 @@ export function buildPf2eCheckBreakdown(roll, flags, { rollIndex = 0, isGM = fal
     summarizeBreakdown(breakdown);
   }
 
+  if (!breakdown.diceTerms.length) {
+    moveSubstitutionToDice(breakdown, getSelectedSubstitution(context));
+    summarizeBreakdown(breakdown);
+  }
+
   return finalizeBreakdown(breakdown, {
     sections: [buildFortuneSection(context), buildNotCountedSection(rawModifiers)],
     pills: buildCheckPills(roll, context, isGM),
@@ -178,45 +231,86 @@ function collectDice(instance) {
   return (instance?.terms ?? []).filter((term) => isDiceTerm(term));
 }
 
+// The die without its flavor: PF2e flavors dice with the damage type, e.g. "1d6[fire]".
+function dieExpression(die) {
+  if (typeof die?.expression === "string" && die.expression) return die.expression;
+  return String(die?.formula ?? `${die?.number}d${die?.faces}`).replace(/\[[^\]]*\]$/, "");
+}
+
+// The formula of a damage part without the damage type PF2e appends to it ("(1d8 + 4) slashing").
+function instanceExpression(instance) {
+  const head = instance?.head;
+  if (typeof head?.expression === "string" && head.expression) return head.expression;
+  return String(instance?.formula ?? "");
+}
+
+// PF2e rolls persistent damage with the hit but neither counts nor shows it until the end of the turn.
+function isDeferredPersistent(instance) {
+  return Boolean(instance?.persistent) && !instance?.options?.evaluatePersistent;
+}
+
+// Critical-only dice and modifiers (critical: true) count only on a critical hit, critical: false only without one.
+function appliesToDegree(entry, isCritical) {
+  if (entry?.critical === true) return isCritical;
+  if (entry?.critical === false) return !isCritical;
+  return true;
+}
+
+function damageTag(type, persistent) {
+  return [damageTypeLabel(type), persistent ? systemText("Pf2e.Persistent") : null].filter(Boolean).join(", ") || null;
+}
+
 export function buildPf2eDamageBreakdown(roll, flags, { rollIndex = 0 } = {}) {
   const breakdown = parseRoll(roll, { adapterId: "pf2e", rollIndex });
   const instances = getDamageInstances(roll);
+  const isCritical = roll?.options?.degreeOfSuccess === 3;
 
   if (instances.length) {
-    breakdown.diceTerms = instances.flatMap((instance) => collectDice(instance).map((die) => ({
-      expression: String(die.formula ?? `${die.number}d${die.faces}`),
-      total: toFiniteNumber(die.total),
-      totalText: die.total === undefined || die.total === null ? null : String(die.total),
-      faces: toFiniteNumber(die.faces),
-      number: toFiniteNumber(die.number),
-      sourceLabel: damageTypeLabel(instance.type),
-      sourceDetail: instance.persistent ? systemText("Pf2e.Persistent") : null,
-      confidence: "exact"
-    })));
+    breakdown.diceTerms = instances.flatMap((instance) => {
+      const deferred = isDeferredPersistent(instance);
+      return collectDice(instance).map((die) => ({
+        expression: dieExpression(die),
+        total: deferred ? null : toFiniteNumber(die.total),
+        totalText: deferred || die.total === undefined || die.total === null ? null : String(die.total),
+        faces: toFiniteNumber(die.faces),
+        number: toFiniteNumber(die.number),
+        sourceLabel: damageTypeLabel(instance.type),
+        sourceDetail: instance.persistent ? systemText(deferred ? "Pf2e.PersistentHint" : "Pf2e.Persistent") : null,
+        muted: deferred,
+        confidence: "exact"
+      }));
+    });
     // The instance pool is shown per instance below instead of as one computed term.
     breakdown.computedTerms = [];
-    breakdown.modifiers = getRawModifiers(flags).filter(isEnabled).map(toModifierRow);
+    breakdown.modifiers = getRawModifiers(flags)
+      .filter((modifier) => isEnabled(modifier) && appliesToDegree(modifier, isCritical))
+      .map(toModifierRow);
     breakdown.totalStaticModifier = sumValues(breakdown.modifiers);
     summarizeBreakdown(breakdown);
   }
 
-  const instanceSection = createSection(systemText("Pf2e.DamageParts"), instances.map((instance) => createItem({
-    text: String(instance.formula ?? ""),
-    tag: [damageTypeLabel(instance.type), instance.persistent ? systemText("Pf2e.Persistent") : null].filter(Boolean).join(", ") || null,
-    value: toFiniteNumber(instance.total) === null ? null : String(instance.total)
-  })));
+  const instanceSection = createSection(systemText("Pf2e.DamageParts"), instances.map((instance) => {
+    const deferred = isDeferredPersistent(instance);
+    return createItem({
+      text: instanceExpression(instance),
+      tag: damageTag(instance.type, instance.persistent),
+      value: deferred || toFiniteNumber(instance.total) === null ? null : String(instance.total),
+      tooltip: deferred ? systemText("Pf2e.PersistentHint") : null,
+      muted: deferred
+    });
+  }));
 
   const extraDice = Array.isArray(flags?.dice)
-    ? flags.dice.filter((dice) => dice && dice.enabled !== false && dice.ignored !== true && dice.diceNumber > 0 && dice.dieSize)
+    ? flags.dice.filter((dice) => dice && dice.enabled !== false && dice.ignored !== true && dice.diceNumber > 0 && dice.dieSize && appliesToDegree(dice, isCritical))
     : [];
   const diceSection = createSection(systemText("Pf2e.ExtraDice"), extraDice.map((dice) => createItem({
     text: localizeLabel(dice.label) ?? dice.slug,
-    tag: damageTypeLabel(dice.damageType),
+    tag: damageTag(dice.damageType, dice.category === "persistent"),
     value: `${dice.diceNumber}${dice.dieSize}`
   })));
 
   const pills = [];
-  if (roll?.options?.degreeOfSuccess === 3) {
+  if (isCritical) {
     const rule = roll.options.critRule === "double-dice" ? "Pf2e.CritDoubleDice" : roll.options.critRule === "double-damage" ? "Pf2e.CritDoubleDamage" : null;
     pills.push(createPill(systemText("Pf2e.Critical"), { emphasis: true, tooltip: rule ? systemText(rule) : null }));
   }

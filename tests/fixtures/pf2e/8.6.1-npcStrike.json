@@ -1,0 +1,91 @@
+{
+  "source": "pf2e 8.6.1, live capture of \"npcStrike\"",
+  "speaker": {
+    "alias": "Goblin Warrior",
+    "isWildcard": null
+  },
+  "rollClasses": [
+    "CheckRoll"
+  ],
+  "rolls": [
+    {
+      "class": "CheckRoll",
+      "options": {
+        "type": "attack-roll",
+        "action": "strike",
+        "dice": "1d20",
+        "isReroll": false,
+        "totalModifier": 7,
+        "damaging": true,
+        "showBreakdown": false,
+        "degreeOfSuccess": 1
+      },
+      "dice": [],
+      "formula": "1d20 + 7",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 2,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": null
+          },
+          "evaluated": true,
+          "number": 7
+        }
+      ],
+      "total": 9,
+      "evaluated": true
+    }
+  ],
+  "flags": {
+    "pf2e": {
+      "context": {
+        "type": "attack-roll",
+        "outcome": "failure",
+        "unadjustedOutcome": "failure",
+        "rollTwice": false,
+        "isReroll": false,
+        "dc": {
+          "slug": "armor",
+          "value": 17,
+          "scope": "attack"
+        },
+        "substitutions": []
+      },
+      "modifiers": [
+        {
+          "slug": "base",
+          "label": "Modifier",
+          "modifier": 7,
+          "type": "untyped",
+          "enabled": true,
+          "ignored": false,
+          "hideIfDisabled": false,
+          "critical": null,
+          "kind": "modifier"
+        }
+      ]
+    }
+  }
+}
