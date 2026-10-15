@@ -27,7 +27,7 @@
   "SRB.Chat.Modifiers": "Modifiers",
   "SRB.Chat.ComputedTerms": "Computed terms",
   "SRB.Chat.Unresolved": "Unresolved",
-  "SRB.Chat.StaticModifier": "Static total",
+  "SRB.Chat.StaticModifier": "Total modifiers",
   "SRB.Chat.RollTotal": "Roll total",
   "SRB.Chat.PossibleSources": "Possible sources",
   "SRB.Chat.UnknownModifier": "Unknown modifier",

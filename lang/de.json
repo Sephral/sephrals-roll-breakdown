@@ -27,7 +27,7 @@
   "SRB.Chat.Modifiers": "Modifikatoren",
   "SRB.Chat.ComputedTerms": "Berechnete Terme",
   "SRB.Chat.Unresolved": "Nicht aufgelöst",
-  "SRB.Chat.StaticModifier": "Statischer Gesamtwert",
+  "SRB.Chat.StaticModifier": "Modifikatoren gesamt",
   "SRB.Chat.RollTotal": "Gesamtwurf",
   "SRB.Chat.PossibleSources": "Mögliche Quellen",
   "SRB.Chat.UnknownModifier": "Unbekannter Modifikator",
