@@ -738,11 +738,30 @@ async function resolveMessageActivity(message, item, actor) {
   return null;
 }
 
+// Ready Set Roll stores Roll#toJSON(). Rebuilt rolls keep their class, terms and dice results.
+function restoreRoll(data) {
+  const Roll = globalThis.foundry?.dice?.Roll ?? globalThis.Roll;
+  if (!data || typeof data !== "object" || (typeof Roll === "function" && data instanceof Roll)) return data ?? null;
+  if (typeof Roll?.fromData !== "function") return data;
+  try {
+    return Roll.fromData(data) ?? data;
+  } catch {
+    return data;
+  }
+}
+
+// Ready Set Roll (dnd5e 5.3 builds) keeps the rolls of its cards serialized in flags.rsr5e.rolls and leaves
+// message.rolls empty. The flag wins whenever it is there, as in Ready Set Roll itself.
+function getStoredRolls(message) {
+  const stored = message?.flags?.rsr5e?.rolls;
+  return Array.isArray(stored) ? stored.map(restoreRoll).filter(Boolean) : null;
+}
+
 function resolveMessageRollType(message, roll = null) {
   return roll?.options?.rollType
     ?? roll?.options?.["midi-qol"]?.rollType
     ?? message?.flags?.dnd5e?.roll?.type
-    ?? message?.rolls?.find?.((candidate) => typeof candidate?.options?.rollType === "string")?.options?.rollType
+    ?? (getStoredRolls(message) ?? message?.rolls ?? []).find?.((candidate) => typeof candidate?.options?.rollType === "string")?.options?.rollType
     ?? message?.flags?.dnd5e?.activity?.type
     ?? message?.flags?.["midi-qol"]?.messageType
     ?? null;
@@ -799,8 +818,12 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
     this.id = "dnd5e";
   }
 
+  getMessageRolls(message) {
+    return getStoredRolls(message) ?? super.getMessageRolls(message);
+  }
+
   supportsMessage(message) {
-    return game.system?.id === "dnd5e" && Array.isArray(message?.rolls) && message.rolls.length > 0;
+    return game.system?.id === "dnd5e" && this.getMessageRolls(message).length > 0;
   }
 
   async buildBreakdowns(message) {
@@ -822,8 +845,7 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
       ? buildDamageSourceCandidates(actor, item, activity, message)
       : null;
 
-    return (message?.rolls ?? [])
-      .filter((roll) => Boolean(roll))
+    return this.getMessageRolls(message)
       .map((roll, index) => {
         const currentRollType = resolveMessageRollType(message, roll) ?? rollType;
         const candidates = ["ability", "save", "skill", "tool", "concentration", "death"].includes(currentRollType)

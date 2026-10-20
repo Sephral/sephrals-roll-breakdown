@@ -30,7 +30,7 @@ Supported D&D 5e rolls:
 * Concentration saves
 * Death saves
 
-When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown.
+When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown. This includes the cards of MidiQOL and Ready Set Roll.
 
 Chat cards can still differ by system version, activity type and automation modules, so not every bonus can always be named.
 

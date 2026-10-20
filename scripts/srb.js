@@ -91,7 +91,8 @@ Hooks.on("renderChatMessageHTML", (message, html) => {
   // which would drop the panel again. In dnd5e worlds the system hook below handles every message instead.
   // Safety net: if that hook does not fire for a roll message (e.g. renamed in a later dnd5e version),
   // render from here once dnd5e is done with the card.
-  if (!message?.rolls?.length || !html || typeof html !== "object") return;
+  const rolls = service.adapter?.getMessageRolls?.(message) ?? message?.rolls ?? [];
+  if (!rolls.length || !html || typeof html !== "object") return;
   setTimeout(() => {
     if (systemHookElements.has(html)) return;
     service.log("dnd5e.renderChatMessage did not fire, using the core render hook.", { messageId: message.id });

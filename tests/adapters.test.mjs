@@ -464,6 +464,62 @@ test("dnd5e adapter resolves mixed midi attack and damage rolls per roll type", 
   assert.equal(breakdowns[1].advantageContext, null);
 });
 
+test("dnd5e adapter reads the rolls Ready Set Roll keeps in its flags", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const { game } = createGameStub({
+    lang: "en",
+    systemId: "dnd5e",
+    translations: createTranslations()
+  });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+
+  const actor = {
+    system: { abilities: { str: { mod: 3 } }, attributes: { prof: 2 }, bonuses: {} },
+    effects: [],
+    items: []
+  };
+  const item = { name: "Longsword", type: "weapon", actor, system: { range: { value: 5 }, ammunition: { type: null }, source: { rules: "2024" } } };
+  const activity = { type: "attack", attack: { ability: "str" }, damage: { parts: [{ number: 1, denomination: 8, bonus: "0" }] } };
+  globalThis.fromUuid = async (uuid) => ({ "uuid:item": item, "uuid:activity": activity }[uuid] ?? null);
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+  // The card holds no rolls of its own: Ready Set Roll wrote them into flags.rsr5e.rolls.
+  const message = {
+    type: "usage",
+    rolls: [],
+    flags: {
+      dnd5e: { activity: { uuid: "uuid:activity", type: "attack" }, item: { uuid: "uuid:item" } },
+      rsr5e: {
+        quickRoll: true,
+        processed: true,
+        rolls: [{
+          formula: "1d20 + 3 + 2",
+          total: 18,
+          options: { rollType: "attack" },
+          terms: [new DiceTerm("1d20", 13, { number: 1, faces: 20 }), new OperatorTerm("+"), new NumericTerm(3), new OperatorTerm("+"), new NumericTerm(2)]
+        }, {
+          formula: "1d8 + 3",
+          total: 8,
+          options: { rollType: "damage", type: "slashing" },
+          terms: [new DiceTerm("1d8", 5, { number: 1, faces: 8 }), new OperatorTerm("+"), new NumericTerm(3)]
+        }]
+      }
+    }
+  };
+
+  assert.equal(adapter.supportsMessage(message), true);
+  assert.equal(adapter.supportsMessage({ ...message, flags: { dnd5e: message.flags.dnd5e } }), false);
+  const breakdowns = await adapter.buildBreakdowns(message);
+  assert.equal(breakdowns.length, 2);
+  assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "STR modifier"), true);
+  assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "Proficiency"), true);
+  assert.equal(breakdowns[1].diceTerms.some((term) => term.sourceLabel === "Base damage"), true);
+});
+
 test("dnd5e adapter keeps pure dice damage rolls visible in mixed messages", async () => {
   resetGlobals();
   installRollEnvironment();
