@@ -222,8 +222,9 @@ function getMessageReference(message, key) {
 }
 
 function resolveActorRollAbility(actor, rollType, rollFlags) {
-  if (rollType === "skill") return actor.system?.skills?.[rollFlags.skillId]?.ability;
-  if (rollType === "tool") return actor.system?.tools?.[rollFlags.toolId]?.ability;
+  // A skill or tool may be rolled with another ability than its default; the card names the one it used.
+  if (rollType === "skill") return rollFlags.ability || actor.system?.skills?.[rollFlags.skillId]?.ability;
+  if (rollType === "tool") return rollFlags.ability || actor.system?.tools?.[rollFlags.toolId]?.ability;
   // The card names the ability it rolled. The actor's setting is "" when it uses the default.
   if (rollType === "concentration") {
     return rollFlags.ability
@@ -410,7 +411,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
   const detailText = getRollContextDetail(item, "attack");
   const abilityKey = resolveActivityAbility(actor, item, activity);
   const abilityMod = toFiniteNumber(actor?.system?.abilities?.[abilityKey]?.mod);
-  if (abilityKey && abilityMod) {
+  if (abilityKey && abilityMod !== null) {
     candidates.push(...createCandidate(abilityModifierLabel(localizeAbilityLabel(abilityKey)), `${abilityMod}`, {
       sourceType: "standard",
       confidence: "exact",
@@ -418,8 +419,12 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
     }));
   }
 
-  const proficiencyBonus = toFiniteNumber(actor?.system?.attributes?.prof);
-  if (proficiencyBonus) {
+  // dnd5e 6 adds the item's proficiency term, which is 0 for a weapon the actor is not proficient with
+  const itemProficiency = item?.system?.prof;
+  const proficiencyBonus = typeof itemProficiency?.term === "string" && dnd5eMajorVersion() >= 6
+    ? itemProficiency.term
+    : toFiniteNumber(actor?.system?.attributes?.prof);
+  if (proficiencyBonus || proficiencyBonus === "0") {
     candidates.push(...createCandidate(game.i18n.localize("DND5E.Proficiency") || "Proficiency bonus", `${proficiencyBonus}`, {
       sourceType: "standard",
       confidence: "exact",
@@ -485,6 +490,19 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
     }));
   }
 
+  // dnd5e 6 also has an attack bonus for all attacks and one per ability
+  if (dnd5eMajorVersion() >= 6) {
+    for (const bonus of [actor?.system?.rolls?.attack?.bonus, actor?.system?.abilities?.[abilityKey]?.attack?.roll?.bonus]) {
+      const expression = sanitizeExpression(bonus);
+      if (!expression) continue;
+      candidates.push(...createCandidate(localizeRuleLabel("ActorAttackBonusLabel", null, "Actor attack bonus"), expression, {
+        sourceType: "actor",
+        confidence: "derived",
+        detail: detailText.actor
+      }));
+    }
+  }
+
   const ammunitionId = getRollFlags(message).ammunition;
   if (ammunitionId) {
     const ammunition = actor?.items?.get?.(ammunitionId);
@@ -528,7 +546,7 @@ function buildDamageSourceCandidates(actor, item, activity) {
 
   const abilityKey = resolveActivityAbility(actor, item, activity);
   const abilityMod = toFiniteNumber(actor?.system?.abilities?.[abilityKey]?.mod);
-  if (abilityKey && abilityMod) {
+  if (abilityKey && abilityMod !== null) {
     candidates.push(...createCandidate(abilityModifierLabel(localizeAbilityLabel(abilityKey)), `${abilityMod}`, {
       sourceType: "standard",
       confidence: "exact",
@@ -561,7 +579,7 @@ function buildActorRollSourceCandidates(actor, message) {
   const contextLabel = getCheckContextLabel(rollType, rollId);
 
   const abilityMod = toFiniteNumber(ability?.mod);
-  if (abilityId && abilityMod) {
+  if (abilityId && abilityMod !== null) {
     candidates.push(...createCandidate(abilityModifierLabel(abilityLabel), `${abilityMod}`, {
       sourceType: "standard",
       confidence: "exact",
@@ -704,6 +722,93 @@ function buildActorRollSourceCandidates(actor, message) {
   }
 
   return candidates;
+}
+
+// dnd5e 6 rules: Active Effect changes of the types dnd5e.bonus and dnd5e.advantage, which dnd5e applies only when a
+// roll is made. Their key is a category: attack, check, save, d20 (any of these three), damage or healing. dnd5e checks
+// the conditions of each rule against the roll data and adds a bonus as plain formula parts. The same check on rebuilt
+// roll data tells which effects took part in a roll.
+const RULE_CATEGORIES = { attack: "attack", ability: "check", skill: "check", tool: "check", save: "save", concentration: "save", damage: "damage" };
+
+const RULE_ADVANTAGE_TYPES = { "1": "ADV", "+1": "ADV", "=1": "ADV", "=+1": "ADV", "-1": "DIS", "=-1": "DIS", ">=0": "NODIS", "<=0": "NOADV" };
+
+// The rules of a category and type, filtered with the roll data when there is some. A rule that is consumed by a
+// damage part counts only for that part, as in dnd5e.
+function collectRules(category, type, actor, item, rollData, consumed = null) {
+  const Rules = actor?.appliedRules?.constructor;
+  if (typeof Rules?.collect !== "function") return [];
+  try {
+    const rules = Rules.collect(`${category}:${type}`, actor, item);
+    return (rollData ? rules.filterWith(rollData, consumed ? { consumed } : {}) : rules).toArray();
+  } catch {
+    return [];
+  }
+}
+
+// The roll data dnd5e checked the rules against, rebuilt from the card and the current actor.
+function buildRuleRollData(rollType, { actor, item, activity, message, roll = null }) {
+  const rollFlags = getRollFlags(message);
+  try {
+    if (rollType === "attack" || rollType === "damage") {
+      const data = activity?.getRollData?.({ roll: { ability: rollFlags.ability, attackMode: rollFlags.attackMode } });
+      if (!data || rollType === "attack") return data ?? null;
+      data.roll ??= {};
+      data.roll.isCritical = Boolean(roll?.isCritical ?? roll?.options?.isCritical);
+      data.roll.properties = Array.from(item?.system?.properties ?? []).filter((p) => CONFIG.DND5E?.itemProperties?.[p]?.isPhysical);
+      data.roll.damage = { ...(data.roll.damage ?? {}), type: roll?.options?.type ?? null };
+      return data;
+    }
+
+    const data = actor?.getRollData?.({ roll: true });
+    if (!data) return null;
+    data.roll ??= {};
+    const abilityId = resolveActorRollAbility(actor, rollType, rollFlags);
+    if (rollType === "skill" || rollType === "tool") {
+      const id = rollType === "skill" ? rollFlags.skillId : rollFlags.toolId;
+      const relevant = rollType === "skill" ? actor.system?.skills?.[id] : actor.system?.tools?.[id];
+      Object.assign(data.roll, { ability: abilityId, proficient: (relevant?.prof?.multiplier ?? 0) >= 1, type: rollType, [rollType]: id });
+    } else {
+      const kind = rollType === "ability" ? "check" : "save";
+      Object.assign(data.roll, {
+        ability: abilityId,
+        proficient: (actor.system?.abilities?.[abilityId]?.[kind]?.prof?.multiplier ?? 0) >= 1,
+        type: rollType === "concentration" ? "concentration" : "ability"
+      });
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function resolveRuleValue(value, rollData) {
+  const text = sanitizeExpression(value);
+  if (!text.includes("@") || !rollData) return text;
+  try {
+    return Roll.replaceFormulaData(text, rollData, { missing: "0" });
+  } catch {
+    return text;
+  }
+}
+
+// Bonus rules as term sources, named after their effect.
+function buildRuleBonusCandidates(rules, rollData, rollType, item, actor) {
+  return rules.flatMap((rule) => createCandidate(
+    rule.effect?.name || localizeRuleLabel("ActiveEffectLabel", null, "Active effect"),
+    resolveRuleValue(rule.value, rollData),
+    {
+      sourceType: "effect",
+      confidence: rollData ? "exact" : "labeled",
+      detail: createEffectDetail(rule.effect, rollType, item, actor)
+    }
+  ));
+}
+
+// Advantage rules as reasons for advantage or disadvantage, in the form of dnd5e's roll attributions.
+function buildRuleAdvantageAttributions(rules) {
+  return rules
+    .map((rule) => ({ type: RULE_ADVANTAGE_TYPES[String(rule.value ?? "").trim()], source: rule.effect?.uuid ?? null, displayName: rule.effect?.name ?? "" }))
+    .filter((entry) => entry.type && entry.displayName);
 }
 
 function getSegmentMatchScore(payload, segment) {
@@ -852,8 +957,9 @@ function getRollAttributions(message, roll, rollType) {
   return [];
 }
 
-function extractAdvantageContext(message, roll, rollType) {
-  const attributions = getRollAttributions(message, roll, rollType)
+function extractAdvantageContext(message, roll, rollType, ruleAttributions = []) {
+  const direct = getRollAttributions(message, roll, rollType);
+  const attributions = (direct.length ? direct : (resolveAdvantageState(roll) === "normal" ? [] : ruleAttributions))
     .filter((entry) => ["ADV", "DIS", "NOADV", "NODIS"].includes(entry?.type))
     .map((entry) => ({
       type: entry.type,
@@ -872,6 +978,33 @@ function extractAdvantageContext(message, roll, rollType) {
   return {
     state,
     attributions
+  };
+}
+
+// The rule effects of one card: bonus candidates per roll (a damage rule counts for the first matching part only) and
+// advantage reasons per roll type.
+function createRuleSources({ actor, item, activity, message }) {
+  const consumed = new Set();
+  const rollData = new Map();
+  const dataFor = (rollType) => {
+    if (!rollData.has(rollType)) rollData.set(rollType, buildRuleRollData(rollType, { actor, item, activity, message }));
+    return rollData.get(rollType);
+  };
+  return {
+    bonusCandidates(rollType, roll) {
+      const category = rollType === "damage" && activity?.type === "heal" ? "healing" : RULE_CATEGORIES[rollType];
+      if (!category || !actor) return [];
+      const data = rollType === "damage" ? buildRuleRollData(rollType, { actor, item, activity, message, roll }) : dataFor(rollType);
+      const rules = collectRules(category, "bonus", actor, ["attack", "damage"].includes(rollType) ? item : null, data, rollType === "damage" ? consumed : null);
+      return buildRuleBonusCandidates(rules, data, rollType, item, actor);
+    },
+    advantage(rollType) {
+      const category = RULE_CATEGORIES[rollType];
+      if (!category || category === "damage" || !actor) return [];
+      const data = dataFor(rollType);
+      if (!data) return [];
+      return buildRuleAdvantageAttributions(collectRules(category, "advantage", actor, rollType === "attack" ? item : null, data));
+    }
   };
 }
 
@@ -907,17 +1040,20 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
     const damageCandidates = item && activity && actor
       ? buildDamageSourceCandidates(actor, item, activity, message)
       : null;
+    const rules = createRuleSources({ actor, item, activity, message });
 
     return this.getMessageRolls(message)
       .map((roll, index) => {
         const currentRollType = resolveMessageRollType(message, roll) ?? rollType;
-        const candidates = ["ability", "save", "skill", "tool", "concentration", "death"].includes(currentRollType)
+        const baseCandidates = ["ability", "save", "skill", "tool", "concentration", "death"].includes(currentRollType)
           ? actorRollCandidates
           : currentRollType === "attack"
             ? attackCandidates
             : currentRollType === "damage"
               ? damageCandidates
               : null;
+        const ruleCandidates = rules.bonusCandidates(currentRollType, roll);
+        const candidates = baseCandidates || ruleCandidates.length ? [...(baseCandidates ?? []), ...ruleCandidates] : null;
 
         const breakdown = parseRoll(roll, {
           adapterId: this.id,
@@ -929,7 +1065,7 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
           breakdown.hasVisibleContent = true;
         }
 
-        breakdown.advantageContext = extractAdvantageContext(message, roll, currentRollType);
+        breakdown.advantageContext = extractAdvantageContext(message, roll, currentRollType, rules.advantage(currentRollType));
         if (breakdown.advantageContext) {
           breakdown.hasVisibleContent = true;
         }

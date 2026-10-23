@@ -58,6 +58,7 @@
   "SRB.Rule.BaseDamageLabel": "Base damage",
   "SRB.Rule.BaseBonusLabel": "Base bonus",
   "SRB.Rule.ItemAttackBonusLabel": "{item} attack bonus",
+  "SRB.Rule.ActiveEffectLabel": "Active effect",
   "SRB.Rule.ActorAttackBonusLabel": "Actor attack bonus",
   "SRB.Rule.ActorDamageBonusLabel": "Actor damage bonus"
 }

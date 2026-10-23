@@ -14,7 +14,7 @@
 
 * **Every number explained:** a compact panel on the chat card shows the dice, the modifiers and every other part of the formula.
 * **Made for D&D 5e:** attacks, damage, saves, ability, skill and tool checks, concentration and death saves, each with its real sources.
-* **Why advantage?** When modules like MidiQOL record the reasons, the panel lists them, such as flanking, a prone target or long range.
+* **Why advantage?** When modules like MidiQOL record the reasons, the panel lists them, such as flanking, a prone target or long range. In D&D 5e 6 it also names the effects whose rules grant advantage or a bonus.
 * **Honest by design:** the panel only shows what the roll really contains. It never guesses a source.
 * **Monster bonuses stay secret:** players see no breakdown on NPC and GM rolls, unless you want them to.
 * **Out of the way:** the panel stays folded until someone opens it, and an open panel stays open while the chat updates.

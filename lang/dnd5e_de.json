@@ -58,6 +58,7 @@
   "SRB.Rule.BaseDamageLabel": "Grundschaden",
   "SRB.Rule.BaseBonusLabel": "Fester Bonus",
   "SRB.Rule.ItemAttackBonusLabel": "Angriffsbonus von {item}",
+  "SRB.Rule.ActiveEffectLabel": "Aktiver Effekt",
   "SRB.Rule.ActorAttackBonusLabel": "Angriffsbonus des Akteurs",
   "SRB.Rule.ActorDamageBonusLabel": "Schadensbonus des Akteurs"
 }

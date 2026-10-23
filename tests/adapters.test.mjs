@@ -1637,3 +1637,98 @@ test("dnd5e adapter source labels follow the module translations", async () => {
   assert.equal(labels.some((label) => /^(Angriffsbonus des Akteurs|Angriffsbonus von Dagger)$/.test(label ?? "")), true);
   assert.equal(labels.some((label) => /modifier|Base damage|Actor .* bonus/.test(label ?? "")), false);
 });
+
+// dnd5e 6 keeps rule effects in actor.appliedRules; its class collects them per category (attack, check and save also
+// read d20) and filters them with the roll data. A small stand in with the same surface.
+class StubAppliedRules {
+  constructor(entries = []) {
+    this.entries = entries;
+  }
+
+  static collect(rule, actor, item) {
+    const [category, type] = rule.split(":");
+    const categories = ["attack", "check", "save"].includes(category) ? [category, "d20"] : [category];
+    const list = [actor, item].flatMap((doc) => doc?.appliedRules?.entries ?? [])
+      .filter((entry) => categories.includes(entry.key) && entry.type === type);
+    return StubAppliedRules.iterate(list);
+  }
+
+  static iterate(list) {
+    return {
+      filterWith: (data, { consumed } = {}) => StubAppliedRules.iterate(list.filter((entry) => {
+        if (consumed?.has(entry)) return false;
+        const ok = !entry.applies || entry.applies(data);
+        if (ok) consumed?.add(entry);
+        return ok;
+      })),
+      toArray: () => list
+    };
+  }
+}
+
+test("dnd5e adapter names the rule effects of dnd5e 6 and their reasons for advantage", async () => {
+  resetGlobals();
+  installRollEnvironment();
+  globalThis.Roll.replaceFormulaData = (text, data) => text.replace(/@(\w+)/g, (_, key) => String(data?.[key] ?? 0));
+
+  const { game } = createGameStub({ lang: "en", systemId: "dnd5e", translations: createTranslations() });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+  globalThis.CONFIG ??= {};
+  globalThis.CONFIG.DND5E = { abilities: { str: { label: "Strength" }, con: { label: "Constitution" } }, skills: {}, tools: {}, itemProperties: {} };
+
+  const blessing = { name: "Battle Blessing", uuid: "Actor.a.ActiveEffect.b" };
+  const nimble = { name: "Nimble Charm", uuid: "Actor.a.ActiveEffect.n" };
+  const actor = {
+    system: { abilities: { str: { mod: 3 }, con: { mod: 2, save: { prof: { hasProficiency: false, multiplier: 0 } } } }, attributes: { prof: 2, ac: { cover: 0 } } },
+    items: [],
+    effects: [],
+    getRollData: () => ({ prof: 2 })
+  };
+  actor.appliedRules = new StubAppliedRules([
+    { key: "attack", type: "bonus", value: 2, effect: blessing },
+    { key: "attack", type: "advantage", value: "+1", effect: blessing },
+    // Only for Dexterity rolls: not part of a Strength attack
+    { key: "d20", type: "bonus", value: 1, effect: nimble, applies: (data) => data?.roll?.ability === "dex" },
+    { key: "save", type: "bonus", value: "@prof", effect: blessing },
+    { key: "damage", type: "bonus", value: "1d4", effect: blessing }
+  ]);
+  const item = { name: "Longsword", type: "weapon", actor, system: { range: { value: 5 }, ammunition: { type: null }, source: { rules: "2024" } } };
+  const activity = {
+    type: "attack", attack: { ability: "str" }, damage: { parts: [{ number: 1, denomination: 8, bonus: "0" }] },
+    getRollData: ({ roll } = {}) => ({ prof: 2, roll: { ability: roll?.ability ?? "str", type: "attack", attack: { mode: roll?.attackMode } } })
+  };
+  globalThis.fromUuid = async (uuid) => ({ "Actor.a.Item.sword": item, "Actor.a.Item.sword.Activity.hit": activity }[uuid] ?? null);
+  const system = { ability: "str", mode: "oneHanded", item: { id: "sword", uuid: "Actor.a.Item.sword", type: "weapon" }, activity: { id: "hit", uuid: "Actor.a.Item.sword.Activity.hit", type: "attack" } };
+  const d20 = (result, ...mods) => [new DiceTerm("2d20kh", result, { number: 2, faces: 20 }), ...mods.flatMap((m) => [new OperatorTerm("+"), new NumericTerm(m)])];
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+  const [attack] = await adapter.buildBreakdowns({
+    type: "attack", flags: {}, system,
+    rolls: [{ formula: "2d20kh + 3 + 2 + 2", total: 22, options: { rollType: "attack", advantageMode: 1 }, terms: d20(15, 3, 2, 2) }]
+  });
+  const attackLabels = attack.modifiers.map((term) => term.sourceLabel);
+  assert.deepEqual(attackLabels, ["STR modifier", "Proficiency", "Battle Blessing"]);
+  assert.equal(attack.advantageContext.state, "advantage");
+  assert.deepEqual(attack.advantageContext.attributions.map((entry) => [entry.type, entry.displayName]), [["ADV", "Battle Blessing"]]);
+
+  // A save rule with a roll data reference: @prof is 2
+  const [save] = await adapter.buildBreakdowns({
+    type: "save", flags: {}, system: { ability: "con", type: "ability" },
+    getAssociatedActor() { return actor; },
+    rolls: [{ formula: "1d20 + 2 + 2", total: 14, options: { rollType: "save" }, terms: [new DiceTerm("1d20", 10, { number: 1, faces: 20 }), new OperatorTerm("+"), new NumericTerm(2), new OperatorTerm("+"), new NumericTerm(2)] }]
+  });
+  assert.deepEqual(save.modifiers.map((term) => term.sourceLabel), ["CON modifier", "Battle Blessing"]);
+
+  // A damage rule counts for the first damage part only
+  const damage = await adapter.buildBreakdowns({
+    type: "damage", flags: {}, system: { item: system.item, activity: system.activity },
+    rolls: [
+      { formula: "1d8 + 1d4 + 3", total: 9, options: { rollType: "damage", type: "slashing" }, terms: [new DiceTerm("1d8", 5, { number: 1, faces: 8 }), new OperatorTerm("+"), new DiceTerm("1d4", 1, { number: 1, faces: 4 }), new OperatorTerm("+"), new NumericTerm(3)] },
+      { formula: "1d4", total: 2, options: { rollType: "damage", type: "fire" }, terms: [new DiceTerm("1d4", 2, { number: 1, faces: 4 })] }
+    ]
+  });
+  const ruleDice = damage.map((breakdown) => breakdown.diceTerms.find((term) => term.expression === "1d4")?.sourceLabel ?? null);
+  assert.deepEqual(ruleDice, ["Battle Blessing", null]);
+});

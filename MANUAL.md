@@ -32,6 +32,8 @@ Supported D&D 5e rolls:
 
 When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown. This includes the cards of MidiQOL and Ready Set Roll.
 
+In D&D 5e 6 active effects can carry rules that only apply when a roll is made, a bonus to attacks for example, or advantage on Strength checks. The panel names the effect behind such a bonus and lists it as a reason for advantage or disadvantage. It checks the conditions of each rule the way D&D 5e does, with the actor as it is now.
+
 Chat cards can still differ by system version, activity type and automation modules, so not every bonus can always be named.
 
 ### Crucible
