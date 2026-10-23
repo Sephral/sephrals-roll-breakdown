@@ -2,6 +2,30 @@ import { GenericRollAdapter } from "./generic-adapter.js";
 import { getTermExpression, getTermType, hasNestedDice, isDiceTerm, parseRoll, toFiniteNumber } from "../formula-parser.js";
 import { ensureSystemTranslationsLoaded, localizeSystemTranslation } from "../settings.js";
 
+// dnd5e 6.0 moved the roll bonuses: bonuses.mwak.attack is rolls.attack.mwak.bonus, abilities.str.bonuses.check is
+// abilities.str.check.roll.bonus, checkProf is check.prof and so on. The old paths still answer through deprecation
+// getters until 6.2 or 7.0, and an unset bonus is missing at the new path, so the system version picks the path.
+// Without a version (tests) the new path is read first.
+function readMoved(source, newPath, oldPath) {
+  const read = (path) => path.split(".").reduce((value, key) => value?.[key], source);
+  const major = dnd5eMajorVersion();
+  if (major !== null) return read(major >= 6 ? newPath : oldPath);
+  const value = read(newPath);
+  return value === undefined ? read(oldPath) : value;
+}
+
+function dnd5eMajorVersion() {
+  const system = globalThis.game?.system;
+  if (system?.id !== "dnd5e") return null;
+  const major = Number.parseInt(String(system.version ?? ""), 10);
+  return Number.isFinite(major) ? major : null;
+}
+
+// Active effect keys of a roll bonus in dnd5e 5.x and in 6.x (6.0 migrates the keys of existing effects).
+function bonusEffectKeys(kind, bucket) {
+  return new Set([`system.bonuses.${bucket}.${kind}`, `system.rolls.${kind}.${bucket}.bonus`]);
+}
+
 function sanitizeExpression(expression) {
   return String(expression ?? "")
     .replace(/^\s*[+]+\s*/, "")
@@ -166,13 +190,45 @@ function getActorCheckDetail(rollType, abilityLabel, rollId = null) {
   return localizeRule("CheckAbility", { ability: abilityLabel });
 }
 
+// dnd5e 6 keeps the roll data of a chat message in typed system data instead of flags.dnd5e.roll: an ability, skill
+// or tool check is a "check" message (system.ability, system.skill, system.tool), a death or concentration save a
+// "save" message with system.type, an attack keeps system.ability and system.ammunition. This returns the dnd5e 5
+// shape for both versions.
+const DND5E_ROLL_MESSAGE_TYPES = new Set(["attack", "check", "save", "damage", "healing", "generic", "hitDie", "hitPoints", "recharge"]);
+
+function getRollFlags(message) {
+  const flags = message?.flags?.dnd5e?.roll;
+  if (flags) return flags;
+  const type = message?.type;
+  const system = message?.system ?? {};
+  if (!DND5E_ROLL_MESSAGE_TYPES.has(type)) return {};
+  if (type === "check") {
+    const kind = system.skill ? "skill" : system.tool ? "tool" : system.type === "initiative" ? "initiative" : "ability";
+    return { type: kind, ability: system.ability ?? undefined, skillId: system.skill ?? undefined, toolId: system.tool ?? undefined };
+  }
+  if (type === "save") {
+    const kind = system.type === "death" ? "death" : system.type === "concentration" ? "concentration" : "save";
+    return { type: kind, ability: system.ability ?? undefined, forceSuccess: system.resisted };
+  }
+  if (type === "attack") {
+    return { type, ability: system.ability ?? undefined, ammunition: system.ammunition ?? undefined, mastery: system.mastery ?? undefined, attackMode: system.mode ?? undefined };
+  }
+  return { type };
+}
+
+// The item and activity a card names: flags.dnd5e in dnd5e 5, system.item and system.activity in dnd5e 6.
+function getMessageReference(message, key) {
+  return message?.flags?.dnd5e?.[key] ?? message?.system?.[key] ?? null;
+}
+
 function resolveActorRollAbility(actor, rollType, rollFlags) {
   if (rollType === "skill") return actor.system?.skills?.[rollFlags.skillId]?.ability;
   if (rollType === "tool") return actor.system?.tools?.[rollFlags.toolId]?.ability;
+  // The card names the ability it rolled. The actor's setting is "" when it uses the default.
   if (rollType === "concentration") {
-    return actor.system?.attributes?.concentration?.ability
-      ?? CONFIG.DND5E?.defaultAbilities?.concentration
-      ?? rollFlags.ability;
+    return rollFlags.ability
+      || actor.system?.attributes?.concentration?.ability
+      || CONFIG.DND5E?.defaultAbilities?.concentration;
   }
 
   if (rollType === "death") return null;
@@ -348,7 +404,7 @@ function createCandidate(label, expression, { sourceType = "effect", confidence 
 
 function buildAttackSourceCandidates(actor, item, activity, message) {
   const bucket = inferAttackBucket(item);
-  const effectKey = `system.bonuses.${bucket}.attack`;
+  const effectKeys = bonusEffectKeys("attack", bucket);
   const candidates = [];
   const contextLabel = getBucketContextLabel(item);
   const detailText = getRollContextDetail(item, "attack");
@@ -411,7 +467,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
 
   for (const effect of actor?.effects ?? []) {
     for (const change of effect.changes ?? []) {
-      if (change?.key !== effectKey) continue;
+      if (!effectKeys.has(change?.key)) continue;
       candidates.push(...createCandidate(effect.name, change.value, {
         sourceType: "effect",
         confidence: "exact",
@@ -420,7 +476,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
     }
   }
 
-  const actorBonus = sanitizeExpression(actor?.system?.bonuses?.[bucket]?.attack);
+  const actorBonus = sanitizeExpression(readMoved(actor?.system, `rolls.attack.${bucket}.bonus`, `bonuses.${bucket}.attack`));
   if (actorBonus) {
     candidates.push(...createCandidate(localizeRuleLabel("ActorAttackBonusLabel", null, "Actor attack bonus"), actorBonus, {
       sourceType: "actor",
@@ -429,8 +485,9 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
     }));
   }
 
-  if (message?.flags?.dnd5e?.roll?.ammunition) {
-    const ammunition = actor?.items?.get?.(message.flags.dnd5e.roll.ammunition);
+  const ammunitionId = getRollFlags(message).ammunition;
+  if (ammunitionId) {
+    const ammunition = actor?.items?.get?.(ammunitionId);
     const ammoBonus = sanitizeExpression(ammunition?.system?.bonus);
     if (ammoBonus) {
       candidates.push(...createCandidate(ammunition.name, ammoBonus, {
@@ -446,7 +503,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
 
 function buildDamageSourceCandidates(actor, item, activity) {
   const bucket = inferAttackBucket(item);
-  const effectKey = `system.bonuses.${bucket}.damage`;
+  const effectKeys = bonusEffectKeys("damage", bucket);
   const candidates = [];
   const contextLabel = getDamageContextLabel(item, activity);
   const detailText = activity?.type === "save" && item?.type === "spell"
@@ -460,7 +517,7 @@ function buildDamageSourceCandidates(actor, item, activity) {
 
   for (const effect of actor?.effects ?? []) {
     for (const change of effect.changes ?? []) {
-      if (change?.key !== effectKey) continue;
+      if (!effectKeys.has(change?.key)) continue;
       candidates.push(...createCandidate(effect.name, change.value, {
         sourceType: "effect",
         confidence: "exact",
@@ -479,7 +536,7 @@ function buildDamageSourceCandidates(actor, item, activity) {
     }));
   }
 
-  const actorBonus = sanitizeExpression(actor?.system?.bonuses?.[bucket]?.damage);
+  const actorBonus = sanitizeExpression(readMoved(actor?.system, `rolls.damage.${bucket}.bonus`, `bonuses.${bucket}.damage`));
   if (actorBonus) {
     candidates.push(...createCandidate(localizeRuleLabel("ActorDamageBonusLabel", null, "Actor damage bonus"), actorBonus, {
       sourceType: "actor",
@@ -493,7 +550,7 @@ function buildDamageSourceCandidates(actor, item, activity) {
 
 function buildActorRollSourceCandidates(actor, message) {
   const rollType = resolveMessageRollType(message);
-  const rollFlags = message?.flags?.dnd5e?.roll ?? {};
+  const rollFlags = getRollFlags(message);
   if (!["ability", "save", "skill", "tool", "concentration", "death"].includes(rollType) || !actor) return [];
 
   const candidates = [];
@@ -524,7 +581,7 @@ function buildActorRollSourceCandidates(actor, message) {
       }
     }
 
-    const deathBonus = sanitizeExpression(actor.system?.attributes?.death?.bonuses?.save);
+    const deathBonus = sanitizeExpression(readMoved(actor.system, "attributes.death.roll.bonus", "attributes.death.bonuses.save"));
     if (deathBonus) {
       candidates.push(...createCandidate(localizeRule("DeathSaveBonusLabel", null), deathBonus, {
         sourceType: "actor",
@@ -537,7 +594,8 @@ function buildActorRollSourceCandidates(actor, message) {
   }
 
   if (rollType === "ability" || rollType === "save" || rollType === "concentration") {
-    const proficiency = ability?.[`${rollType === "ability" ? "check" : "save"}Prof`];
+    const kind = rollType === "ability" ? "check" : "save";
+    const proficiency = readMoved(ability, `${kind}.prof`, `${kind}Prof`);
     if (proficiency?.hasProficiency) {
       candidates.push(...createCandidate(getProficiencyLabel(proficiency.multiplier), proficiency.term, {
         sourceType: "standard",
@@ -546,7 +604,7 @@ function buildActorRollSourceCandidates(actor, message) {
       }));
     }
 
-    const abilityBonus = sanitizeExpression(ability?.bonuses?.[rollType === "ability" ? "check" : "save"]);
+    const abilityBonus = sanitizeExpression(readMoved(ability, `${kind}.roll.bonus`, `bonuses.${kind}`));
     if (abilityBonus) {
       candidates.push(...createCandidate(`${abilityLabel} ${rollType === "ability" ? localizeRule("CheckBonusLabel", null) : localizeRule("SaveBonusLabel", null)}`, abilityBonus, {
         sourceType: "actor",
@@ -555,7 +613,7 @@ function buildActorRollSourceCandidates(actor, message) {
       }));
     }
 
-    const globalBonus = sanitizeExpression(actor.system?.bonuses?.abilities?.[rollType === "ability" ? "check" : "save"]);
+    const globalBonus = sanitizeExpression(readMoved(actor.system, `rolls.ability.${kind}.bonus`, `bonuses.abilities.${kind}`));
     if (globalBonus) {
       candidates.push(...createCandidate(rollType === "ability" ? localizeRule("GlobalCheckBonus", null) : localizeRule("GlobalSaveBonus", null), globalBonus, {
         sourceType: "actor",
@@ -565,7 +623,7 @@ function buildActorRollSourceCandidates(actor, message) {
     }
 
     if (rollType === "concentration") {
-      const concentrationBonus = sanitizeExpression(actor.system?.attributes?.concentration?.bonuses?.save);
+      const concentrationBonus = sanitizeExpression(readMoved(actor.system, "attributes.concentration.roll.bonus", "attributes.concentration.bonuses.save"));
       if (concentrationBonus) {
         candidates.push(...createCandidate(localizeRule("ConcentrationBonusLabel", null), concentrationBonus, {
           sourceType: "actor",
@@ -599,7 +657,7 @@ function buildActorRollSourceCandidates(actor, message) {
     }));
   }
 
-  const relevantBonus = sanitizeExpression(relevant?.bonuses?.check);
+  const relevantBonus = sanitizeExpression(readMoved(relevant, "roll.bonus", "bonuses.check"));
   if (relevantBonus) {
     candidates.push(...createCandidate(
       rollType === "skill"
@@ -614,7 +672,7 @@ function buildActorRollSourceCandidates(actor, message) {
     ));
   }
 
-  const abilityCheckBonus = sanitizeExpression(ability?.bonuses?.check);
+  const abilityCheckBonus = sanitizeExpression(readMoved(ability, "check.roll.bonus", "bonuses.check"));
   if (abilityCheckBonus) {
     candidates.push(...createCandidate(`${abilityLabel} ${localizeRule("CheckBonusLabel", null)}`, abilityCheckBonus, {
       sourceType: "actor",
@@ -623,7 +681,7 @@ function buildActorRollSourceCandidates(actor, message) {
     }));
   }
 
-  const typeBonus = sanitizeExpression(actor.system?.bonuses?.abilities?.[rollType]);
+  const typeBonus = sanitizeExpression(readMoved(actor.system, `rolls.ability.${rollType}.bonus`, `bonuses.abilities.${rollType}`));
   if (typeBonus) {
     candidates.push(...createCandidate(
       rollType === "skill" ? localizeRule("GlobalSkillBonus", null) : localizeRule("GlobalToolBonus", null),
@@ -636,7 +694,7 @@ function buildActorRollSourceCandidates(actor, message) {
     ));
   }
 
-  const globalCheckBonus = sanitizeExpression(actor.system?.bonuses?.abilities?.check);
+  const globalCheckBonus = sanitizeExpression(readMoved(actor.system, "rolls.ability.check.bonus", "bonuses.abilities.check"));
   if (globalCheckBonus) {
     candidates.push(...createCandidate(localizeRule("GlobalCheckBonus", null), globalCheckBonus, {
       sourceType: "actor",
@@ -698,14 +756,14 @@ function createTermSourceResolver(candidates) {
 }
 
 async function resolveMessageItem(message) {
-  const itemUuid = message?.flags?.dnd5e?.item?.uuid;
+  const itemUuid = getMessageReference(message, "item")?.uuid;
   if (itemUuid) {
     const item = await fromUuid(itemUuid);
     if (item) return item;
   }
 
   const actor = message?.getAssociatedActor?.() ?? null;
-  const itemId = message?.flags?.dnd5e?.item?.id;
+  const itemId = getMessageReference(message, "item")?.id;
   if (actor && itemId) {
     const item = actor.items?.get?.(itemId) ?? actor.items?.find?.((candidate) => candidate?.id === itemId) ?? null;
     if (item) return item;
@@ -715,7 +773,7 @@ async function resolveMessageItem(message) {
 }
 
 async function resolveMessageActivity(message, item, actor) {
-  const activityUuid = message?.flags?.dnd5e?.activity?.uuid;
+  const activityUuid = getMessageReference(message, "activity")?.uuid;
   if (activityUuid) {
     const activity = await fromUuid(activityUuid);
     if (activity) return activity;
@@ -727,7 +785,7 @@ async function resolveMessageActivity(message, item, actor) {
     if (activity) return activity;
   }
 
-  const activityId = message?.flags?.dnd5e?.activity?.id;
+  const activityId = getMessageReference(message, "activity")?.id;
   if (item && activityId) {
     const activity = item.system?.activities?.get?.(activityId)
       ?? item.system?.activities?.find?.((candidate) => candidate?.id === activityId)
@@ -757,12 +815,17 @@ function getStoredRolls(message) {
   return Array.isArray(stored) ? stored.map(restoreRoll).filter(Boolean) : null;
 }
 
+// dnd5e 6 stores the message type as roll.options.rollType, so a skill check says "check" and a death save "save".
+// The message data tells which kind it is.
+const REFINED_ROLL_TYPES = { check: ["ability", "skill", "tool", "initiative"], save: ["save", "death", "concentration"] };
+
 function resolveMessageRollType(message, roll = null) {
-  return roll?.options?.rollType
-    ?? roll?.options?.["midi-qol"]?.rollType
-    ?? message?.flags?.dnd5e?.roll?.type
+  const own = roll?.options?.rollType ?? roll?.options?.["midi-qol"]?.rollType;
+  const fromMessage = getRollFlags(message).type;
+  if (own && !REFINED_ROLL_TYPES[own]?.includes(fromMessage)) return own;
+  return fromMessage
     ?? (getStoredRolls(message) ?? message?.rolls ?? []).find?.((candidate) => typeof candidate?.options?.rollType === "string")?.options?.rollType
-    ?? message?.flags?.dnd5e?.activity?.type
+    ?? getMessageReference(message, "activity")?.type
     ?? message?.flags?.["midi-qol"]?.messageType
     ?? null;
 }

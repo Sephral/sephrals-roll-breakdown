@@ -17,7 +17,7 @@ Roll Breakdown has its own breakdown for D&D 5e, Crucible, Pathfinder 2e and Sav
 
 ### D&D 5e
 
-Roll Breakdown names the sources of most D&D 5e bonuses.
+Roll Breakdown names the sources of most D&D 5e bonuses. It works with D&D 5e 5.x and 6.x.
 
 Supported D&D 5e rolls:
 

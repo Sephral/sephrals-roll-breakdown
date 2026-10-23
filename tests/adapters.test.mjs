@@ -1300,6 +1300,124 @@ test("dnd5e adapter resolves saving throw sources without item or activity conte
   assert.equal(breakdowns[0].modifiers.some((term) => term.sourceLabel === "WIS modifier"), true);
 });
 
+test("dnd5e adapter reads the roll bonuses at their dnd5e 6 places without the deprecated paths", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const { game } = createGameStub({ lang: "en", systemId: "dnd5e", translations: createTranslations() });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+  globalThis.CONFIG ??= {};
+  globalThis.CONFIG.DND5E = { abilities: { wis: { label: "Wisdom" }, str: { label: "Strength" } }, skills: {}, tools: {} };
+
+  // dnd5e 6 answers the old paths through deprecation getters: reading them is a mistake here.
+  const deprecated = [];
+  const shim = (target, keys) => {
+    for (const key of keys) Object.defineProperty(target, key, { get() { deprecated.push(key); return undefined; } });
+    return target;
+  };
+  const wis = shim({ mod: 2, save: { prof: { hasProficiency: true, term: "2", multiplier: 1 }, roll: { bonus: "1" } } }, ["saveProf", "bonuses"]);
+  // An unset bonus is missing at its new place (check.roll holds only min, max and mode).
+  const str = shim({ mod: 3, check: { prof: { hasProficiency: false, term: "0", multiplier: 0 }, roll: { min: null, max: null, mode: 0 } } }, ["checkProf", "bonuses"]);
+  const system = shim({
+    abilities: { wis, str },
+    attributes: { prof: 2, ac: { cover: 0 } },
+    rolls: { ability: { save: { bonus: "1" } }, attack: { mwak: { bonus: "1" } }, damage: { mwak: { bonus: "" } } }
+  }, ["bonuses"]);
+  const actor = { system, items: [], effects: [{ name: "Blessed Blade", changes: [{ key: "system.rolls.attack.mwak.bonus", value: "1" }] }] };
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+  const [save] = await adapter.buildBreakdowns({
+    flags: { dnd5e: { roll: { type: "save", ability: "wis" } } },
+    getAssociatedActor() { return actor; },
+    rolls: [{ formula: "1d20 + 2 + 2 + 1 + 1", total: 14, terms: [new DiceTerm("1d20", 8, { number: 1, faces: 20 }), new OperatorTerm("+"), new NumericTerm(2),
+      new OperatorTerm("+"), new NumericTerm(2), new OperatorTerm("+"), new NumericTerm(1), new OperatorTerm("+"), new NumericTerm(1)] }]
+  });
+  const labels = save.modifiers.map((term) => term.sourceLabel);
+  assert.equal(labels.includes("WIS modifier"), true, labels.join(", "));
+  assert.equal(labels.includes("Proficiency"), true, labels.join(", "));
+  assert.equal(labels.some((label) => /save bonus/i.test(label ?? "")), true, labels.join(", "));
+
+  const item = { name: "Longsword", type: "weapon", actor, system: { range: { value: 5 }, ammunition: { type: null }, source: { rules: "2024" } } };
+  const activity = { type: "attack", attack: { ability: "str" }, damage: { parts: [{ number: 1, denomination: 8, bonus: "0" }] } };
+  globalThis.fromUuid = async (uuid) => ({ "uuid:item": item, "uuid:activity": activity }[uuid] ?? null);
+  const [attack] = await adapter.buildBreakdowns({
+    flags: { dnd5e: { activity: { uuid: "uuid:activity", type: "attack" }, item: { uuid: "uuid:item" } } },
+    rolls: [{ formula: "1d20 + 3 + 2 + 1 + 1", total: 20, options: { rollType: "attack" }, terms: [new DiceTerm("1d20", 13, { number: 1, faces: 20 }), new OperatorTerm("+"),
+      new NumericTerm(3), new OperatorTerm("+"), new NumericTerm(2), new OperatorTerm("+"), new NumericTerm(1), new OperatorTerm("+"), new NumericTerm(1)] }]
+  });
+  const attackLabels = attack.modifiers.map((term) => term.sourceLabel);
+  assert.equal(attackLabels.includes("Blessed Blade"), true, attackLabels.join(", "));
+  assert.equal(attackLabels.includes("Actor attack bonus"), true, attackLabels.join(", "));
+
+  // With the system version known, dnd5e 6 never falls back to the old paths, also where nothing is set.
+  game.system.version = "6.0.6";
+  const [check] = await adapter.buildBreakdowns({
+    type: "check",
+    system: { ability: "str" },
+    getAssociatedActor() { return actor; },
+    rolls: [{ formula: "1d20 + 3", total: 12, options: { rollType: "check" }, terms: [new DiceTerm("1d20", 9, { number: 1, faces: 20 }), new OperatorTerm("+"), new NumericTerm(3)] }]
+  });
+  assert.equal(check.modifiers.map((term) => term.sourceLabel).includes("STR modifier"), true, check.modifiers.map((term) => term.sourceLabel).join(", "));
+  assert.deepEqual(deprecated, []);
+});
+
+test("dnd5e adapter reads the typed roll messages of dnd5e 6 (check, save, attack without flags)", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const { game } = createGameStub({ lang: "en", systemId: "dnd5e", translations: createTranslations() });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+  globalThis.CONFIG ??= {};
+  globalThis.CONFIG.DND5E = { abilities: { int: { label: "Intelligence" }, str: { label: "Strength" } }, skills: { arc: { label: "Arcana" } }, tools: {} };
+
+  const actor = {
+    system: {
+      abilities: { int: { mod: 3, check: { roll: { bonus: "" } } }, str: { mod: 3 } },
+      skills: { arc: { ability: "int", roll: { bonus: "1" }, prof: { hasProficiency: true, term: "2", multiplier: 1 } } },
+      attributes: { prof: 2, death: { roll: { bonus: "1" } } },
+      rolls: { ability: { check: { bonus: "" }, skill: { bonus: "" } }, attack: { mwak: { bonus: "" } } }
+    },
+    items: [],
+    effects: []
+  };
+  const d20 = (result, ...mods) => [new DiceTerm("1d20", result, { number: 1, faces: 20 }), ...mods.flatMap((m) => [new OperatorTerm("+"), new NumericTerm(m)])];
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+  // A skill check is a "check" message, the roll only says "check"
+  const [skill] = await adapter.buildBreakdowns({
+    type: "check", system: { ability: "int", skill: "arc", tool: null, type: "ability" }, flags: {},
+    getAssociatedActor() { return actor; },
+    rolls: [{ formula: "1d20 + 3 + 2 + 1", total: 18, options: { rollType: "check" }, terms: d20(12, 3, 2, 1) }]
+  });
+  const skillLabels = skill.modifiers.map((term) => term.sourceLabel);
+  assert.deepEqual(["INT modifier", "Proficiency", "Arcana"].filter((label) => !skillLabels.includes(label)), [], skillLabels.join(", "));
+
+  // A death save is a "save" message with system.type death
+  const [death] = await adapter.buildBreakdowns({
+    type: "save", system: { type: "death" }, flags: {},
+    getAssociatedActor() { return actor; },
+    rolls: [{ formula: "1d20 + 1", total: 11, options: { rollType: "save" }, terms: d20(10, 1) }]
+  });
+  assert.equal(death.modifiers.some((term) => /death save bonus/i.test(term.sourceLabel ?? "")), true, death.modifiers.map((term) => term.sourceLabel).join(", "));
+
+  // An attack names its item and activity in system data
+  const item = { name: "Longsword", type: "weapon", actor, system: { range: { value: 5 }, ammunition: { type: null }, source: { rules: "2024" } } };
+  const activity = { type: "attack", attack: { ability: "str" }, damage: { parts: [{ number: 1, denomination: 8, bonus: "0" }] } };
+  globalThis.fromUuid = async (uuid) => ({ "Actor.a.Item.sword": item, "Actor.a.Item.sword.Activity.hit": activity }[uuid] ?? null);
+  const [attack] = await adapter.buildBreakdowns({
+    type: "attack", flags: {},
+    system: { ability: "str", item: { id: "sword", uuid: "Actor.a.Item.sword", type: "weapon" }, activity: { id: "hit", uuid: "Actor.a.Item.sword.Activity.hit", type: "attack" } },
+    rolls: [{ formula: "1d20 + 3 + 2", total: 18, options: { rollType: "attack" }, terms: d20(13, 3, 2) }]
+  });
+  const attackLabels = attack.modifiers.map((term) => term.sourceLabel);
+  assert.equal(attackLabels.includes("STR modifier"), true, attackLabels.join(", "));
+  assert.equal(attackLabels.includes("Proficiency"), true, attackLabels.join(", "));
+});
+
 test("dnd5e adapter resolves skill check sources without item or activity context", async () => {
   resetGlobals();
   installRollEnvironment();
