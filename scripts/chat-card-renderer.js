@@ -1,5 +1,5 @@
 import { normalizeBreakdown } from "./adapter-registry.js";
-import { MODULE_ID, localize } from "./settings.js";
+import { MODULE_ID, hasOwnSettings, localize, openModuleSettings } from "./settings.js";
 
 const TEMPLATE_PATH = `modules/${MODULE_ID}/templates/breakdown-panel.hbs`;
 
@@ -86,6 +86,7 @@ function buildTemplateData(message, rawBreakdowns, options, expanded) {
     messageId: message.id,
     expanded,
     labels,
+    settingsLabel: hasOwnSettings() ? localize("Chat.Settings") : null,
     breakdowns: breakdowns.map((breakdown, index) => ({
       rollLabel: breakdown.title ?? (breakdowns.length > 1 ? `${labels.rollLabel} ${index + 1}` : null),
       formula: breakdown.formula,
@@ -155,6 +156,10 @@ export class ChatCardRenderer {
 
     const panel = root.querySelector(selector);
     panel?.addEventListener?.("toggle", () => this.openPanels.set(message.id, panel.open));
+    panel?.querySelector?.(".srb-breakdown__settings")?.addEventListener?.("click", (event) => {
+      event.preventDefault();
+      void openModuleSettings();
+    });
     return true;
   }
 }

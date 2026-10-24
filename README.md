@@ -1,4 +1,4 @@
-# Sephral's Roll Breakdown
+# Sephral’s Roll Breakdown
 
 **"Wait, why is my attack +9?"** Roll Breakdown answers that right on the chat card: every die, every modifier and, in D&D 5e, the reasons for advantage and disadvantage.
 
@@ -33,7 +33,7 @@ You decide who sees the panel: only the GM, the GM and the owner of the roll, or
 
 Search for **Roll Breakdown** in Foundry's module browser or open the [package page](https://foundryvtt.com/packages/sephrals-roll-breakdown).
 
-Foundry VTT v13 and v14 · any game system, extra details for D&D 5e · English and German
+Foundry VTT 13 and 14 · any game system, extra details for D&D 5e, Crucible, Pathfinder 2e and Savage Worlds · English and German
 
 ## Help it get better
 

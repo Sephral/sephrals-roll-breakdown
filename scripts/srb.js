@@ -13,6 +13,7 @@ import {
   registerSettings
 } from "./settings.js";
 import { Dnd5eRollAdapter } from "./adapters/dnd5e-adapter.js";
+import { noticeNewVersions, runSelfTest } from "./selftest.js";
 
 // How long the core hook waits for dnd5e's own render hook before it renders the panel itself.
 // Systems such as Crucible finish their chat card after the render hook. The panel waits until the card is
@@ -35,7 +36,8 @@ const api = createApi({
   onRegister(systemId, adapter) {
     // Adapters registered after init take over right away for the running system.
     if (systemId === game.system?.id) service.adapter = adapter;
-  }
+  },
+  runSelfTest: (options) => runSelfTest(service, options)
 });
 
 function whenCardIsFinished(html, callback) {
@@ -75,6 +77,7 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", () => {
   void migrateLegacyVisibility();
+  noticeNewVersions();
 });
 
 Hooks.on("renderChatMessageHTML", (message, html) => {

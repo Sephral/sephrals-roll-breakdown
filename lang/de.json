@@ -44,5 +44,20 @@
   "SRB.Chat.Disadvantage": "Nachteil",
   "SRB.Chat.Normal": "Normal",
   "SRB.Chat.SuppressedAdvantage": "Unterdrückter Vorteil",
-  "SRB.Chat.SuppressedDisadvantage": "Unterdrückter Nachteil"
+  "SRB.Chat.SuppressedDisadvantage": "Unterdrückter Nachteil",
+  "SRB.Chat.Settings": "Einstellungen",
+  "SRB.SelfTest.Title": "Roll Breakdown Selbsttest",
+  "SRB.SelfTest.Run": "Selbsttest starten",
+  "SRB.SelfTest.Hint": "Prüft die Anbindung an dein Spielsystem, einen Testwurf, den letzten Wurf im Chat und das Panel. Nach jedem Update von Foundry oder dem System ausführen.",
+  "SRB.SelfTest.Passed": "Selbsttest bestanden: {checks} Prüfungen, Systemanbindung {system}.",
+  "SRB.SelfTest.Problems": "Selbsttest: {problems} von {checks} Prüfungen fehlgeschlagen. Details im Chat.",
+  "SRB.SelfTest.Version": "{id} {current} (geprüft {tested})",
+  "SRB.SelfTest.NewVersions": "Roll Breakdown wurde mit älteren Versionen als {versions} geprüft. Der Selbsttest in den Moduleinstellungen zeigt, ob noch alles funktioniert.",
+  "SRB.SelfTest.Generic": "allgemein",
+  "SRB.SelfTest.Texts": "Die Texte des Moduls fehlen.",
+  "SRB.SelfTest.Adapter": "Die Anbindung an {system} wurde nicht geladen.",
+  "SRB.SelfTest.TestRoll": "Ein Testwurf ließ sich nicht aufschlüsseln.",
+  "SRB.SelfTest.LatestRoll": "Der letzte Wurf im Chat ließ sich nicht aufschlüsseln.",
+  "SRB.SelfTest.Template": "Die Vorlage des Panels fehlt.",
+  "SRB.SelfTest.NoRoll": "Im Chat steht noch kein Wurf, daher wurde nur der Testwurf geprüft."
 }

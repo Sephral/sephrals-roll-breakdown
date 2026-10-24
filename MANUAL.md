@@ -1,4 +1,4 @@
-# Sephral's Roll Breakdown Manual
+# Sephral’s Roll Breakdown Manual
 
 This manual covers the details. For a quick overview see the [README](README.md).
 
@@ -104,6 +104,9 @@ Names of bonuses from the system or from other modules only appear when the roll
 * `Hide NPC and GM rolls from players` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret. On cards with rolls of several actors, such as the Crucible initiative report or a group check, this applies to each roll.
 * `Show unknown terms` keeps unresolved parts visible.
 * `Debug logging` writes extra information to the browser console for bug reports.
+* `Run self test` (GM) checks the support for your game system, a test roll, the latest roll in the chat and the panel. Run it after every update of Foundry or the system. When a newer version than the tested one is installed, the GM gets a notice once. Macros call it as `game.modules.get("sephrals-roll-breakdown").api.runSelfTest()`.
+
+The gear at the bottom of an open breakdown opens these settings.
 
 ## Adding a system
 

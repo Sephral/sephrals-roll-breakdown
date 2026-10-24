@@ -109,7 +109,7 @@ export function normalizeBreakdown(breakdown) {
 }
 
 // Public API on game.modules.get("sephrals-roll-breakdown").api
-export function createApi({ registry, onRegister }) {
+export function createApi({ registry, onRegister, runSelfTest }) {
   return Object.freeze({
     registerAdapter(systemId, adapter) {
       const registered = registry.register(systemId, adapter);
@@ -124,6 +124,9 @@ export function createApi({ registry, onRegister }) {
     },
     summarizeBreakdown(breakdown) {
       return summarizeBreakdown(breakdown);
+    },
+    runSelfTest(options) {
+      return runSelfTest?.(options);
     }
   });
 }

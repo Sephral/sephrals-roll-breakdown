@@ -165,5 +165,10 @@
         </div>
       </section>
     {{/each}}
+    {{#if settingsLabel}}
+      <div class="srb-breakdown__tools">
+        <button type="button" class="srb-breakdown__settings" data-tooltip="{{settingsLabel}}" aria-label="{{settingsLabel}}"><i class="fa-solid fa-gear" inert></i></button>
+      </div>
+    {{/if}}
   </div>
 </details>

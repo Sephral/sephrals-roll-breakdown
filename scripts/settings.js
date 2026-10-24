@@ -8,6 +8,7 @@ export const SETTINGS = {
   HIDE_NPC_ROLLS: "hideNpcRolls",
   SHOW_UNKNOWN: "showUnknown",
   DEBUG: "debug",
+  ACKNOWLEDGED_VERSIONS: "acknowledgedVersions",
   // Replaced by VISIBILITY. Still registered (hidden) so stored values stay readable for the migration.
   PLAYERS_VISIBLE: "playersVisible",
   GM_ONLY: "gmOnly"
@@ -215,6 +216,23 @@ export function registerSettings() {
   for (const [key, defaultValue] of [[SETTINGS.PLAYERS_VISIBLE, true], [SETTINGS.GM_ONLY, false]]) {
     game.settings.register(MODULE_ID, key, { scope: "world", config: false, type: Boolean, default: defaultValue });
   }
+  game.settings.register(MODULE_ID, SETTINGS.ACKNOWLEDGED_VERSIONS, { scope: "client", config: false, type: String, default: "" });
+
+  // The unit tests register the settings without Foundry's application classes.
+  if (!globalThis.foundry?.applications?.api || typeof game.settings.registerMenu !== "function") return;
+  game.settings.registerMenu(MODULE_ID, "selfTest", {
+    name: localize("SelfTest.Title"),
+    label: localize("SelfTest.Run"),
+    hint: localize("SelfTest.Hint"),
+    icon: "fa-solid fa-stethoscope",
+    type: class RollBreakdownSelfTestMenu extends foundry.applications.api.ApplicationV2 {
+      async render() {
+        if (game.user?.isGM) await game.modules.get(MODULE_ID)?.api?.runSelfTest();
+        return this;
+      }
+    },
+    restricted: true
+  });
 }
 
 export function localize(key, data = null) {
@@ -291,4 +309,22 @@ export function getRenderOptions() {
     defaultExpanded: Boolean(getSetting(SETTINGS.DEFAULT_EXPANDED)),
     showUnknown: Boolean(getSetting(SETTINGS.SHOW_UNKNOWN))
   };
+}
+
+// Whether the current user finds settings of this module in the settings dialog.
+export function hasOwnSettings() {
+  if (game.user?.isGM) return true;
+  return Array.from(game.settings.settings.values()).some((setting) => setting.namespace === MODULE_ID && setting.config && setting.scope !== "world");
+}
+
+// Opens Foundry's settings on the tab of this module.
+export async function openModuleSettings() {
+  const sheet = game.settings.sheet;
+  await sheet.render({ force: true });
+  try {
+    sheet.changeTab(MODULE_ID, "categories");
+  } catch (error) {
+    console.warn(`${MODULE_ID} | The settings have no tab for this module`, error);
+  }
+  sheet.bringToFront?.();
 }

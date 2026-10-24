@@ -189,3 +189,31 @@
   }
 
 }
+
+/* The gear at the end of the panel opens the module settings. */
+.srb-breakdown__tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.srb-breakdown__settings {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  line-height: 1;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.srb-breakdown__settings:hover,
+.srb-breakdown__settings:focus-visible {
+  opacity: 1;
+  box-shadow: none;
+}

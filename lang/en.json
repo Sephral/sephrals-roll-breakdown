@@ -44,5 +44,20 @@
   "SRB.Chat.Disadvantage": "Disadvantage",
   "SRB.Chat.Normal": "Normal",
   "SRB.Chat.SuppressedAdvantage": "Suppressed advantage",
-  "SRB.Chat.SuppressedDisadvantage": "Suppressed disadvantage"
+  "SRB.Chat.SuppressedDisadvantage": "Suppressed disadvantage",
+  "SRB.Chat.Settings": "Settings",
+  "SRB.SelfTest.Title": "Roll Breakdown self test",
+  "SRB.SelfTest.Run": "Run self test",
+  "SRB.SelfTest.Hint": "Checks the support for your game system, a test roll, the latest roll in the chat and the panel. Run it after an update of Foundry or the system.",
+  "SRB.SelfTest.Passed": "Self test passed: {checks} checks, system support {system}.",
+  "SRB.SelfTest.Problems": "Self test: {problems} of {checks} checks failed. See the chat message.",
+  "SRB.SelfTest.Version": "{id} {current} (verified {tested})",
+  "SRB.SelfTest.NewVersions": "Roll Breakdown was verified with older versions than {versions}. Run the self test in the module settings to check that everything still works.",
+  "SRB.SelfTest.Generic": "general",
+  "SRB.SelfTest.Texts": "The texts of the module are missing.",
+  "SRB.SelfTest.Adapter": "The support for {system} did not load.",
+  "SRB.SelfTest.TestRoll": "A test roll could not be broken down.",
+  "SRB.SelfTest.LatestRoll": "The latest roll in the chat could not be broken down.",
+  "SRB.SelfTest.Template": "The panel template of the module is missing.",
+  "SRB.SelfTest.NoRoll": "The chat holds no roll yet, so only the test roll was checked."
 }
