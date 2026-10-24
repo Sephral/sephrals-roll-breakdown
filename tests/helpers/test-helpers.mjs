@@ -109,8 +109,13 @@ export function createHooksStub() {
   const onceHandlers = new Map();
   const onHandlers = new Map();
   globalThis.Hooks = {
+    // Several handlers of one hook (the module's own and the shared usage library's) run in the order they were added.
     once(event, callback) {
-      onceHandlers.set(event, callback);
+      const previous = onceHandlers.get(event);
+      onceHandlers.set(event, previous ? async (...args) => {
+        await previous(...args);
+        return callback(...args);
+      } : callback);
     },
     on(event, callback) {
       onHandlers.set(event, callback);

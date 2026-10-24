@@ -1,5 +1,6 @@
 import { normalizeBreakdown } from "./adapter-registry.js";
 import { MODULE_ID, hasOwnSettings, localize, openModuleSettings } from "./settings.js";
+import { countFeature } from "./usage.mjs";
 
 const TEMPLATE_PATH = `modules/${MODULE_ID}/templates/breakdown-panel.hbs`;
 
@@ -156,8 +157,13 @@ export class ChatCardRenderer {
 
     const panel = root.querySelector(selector);
     panel?.addEventListener?.("toggle", () => this.openPanels.set(message.id, panel.open));
+    // Counted on the click: the toggle event also fires for panels that are rendered open.
+    panel?.querySelector?.(".srb-breakdown__toggle")?.addEventListener?.("click", () => {
+      if (!panel.open) countFeature(MODULE_ID, "panelOpened");
+    });
     panel?.querySelector?.(".srb-breakdown__settings")?.addEventListener?.("click", (event) => {
       event.preventDefault();
+      countFeature(MODULE_ID, "panelSettings");
       void openModuleSettings();
     });
     return true;

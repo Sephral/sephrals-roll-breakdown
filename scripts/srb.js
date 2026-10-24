@@ -10,10 +10,12 @@ import {
   ensureSystemTranslationsLoaded,
   migrateLegacyVisibility,
   MODULE_ID,
-  registerSettings
+  registerSettings,
+  SETTINGS
 } from "./settings.js";
 import { Dnd5eRollAdapter } from "./adapters/dnd5e-adapter.js";
 import { noticeNewVersions, runSelfTest } from "./selftest.js";
+import { registerUsage } from "./usage.mjs";
 
 // How long the core hook waits for dnd5e's own render hook before it renders the panel itself.
 // Systems such as Crucible finish their chat card after the render hook. The panel waits until the card is
@@ -66,6 +68,10 @@ Hooks.once("init", () => {
   const module = game.modules?.get?.(MODULE_ID);
   if (module) module.api = api;
   registerSettings();
+  registerUsage(MODULE_ID, {
+    features: ["panelOpened", "panelSettings", "selfTestRun"],
+    settings: [SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS]
+  });
   void ensureModuleTranslationsLoaded();
   void ensureSystemTranslationsLoaded();
   // The globals are deprecated since v13 and removed in v15.

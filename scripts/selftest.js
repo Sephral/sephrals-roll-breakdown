@@ -1,5 +1,6 @@
 import { GenericRollAdapter } from "./adapters/generic-adapter.js";
 import { getSetting, localize, MODULE_ID, SETTINGS } from "./settings.js";
+import { countFeature } from "./usage.mjs";
 
 // Self-test: the support for the game system, a breakdown of a test roll, the breakdown of the latest roll in the
 // chat, the panel template and the texts. Meant to be run after every update of Foundry or the system; the GM also
@@ -69,6 +70,7 @@ function versionLine() {
 
 // Runs the self-test and reports the result as a notification and a whispered chat message.
 export async function runSelfTest(service, { report = true } = {}) {
+  countFeature(MODULE_ID, "selfTestRun");
   const { problems, checks, latest } = await checkIntegrations(service);
   const support = SUPPORTED_SYSTEMS.includes(game.system.id) ? game.system.title : localize("SelfTest.Generic");
   const summary = problems.length
