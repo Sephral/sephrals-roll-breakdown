@@ -2,7 +2,7 @@
   "id": "sephrals-roll-breakdown",
   "title": "Sephral’s Roll Breakdown",
   "description": "Shows where every number of a roll comes from, right on the chat card: dice, modifiers and every part of the formula. In D&D 5e also the reasons for advantage and disadvantage.",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "compatibility": {
     "minimum": 13,
     "verified": "14.369"
