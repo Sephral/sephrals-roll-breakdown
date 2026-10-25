@@ -46,7 +46,7 @@
   "SRB.Chat.SuppressedAdvantage": "Unterdrückter Vorteil",
   "SRB.Chat.SuppressedDisadvantage": "Unterdrückter Nachteil",
   "SRB.Chat.Settings": "Einstellungen",
-  "SRB.SelfTest.Title": "Roll Breakdown Selbsttest",
+  "SRB.SelfTest.Title": "Selbsttest von Roll Breakdown",
   "SRB.SelfTest.Run": "Selbsttest starten",
   "SRB.SelfTest.Hint": "Prüft die Anbindung an dein Spielsystem, einen Testwurf, den letzten Wurf im Chat und das Panel. Nach jedem Update von Foundry oder dem System ausführen.",
   "SRB.SelfTest.Passed": "Selbsttest bestanden: {checks} Prüfungen, Systemanbindung {system}.",
