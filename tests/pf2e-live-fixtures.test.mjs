@@ -5,8 +5,8 @@ import { importStable, resetGlobals } from "./helpers/test-helpers.mjs";
 import { installDiceEnvironment, installLangFetch, installSystemGame } from "./helpers/system-fixtures.mjs";
 import { loadMessageFixture } from "./helpers/roll-data.mjs";
 
-// Real chat messages from live Pathfinder 2e worlds (PF2e 7.12.2 on Foundry 13.351 and 8.6.1 on 14.369), captured by
-// tmp/srb-systems-tests in the workspace and sanitized. Valeros strikes a goblin with a +1 striking flaming longsword
+// Real chat messages from live Pathfinder 2e worlds (PF2e 7.12.2 on Foundry 13.351 and 8.6.1 on 14.369), captured in
+// test worlds and sanitized. Valeros strikes a goblin with a +1 striking flaming longsword
 // while blessed, heroic, aided and frightened; Assurance, fortune and misfortune effects and a degree adjustment on
 // Fortitude saves were set up as rule elements.
 const VERSIONS = ["7.12.2", "8.6.1"];

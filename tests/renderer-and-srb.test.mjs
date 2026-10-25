@@ -156,7 +156,7 @@ test("srb registers hooks, initializes the correct adapter, and forwards render 
     assert.equal(typeof onHandlers.get("dnd5e.renderChatMessage"), "function");
 
     await onceHandlers.get("init")();
-    // The module's ten settings and the hidden consent setting of the shared usage library.
+    // The module's ten settings and the hidden consent setting of the usage statistics.
     assert.equal(registrations.length, 11);
     assert.deepEqual(templateLoads, [["modules/sephrals-roll-breakdown/templates/breakdown-panel.hbs"]]);
 

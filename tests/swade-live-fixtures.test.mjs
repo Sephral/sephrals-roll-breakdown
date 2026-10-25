@@ -6,7 +6,7 @@ import { installDiceEnvironment, installLangFetch, installSystemGame } from "./h
 import { loadMessageFixture } from "./helpers/roll-data.mjs";
 
 // Real chat messages from live Savage Worlds worlds (SWADE 5.2.6 on Foundry 13.351 and 6.0.4 on 14.369), rolled
-// through the system's roll dialog and captured by tmp/srb-systems-tests in the workspace. "Red" is a Wild Card,
+// through the system's roll dialog and captured in test worlds. "Red" is a Wild Card,
 // "Thug" an Extra. Fixtures named acedRaise, wildDieWins, critfail*, extraCritfail* and damageAced used fixed dice.
 const VERSIONS = ["5.2.6", "6.0.4"];
 const OUTCOME = /^(Critical failure|Possible critical failure|Failure|Success|\d+ raises?)$/;
