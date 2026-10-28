@@ -15,7 +15,7 @@ import {
   registerSettings,
   SETTINGS
 } from "./settings.js";
-import { Dnd5eRollAdapter } from "./adapters/dnd5e-adapter.js";
+import { Dnd5eRollAdapter, rememberRollContext } from "./adapters/dnd5e-adapter.js";
 import { noticeNewVersions, runSelfTest } from "./selftest.js";
 import { registerUsage } from "./usage.mjs";
 
@@ -112,6 +112,11 @@ Hooks.on("renderChatMessageHTML", (message, html) => {
     service.log("dnd5e.renderChatMessage did not fire, using the core render hook.", { messageId: message.id });
     void service.enhanceChatMessage(message, html);
   }, SYSTEM_HOOK_GRACE_MS);
+});
+
+// The situational bonus of the roll dialog and the chosen ability are not on the card, keep them in the roll options.
+Hooks.on("dnd5e.postRollConfiguration", (rolls, config) => {
+  if (game.system?.id === "dnd5e") rememberRollContext(rolls, config);
 });
 
 Hooks.on("dnd5e.renderChatMessage", (message, html) => {

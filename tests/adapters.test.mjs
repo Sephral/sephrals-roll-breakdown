@@ -218,7 +218,8 @@ test("dnd5e adapter resolves attack roll sources including effects and ammunitio
     system: {
       abilities: { str: { mod: 4 } },
       attributes: { prof: 3 },
-      bonuses: { mwak: { attack: "1" } }
+      // The own bonus of 1 and the 1d4 of the effect, as dnd5e prepares it
+      bonuses: { mwak: { attack: "1 + 1d4" } }
     },
     effects: [{
       name: "Bless",
@@ -763,7 +764,7 @@ test("dnd5e adapter resolves damage sources for save-based spells", async () => 
   const actor = {
     system: {
       abilities: { wis: { mod: 5 } },
-      bonuses: { rsak: { damage: "1" } }
+      bonuses: { rsak: { damage: "1 + 2" } }
     },
     effects: [{
       name: "Bane",
@@ -861,7 +862,8 @@ test("dnd5e adapter covers attack fallbacks, unresolved matches, and generic rul
         int: { mod: 1 }
       },
       attributes: { prof: 2 },
-      bonuses: { rwak: { attack: "10 + 2" }, mwak: { damage: "throw" } }
+      // As dnd5e prepares them: the own bonus plus what the effects add
+      bonuses: { rwak: { attack: "10 + 2 - 1d4 + mystery" }, mwak: { damage: "throw" } }
     },
     effects: [
       { name: "Bane", changes: [{ key: "system.bonuses.rwak.attack", value: "-1d4" }] },
@@ -1322,7 +1324,8 @@ test("dnd5e adapter reads the roll bonuses at their dnd5e 6 places without the d
   const system = shim({
     abilities: { wis, str },
     attributes: { prof: 2, ac: { cover: 0 } },
-    rolls: { ability: { save: { bonus: "1" } }, attack: { mwak: { bonus: "1" } }, damage: { mwak: { bonus: "" } } }
+    // The attack bonus holds its own 1 and the 1 of the effect, as dnd5e prepares it
+    rolls: { ability: { save: { bonus: "1" } }, attack: { mwak: { bonus: "1 + 1" } }, damage: { mwak: { bonus: "" } } }
   }, ["bonuses"]);
   const actor = { system, items: [], effects: [{ name: "Blessed Blade", changes: [{ key: "system.rolls.attack.mwak.bonus", value: "1" }] }] };
 
@@ -1792,6 +1795,33 @@ test("dnd5e adapter names the terms of initiative rolls in dnd5e 6 and dnd5e 5",
     rolls: [{ formula: "1d20 + 2 + 3 + 1", total: 15, options: {}, terms: d20(9, 2, 3, 1) }]
   });
   assert.deepEqual(legacy.modifiers.map((term) => term.sourceLabel), ["DEX modifier", "Initiative bonus", "DEX check bonus"]);
+
+  // An effect adds @prof to the initiative bonus of 3 and to the DEX check bonus: dnd5e resolves @prof when it rolls
+  game.system.version = "6.0.6";
+  globalThis.Roll.replaceFormulaData = (text, data) => text.replace(/@(\w+)/g, (_, key) => String(data?.[key] ?? 0));
+  const effectActor = {
+    uuid: "Actor.tobin",
+    system: {
+      abilities: { dex: { mod: 2, value: 14, check: { roll: { bonus: "@prof" } } } },
+      attributes: { prof: 3, init: { ability: "", mod: 2, prof: { hasProficiency: false, term: "0", multiplier: 0 }, roll: { bonus: "3 + @prof" } } },
+      rolls: { ability: { check: { bonus: "" } } }
+    },
+    getRollData: () => ({ prof: 3 }),
+    items: [],
+    effects: []
+  };
+  const effectMessage = {
+    type: "check", flags: { core: { initiativeRoll: true } }, system: { ability: "dex", type: "initiative", skill: null, tool: null },
+    getAssociatedActor() { return effectActor; },
+    rolls: [{ formula: "1d20 + 2 + 3 + 3 + 3", total: 21, options: { ability: "dex" }, terms: d20(10, 2, 3, 3, 3) }]
+  };
+  const [withEffect] = await adapter.buildBreakdowns(effectMessage);
+  assert.deepEqual(withEffect.modifiers.map((term) => term.sourceLabel), ["DEX modifier", "Initiative bonus", "Initiative bonus", "DEX check bonus"]);
+
+  // The debug file lists the sources the adapter read for each roll
+  const debug = await adapter.debugInfo(effectMessage);
+  assert.equal(debug.rolls[0].actor, "Actor.tobin");
+  assert.deepEqual(debug.rolls[0].sources.map((source) => `${source.label} ${source.value}`), ["DEX modifier 2", "Initiative bonus 3", "Initiative bonus 3", "DEX check bonus 3"]);
 });
 
 test("dnd5e adapter names save terms after the roller, also on cards of the caster", async () => {

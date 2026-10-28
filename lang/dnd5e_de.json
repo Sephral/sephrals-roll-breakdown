@@ -69,5 +69,15 @@
   "SRB.Rule.ItemAttackBonusLabel": "Angriffsbonus von {item}",
   "SRB.Rule.ActiveEffectLabel": "Aktiver Effekt",
   "SRB.Rule.ActorAttackBonusLabel": "Angriffsbonus des Akteurs",
-  "SRB.Rule.ActorDamageBonusLabel": "Schadensbonus des Akteurs"
+  "SRB.Rule.ActorDamageBonusLabel": "Schadensbonus des Akteurs",
+  "SRB.Rule.BaseHealingLabel": "Grundheilung",
+  "SRB.Rule.BaseHealing": "Heilung von {item}.",
+  "SRB.Rule.ItemDamageBonusLabel": "Schadensbonus von {item}",
+  "SRB.Rule.ItemDamageBonus": "Schadensbonus von {item}.",
+  "SRB.Rule.HitDieLabel": "Trefferwürfel",
+  "SRB.Rule.HitDie": "Trefferwürfel plus {ability}-Modifikator, nie unter dem Minimum der Regeln. {formula}",
+  "SRB.Rule.SituationalLabel": "Situationsbonus",
+  "SRB.Rule.SituationalBonus": "Im Würfeldialog eingetragener Bonus.",
+  "SRB.Rule.SheetBonusLabel": "Bonus laut Bogen",
+  "SRB.Rule.SheetBonus": "Teil des Modifikators auf dem Charakterbogen ({context}, {total})."
 }

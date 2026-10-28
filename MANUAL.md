@@ -30,10 +30,20 @@ Supported D&D 5e rolls:
 * Concentration saves
 * Death saves
 * Initiative rolls (ability modifier, proficiency, initiative bonus, Alert of the 2014 rules and the optional tiebreaker)
+* Healing rolls
+* Hit dice
 
 Penalties from conditions such as exhaustion are named on attacks, checks, saves and initiative.
 
-When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown. This includes the cards of MidiQOL and Ready Set Roll. A saving throw is always named after the creature that rolled it, also when it was rolled from the button on a spell card or when MidiQOL shows the saves of its targets on the card of the caster.
+Bonuses that an active effect adds carry the name of that effect, also when an item or a feature brings the effect along: a Ring of Protection, the Archery fighting style or Bless show up under their own name instead of a general save or attack bonus. Magic weapons and magic ammunition name their bonus on attack and damage. Base damage keeps its name on a critical hit, for a cantrip at a higher level and for a versatile weapon used with two hands. Formulas such as Sneak Attack (`@scale.rogue.sneak-attack`) are resolved like D&D 5e does.
+
+When a part of an initiative roll, a skill check or a saving throw has no known source, but all parts add up to the modifier the character sheet shows, that part is called sheet bonus instead of unknown modifier.
+
+A bonus typed into the roll dialog shows up as situational bonus. Roll Breakdown keeps it in the options of the roll, because D&D 5e does not store it on the chat card. Rolls made before Roll Breakdown was active have no such note.
+
+Bonuses may use roll data, for example an effect that adds `@prof` to the initiative bonus. The panel resolves these references with the data of the actor or the activity, as D&D 5e does when it rolls, so `3 + @prof` shows up as two parts of the initiative bonus.
+
+When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown. This includes the cards of MidiQOL and Ready Set Roll. Monk's TokenBar puts the requested rolls of several tokens on one card: each roll is explained with the bonuses of its own actor, and the visibility settings apply per roll, so players see the rolls of their heroes but not the bonuses of monsters on the same card. The same applies to the target saves on a MidiQOL card. A saving throw is always named after the creature that rolled it, also when it was rolled from the button on a spell card or when MidiQOL shows the saves of its targets on the card of the caster.
 
 In D&D 5e 6 active effects can carry rules that only apply when a roll is made, a bonus to attacks for example, or advantage on Strength checks. The panel names the effect behind such a bonus and lists it as a reason for advantage or disadvantage. It checks the conditions of each rule the way D&D 5e does, with the actor as it is now.
 
@@ -81,7 +91,7 @@ Other systems get a general breakdown of dice and modifiers. Labels and special 
 
 ## Advantage and Disadvantage reasons
 
-When the roll records the reasons, for example with modules such as MidiQOL, the breakdown shows why an attack was rolled with Advantage or Disadvantage.
+When the roll records the reasons, for example with modules such as MidiQOL, the breakdown shows why an attack was rolled with Advantage or Disadvantage. In D&D 5e it also names the effects and conditions that set the roll mode of the actor, such as Rage or Poisoned.
 
 Typical examples depend on the module stack and include nearby foes, flanking, visibility, stealth, prone targets, long range or similar combat state reasons.
 
@@ -171,7 +181,7 @@ A debug file shows exactly what Roll Breakdown saw on a chat card. It is one fil
 * Right click a chat message and choose `Save Debug File (Sephral’s Modules)` for that message.
 * `Save debug file` in the module settings covers the latest 20 roll messages.
 
-The file holds the versions of Foundry, the system and the active modules, the settings of the modules, the raw data of the messages with their rolls and what each module recorded. For Roll Breakdown that is what the breakdown read from each card (roll type, item, activity, the actor of each roll and every label) and its recent decisions, such as why a message got no panel. Macros call it as `game.modules.get("sephrals-roll-breakdown").api.saveDebugFile(messageId)`, without an id for the latest messages.
+The file holds the versions of Foundry, the system and the active modules, the settings of the modules, the raw data of the messages with their rolls and what each module recorded. For Roll Breakdown that is what the breakdown read from each card (roll type, item, activity, the actor of each roll, the bonus sources it found on that actor and every label) and its recent decisions, such as why a message got no panel. Macros call it as `game.modules.get("sephrals-roll-breakdown").api.saveDebugFile(messageId)`, without an id for the latest messages.
 
 The file contains chat text and whispers. Check it before you share it.
 

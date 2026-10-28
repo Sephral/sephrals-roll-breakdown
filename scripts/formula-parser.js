@@ -7,6 +7,13 @@ export function getTermExpression(term) {
   return value === undefined || value === null ? "" : String(value).trim();
 }
 
+// A die with a flavor ("1d4[Guidance]") shows the flavor as its label, the expression keeps only the dice.
+function getDiceDisplayExpression(term) {
+  const flavor = term?.flavor ?? term?.options?.flavor;
+  const dice = typeof term?.expression === "string" ? term.expression.trim() : "";
+  return flavor && dice ? dice : getTermExpression(term);
+}
+
 function getSourceLabel(term) {
   const candidates = [
     term?.flavor,
@@ -201,7 +208,7 @@ export function parseRoll(roll, { adapterId = "generic", rollIndex = 0, termSour
         expression: getTermExpression(term),
         signedValue: toFiniteNumber(term?.total)
       }, {
-        expression: formatSignedExpression(pendingOperator, getTermExpression(term)),
+        expression: formatSignedExpression(pendingOperator, getDiceDisplayExpression(term)),
         total: toFiniteNumber(term?.total),
         totalText: term?.total === undefined || term?.total === null ? null : String(term.total),
         faces: toFiniteNumber(term?.faces),

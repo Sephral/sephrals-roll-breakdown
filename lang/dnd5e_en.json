@@ -69,5 +69,15 @@
   "SRB.Rule.ItemAttackBonusLabel": "{item} attack bonus",
   "SRB.Rule.ActiveEffectLabel": "Active effect",
   "SRB.Rule.ActorAttackBonusLabel": "Actor attack bonus",
-  "SRB.Rule.ActorDamageBonusLabel": "Actor damage bonus"
+  "SRB.Rule.ActorDamageBonusLabel": "Actor damage bonus",
+  "SRB.Rule.BaseHealingLabel": "Base healing",
+  "SRB.Rule.BaseHealing": "Healing from {item}.",
+  "SRB.Rule.ItemDamageBonusLabel": "{item} damage bonus",
+  "SRB.Rule.ItemDamageBonus": "Damage bonus of {item}.",
+  "SRB.Rule.HitDieLabel": "Hit die",
+  "SRB.Rule.HitDie": "Hit die plus the {ability} modifier, never below the minimum of the rules. {formula}",
+  "SRB.Rule.SituationalLabel": "Situational bonus",
+  "SRB.Rule.SituationalBonus": "Bonus entered in the roll dialog.",
+  "SRB.Rule.SheetBonusLabel": "Sheet bonus",
+  "SRB.Rule.SheetBonus": "Part of the {context} modifier on the character sheet ({total})."
 }
