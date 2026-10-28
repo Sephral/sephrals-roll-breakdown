@@ -307,15 +307,18 @@ test("crucible labels nothing it cannot confirm from the roll data", async () =>
     const [noReasons] = await adapter.buildBreakdowns({ id: "m8", rolls: [changedDice], flags: {} });
     assert.deepEqual(noReasons.diceTerms.map((term) => term.sourceLabel ?? null), [null, null, null]);
 
-    // Plain rolls in a Crucible world use the generic breakdown.
+    // Plain rolls in a Crucible world get the generic breakdown when their formula names a term, else none.
     const plain = {
       formula: "1d6 + 2",
       total: 5,
       terms: joinTerms([new Die({ faces: 6, results: [3] }), new NumericTerm(2)])
     };
-    const [generic] = await adapter.buildBreakdowns({ id: "m9", rolls: [plain], flags: {} });
+    assert.deepEqual(await adapter.buildBreakdowns({ id: "m9", rolls: [plain], flags: {} }), []);
+    const named = { ...plain, formula: "1d6 + 2[Torch]", terms: joinTerms([new Die({ faces: 6, results: [3] }), new NumericTerm(2, { flavor: "Torch" })]) };
+    const [generic] = await adapter.buildBreakdowns({ id: "m9", rolls: [named], flags: {} });
     assert.equal(generic.pills, undefined);
     assert.equal(generic.modifiers[0].value, 2);
+    assert.equal(generic.modifiers[0].sourceLabel, "Torch");
 
     globalThis.game.system.id = "dnd5e";
     assert.equal(adapter.supportsMessage({ rolls: [plain] }), false);

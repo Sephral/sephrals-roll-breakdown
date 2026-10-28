@@ -80,5 +80,9 @@
   "SRB.Rule.SituationalBonus": "Bonus entered in the roll dialog.",
   "SRB.Rule.SheetBonusLabel": "Sheet bonus",
   "SRB.Rule.SheetBonus": "Part of the {context} modifier on the character sheet ({total}).",
-  "SRB.Rule.MultipliedDamage": "Damage of {hits} hits with {item} in one roll."
+  "SRB.Rule.MultipliedDamage": "Damage of {hits} hits with {item} in one roll.",
+  "SRB.Rule.ClassLevelLabel": "{class} level",
+  "SRB.Rule.CharacterLevelLabel": "Character level",
+  "SRB.Rule.ActivityFormula": "Part of the roll formula of {item}: {formula}",
+  "SRB.Rule.AutomationBonus": "Added by {module} for {item} after the roll."
 }

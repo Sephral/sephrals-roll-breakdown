@@ -11,6 +11,7 @@ import {
   formatSignedNumber,
   isCurrentUserGM,
   isInstanceOf,
+  keepNamed,
   localizeLabel,
   sumValues,
   systemText
@@ -469,7 +470,7 @@ export class CrucibleRollAdapter extends GenericRollAdapter {
     return (message?.rolls ?? [])
       .map((roll, index) => {
         if (!roll) return null;
-        if (!isStandardCheck(roll)) return parseRoll(roll, { adapterId: this.id, rollIndex: index });
+        if (!isStandardCheck(roll)) return keepNamed(parseRoll(roll, { adapterId: this.id, rollIndex: index }));
         if (!isRollVisibleToUser(message, roll, isGM)) return null;
         return buildCrucibleBreakdown(roll, {
           rollIndex: index,

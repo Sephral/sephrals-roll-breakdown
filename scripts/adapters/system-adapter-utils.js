@@ -1,3 +1,4 @@
+import { namesOwnTerms } from "../formula-parser.js";
 import { localizeSystemTranslation } from "../settings.js";
 
 export function formatSignedNumber(value) {
@@ -80,4 +81,9 @@ export function finalizeBreakdown(breakdown, { sections = [], pills = [], title 
   breakdown.title = title || null;
   if (forceVisible || breakdown.sections.length || breakdown.pills.length) breakdown.hasVisibleContent = true;
   return breakdown;
+}
+
+// The breakdown of a roll the system adapter does not know, only when its formula names a term (see namesOwnTerms)
+export function keepNamed(breakdown) {
+  return namesOwnTerms(breakdown) ? breakdown : null;
 }

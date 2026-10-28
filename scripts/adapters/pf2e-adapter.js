@@ -10,6 +10,7 @@ import {
   formatSignedNumber,
   isCurrentUserGM,
   isInstanceOf,
+  keepNamed,
   localizeLabel,
   sumValues,
   systemText
@@ -347,7 +348,7 @@ export class Pf2eRollAdapter extends GenericRollAdapter {
         if (index === 0 && isDamageRoll(roll, context)) return buildPf2eDamageBreakdown(roll, flags, { rollIndex: index });
         if (index === 0 && isCheckRoll(roll, context)) return buildPf2eCheckBreakdown(roll, flags, { rollIndex: index, isGM });
         if (isDamageRoll(roll, null)) return buildPf2eDamageBreakdown(roll, {}, { rollIndex: index });
-        return parseRoll(roll, { adapterId: this.id, rollIndex: index });
+        return keepNamed(parseRoll(roll, { adapterId: this.id, rollIndex: index }));
       })
       .filter((breakdown) => breakdown?.hasVisibleContent);
   }

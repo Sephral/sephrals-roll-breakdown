@@ -9,7 +9,7 @@ This manual covers the details. For a quick overview see the [README](README.md)
 3. Open the `Breakdown` section on the chat card to see dice, modifiers and the other parts of the formula.
 4. For D&D 5e attack rolls, the top of the panel lists the reasons for Advantage or Disadvantage when the roll contains them.
 
-An opened panel stays open when the chat card updates or the chat log redraws. Rolls with nothing meaningful to explain get no panel.
+An opened panel stays open when the chat card updates or the chat log redraws. Rolls with nothing meaningful to explain get no panel. In D&D 5e, Crucible, Pathfinder 2e and Savage Worlds this includes rolls typed into the chat, rolled with a dice tray, inline rolls and macro rolls, unless their formula names a part, as in `/r 1d20 + 2[Bless]`.
 
 ## Supported systems
 
@@ -32,10 +32,13 @@ Supported D&D 5e rolls:
 * Initiative rolls (ability modifier, proficiency, initiative bonus, Alert of the 2014 rules and the optional tiebreaker)
 * Healing rolls
 * Hit dice
+* Formulas of utility activities (Deflect Attacks: the die, the DEX modifier and the monk level)
 
 Penalties from conditions such as exhaustion are named on attacks, checks, saves and initiative.
 
-Bonuses that an active effect adds carry the name of that effect, also when an item or a feature brings the effect along: a Ring of Protection, the Archery fighting style or Bless show up under their own name instead of a general save or attack bonus. Magic weapons and magic ammunition name their bonus on attack and damage. Base damage keeps its name on a critical hit, for a cantrip at a higher level and for a versatile weapon used with two hands. Formulas such as Sneak Attack (`@scale.rogue.sneak-attack`) are resolved like D&D 5e does.
+Bonuses that an active effect adds carry the name of that effect, also when an item or a feature brings the effect along: a Ring of Protection, the Archery fighting style or Bless show up under their own name instead of a general save or attack bonus. Magic weapons and magic ammunition name their bonus on attack and damage. Base damage keeps its name on a critical hit, for a cantrip at a higher level and for a versatile weapon used with two hands. Formulas such as Sneak Attack (`@scale.rogue.sneak-attack`) are resolved like D&D 5e does. A term of a formula is named after its reference: `@abilities.dex.mod` is the DEX modifier, `@classes.monk.levels` the monk level, `@prof` the proficiency bonus.
+
+Melee and ranged bonuses follow the attack as D&D 5e rolls it: a spear or a dagger used in melee gets the melee bonuses (Dueling, for example), the same weapon thrown gets the ranged ones.
 
 When a part of an initiative roll, a skill check or a saving throw has no known source, but all parts add up to the modifier the character sheet shows, that part is called sheet bonus instead of unknown modifier.
 
@@ -43,7 +46,7 @@ A bonus typed into the roll dialog shows up as situational bonus. Roll Breakdown
 
 Bonuses may use roll data, for example an effect that adds `@prof` to the initiative bonus. The panel resolves these references with the data of the actor or the activity, as D&D 5e does when it rolls, so `3 + @prof` shows up as two parts of the initiative bonus.
 
-When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown. This includes the cards of MidiQOL and Ready Set Roll. Monk's TokenBar puts the requested rolls of several tokens on one card: each roll is explained with the bonuses of its own actor and carries the name of its token for the GM and the owner, and the visibility settings apply per roll, so players see the rolls of their heroes but not the bonuses of monsters on the same card. The same applies to the target saves on a MidiQOL card. Mob Attack Tool sums the damage of several hits into one roll: the panel names the base damage and the ability modifier times the number of hits. A saving throw is always named after the creature that rolled it, also when it was rolled from the button on a spell card or when MidiQOL shows the saves of its targets on the card of the caster.
+When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown. This includes the cards of MidiQOL and Ready Set Roll. Monk's TokenBar puts the requested rolls of several tokens on one card: each roll is explained with the bonuses of its own actor and carries the name of its token for the GM and the owner, and the visibility settings apply per roll, so players see the rolls of their heroes but not the bonuses of monsters on the same card. The same applies to the target saves on a MidiQOL card. Mob Attack Tool sums the damage of several hits into one roll: the panel names the base damage and the ability modifier times the number of hits. Chris's Premades adds many bonuses in its macros after the roll, Archery to the attack roll, Colossus Slayer, Hunter's Mark or Dueling as extra damage rolls: the panel names them after the feature or the effect of the roller that Chris's Premades automates. A saving throw is always named after the creature that rolled it, also when it was rolled from the button on a spell card or when MidiQOL shows the saves of its targets on the card of the caster.
 
 In D&D 5e 6 active effects can carry rules that only apply when a roll is made, a bonus to attacks for example, or advantage on Strength checks. The panel names the effect behind such a bonus and lists it as a reason for advantage or disadvantage. It checks the conditions of each rule the way D&D 5e does, with the actor as it is now.
 

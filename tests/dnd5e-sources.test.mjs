@@ -384,3 +384,83 @@ test("dnd5e finds the weapon of a midi-qol damage only card through the name of 
     rolls: [{ formula: "1d6 + 2", total: 6, options: { rollType: "damage", "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d6", 2) }] });
   assert.deepEqual(labels(damage), ["Base damage", "DEX modifier"]);
 });
+
+test("dnd5e names the bonuses that Chris's Premades adds in macros: Archery, Colossus Slayer, Hunter's Mark", async () => {
+  const { adapter } = await setup();
+  // The card of the second report: a heavy crossbow attack with +2 from Archery, then 1d8 and 1d6 as damage rolls of their own
+  globalThis.chrisPremades = {
+    macros: {
+      archery: { name: "Archery", config: [{ value: "bonus", type: "text", default: "2" }], midi: { actor: [{ pass: "postAttackRoll" }] } },
+      huntersMark: { name: "Hunter's Mark", config: [{ value: "formula", type: "text", default: "1d6" }, { value: "damageType", type: "select", default: "force" }], midi: { item: [{ pass: "rollFinished" }] } },
+      // Runs when the actor is hit, adds nothing to its own damage
+      wardingFlare: { name: "Warding", config: [{ value: "formula", type: "text", default: "2" }], midi: { actor: [{ pass: "targetApplyDamage" }] } }
+    },
+    legacyMacros: {
+      colossusSlayer: { name: "Colossus Slayer", config: [{ value: "formula", type: "text", default: "1d8" }], midi: { actor: [{ pass: "damageRollComplete" }] } },
+      huntersMarkSource: { name: "Hunter's Mark (source)", midi: { actor: [{ pass: "preAttackRollConfig" }, { pass: "damageRollComplete" }] } }
+    }
+  };
+  const cpr = (identifier, extra = {}) => ({ "chris-premades": { info: { identifier }, ...extra } });
+  const items = [
+    { name: "Archery", type: "feat", documentName: "Item", flags: cpr("archery"), system: { source: { rules: "2024" } } },
+    { name: "Colossus Slayer", type: "feat", documentName: "Item", flags: cpr("colossusSlayer"), system: { source: { rules: "2024" } } },
+    { name: "Hunter's Mark", type: "spell", documentName: "Item", flags: cpr("huntersMark"), system: { source: { rules: "2024" } } },
+    { name: "Warding", type: "feat", documentName: "Item", flags: cpr("wardingFlare"), system: { source: { rules: "2024" } } }
+  ];
+  const mark = { name: "Hunter's Mark", documentName: "ActiveEffect", changes: [],
+    flags: cpr("huntersMark", { rules: "modern", huntersMark: { formula: "1d6" }, macros: { midi: { actor: ["huntersMarkSource"] } } }) };
+  const actor = makeActor({ abilities: { dex: { mod: 4 } }, attributes: { prof: 3 } }, { items, effects: [mark] });
+  actor.appliedEffects = [mark];
+  const base = { number: 1, denomination: 10, scaledFormula: () => "1d10", formula: "1d10" };
+  const crossbow = { name: "Heavy Crossbow", type: "weapon", actor, system: { range: { value: 100 }, ammunition: { type: "crossbowBolt" }, damage: { base } } };
+  const activity = { id: "shoot", type: "attack", attack: { ability: "dex" }, damage: { parts: [base] }, getRollData: () => ({ mod: 4 }), getActionType: () => "rwak" };
+  globalThis.fromUuid = async (uuid) => ({ "Item.bow": crossbow, "Item.bow.Activity.shoot": activity }[uuid] ?? null);
+  const [attack, weapon, slayer, hunted, other] = await adapter.buildBreakdowns({ type: "usage", system: { item: { uuid: "Item.bow" }, activity: { uuid: "Item.bow.Activity.shoot" } },
+    rolls: [
+      { formula: "1d20 + 4 + 3 + 2", total: 20, options: { rollType: "attack", attackMode: "twoHanded" }, terms: terms("1d20", 4, 3, 2) },
+      { formula: "1d10 + 4", total: 13, options: { rollType: "damage", "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d10", 4) },
+      { formula: "1d8", total: 7, options: { "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d8") },
+      { formula: "1d6", total: 2, options: { "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d6") },
+      { formula: "1d4 + 2", total: 5, options: { "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d4", 2) }
+    ] });
+  assert.deepEqual(labels(attack), [null, "DEX modifier", "Proficiency", "Archery"]);
+  assert.deepEqual(labels(other), [null, null]);
+  assert.deepEqual(labels(weapon), ["Base damage", "DEX modifier"]);
+  assert.deepEqual(labels(slayer), ["Colossus Slayer"]);
+  assert.deepEqual(labels(hunted), ["Hunter's Mark"]);
+  delete globalThis.chrisPremades;
+});
+
+test("dnd5e names the terms of a utility formula after their references", async () => {
+  const { adapter } = await setup();
+  // Deflect Attacks of the second report: 1d10 + @abilities.dex.mod + @classes.monk.levels rolled as 1d10 + 4 + 5
+  const actor = makeActor({ abilities: { dex: { mod: 4 } }, attributes: { prof: 3 } });
+  actor.classes = { monk: { name: "Monk" } };
+  const feature = { name: "Deflect Attacks", type: "feat", actor, system: {} };
+  const activity = { id: "use", type: "utility", roll: { formula: "1d10 + @abilities.dex.mod + @classes.monk.levels" },
+    getRollData: () => ({ abilities: { dex: { mod: 4 } }, classes: { monk: { levels: 5 } } }) };
+  globalThis.fromUuid = async (uuid) => ({ "Item.deflect": feature, "Item.deflect.Activity.use": activity }[uuid] ?? null);
+  const [roll] = await adapter.buildBreakdowns({ type: "usage", system: { item: { uuid: "Item.deflect" }, activity: { uuid: "Item.deflect.Activity.use" } },
+    rolls: [{ formula: "1d10 + 4 + 5", total: 17, options: { rollType: "generic", "midi-qol": { rollType: "utility" } }, terms: terms("1d10", 4, 5) }] });
+  assert.deepEqual(labels(roll), ["Deflect Attacks", "DEX modifier", "Monk level"]);
+});
+
+test("dnd5e picks the actor bonus of a thrown weapon by its attack mode", async () => {
+  const { adapter } = await setup();
+  // A spear has a range (thrown 20/60) but a melee attack uses the melee bonus, as dnd5e does (Dueling +2)
+  const actor = makeActor({ abilities: { str: { mod: 3 } }, attributes: { prof: 2 }, rolls: { damage: { mwak: { bonus: "2" } } } });
+  const base = { number: 1, denomination: 6, scaledFormula: () => "1d6", formula: "1d6" };
+  const spear = { name: "Spear", type: "weapon", actor, system: { range: { value: 20, long: 60 }, damage: { base } } };
+  const activity = { id: "stab", type: "attack", attack: { ability: "str" }, damage: { parts: [base] }, getRollData: () => ({ mod: 3 }),
+    getActionType: (mode) => (mode?.startsWith("thrown") ? "rwak" : "mwak") };
+  globalThis.fromUuid = async (uuid) => ({ "Item.spear": spear, "Item.spear.Activity.stab": activity }[uuid] ?? null);
+  const card = (attackMode) => ({ type: "usage", system: { item: { uuid: "Item.spear" }, activity: { uuid: "Item.spear.Activity.stab" } },
+    rolls: [
+      { formula: "1d20 + 3 + 2", total: 15, options: { rollType: "attack", attackMode }, terms: terms("1d20", 3, 2) },
+      { formula: "1d6 + 3 + 2", total: 9, options: { rollType: "damage" }, terms: terms("1d6", 3, 2) }
+    ] });
+  const [, melee] = await adapter.buildBreakdowns(card("oneHanded"));
+  assert.deepEqual(labels(melee), ["Base damage", "STR modifier", "Actor damage bonus"]);
+  const [, thrown] = await adapter.buildBreakdowns(card("thrownOneHanded"));
+  assert.deepEqual(labels(thrown), ["Base damage", "STR modifier", null]);
+});

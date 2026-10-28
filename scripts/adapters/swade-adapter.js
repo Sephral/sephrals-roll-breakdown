@@ -8,6 +8,7 @@ import {
   createSection,
   finalizeBreakdown,
   isInstanceOf,
+  keepNamed,
   systemText
 } from "./system-adapter-utils.js";
 
@@ -233,7 +234,7 @@ export class SwadeRollAdapter extends GenericRollAdapter {
         if (roll.options?.critfailConfirmationRoll) return null;
         if (isTraitRoll(roll)) return buildSwadeTraitBreakdown(roll, { rollIndex: index, wildcard, confirmations });
         if (isDamageRoll(roll)) return buildSwadeDamageBreakdown(roll, { rollIndex: index });
-        return parseRoll(roll, { adapterId: this.id, rollIndex: index });
+        return keepNamed(parseRoll(roll, { adapterId: this.id, rollIndex: index }));
       })
       .filter((breakdown) => breakdown?.hasVisibleContent);
   }

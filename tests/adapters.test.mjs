@@ -167,7 +167,7 @@ test("generic adapter supports roll messages and filters empty breakdowns", asyn
   assert.equal(diceOnlyBreakdowns.length, 0);
 });
 
-test("dnd5e adapter falls back to the generic adapter when metadata is missing", async () => {
+test("dnd5e adapter shows a roll without roll type only where its formula names the terms", async () => {
   resetGlobals();
   installRollEnvironment();
 
@@ -189,9 +189,24 @@ test("dnd5e adapter falls back to the generic adapter when metadata is missing",
     }]
   });
 
+  // Typed in the chat or rolled in Dice Tray: no source can explain the 3, so no panel says "Unknown modifier"
   assert.equal(adapter.supportsMessage({ rolls: [{}] }), true);
-  assert.equal(breakdowns.length, 1);
-  assert.equal(breakdowns[0].adapterId, "dnd5e");
+  assert.equal(breakdowns.length, 0);
+
+  const named = await adapter.buildBreakdowns({
+    rolls: [{
+      formula: "1d20 + 3[Strength]",
+      total: 15,
+      terms: [
+        new DiceTerm("1d20", 12, { number: 1, faces: 20 }),
+        new OperatorTerm("+"),
+        new NumericTerm(3, { flavor: "Strength" })
+      ]
+    }]
+  });
+  assert.equal(named.length, 1);
+  assert.equal(named[0].adapterId, "dnd5e");
+  assert.equal(named[0].modifiers[0].sourceLabel, "Strength");
 
   const diceOnlyBreakdowns = await adapter.buildBreakdowns({
     rolls: [{ formula: "1d20", total: 12, terms: [new DiceTerm("1d20", 12, { number: 1, faces: 20 })] }]

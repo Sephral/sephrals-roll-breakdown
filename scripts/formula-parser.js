@@ -313,3 +313,9 @@ export function summarizeBreakdown(breakdown) {
 
   return breakdown;
 }
+// A roll without context of the game system (typed in the chat, Dice Tray, an inline roll, a macro) explains itself
+// only where its formula names a term, as in 1d20 + 2[Strength]. Without such a name every number would show as an
+// unknown modifier, so system adapters show no panel for it.
+export function namesOwnTerms(breakdown) {
+  return Boolean(breakdown?.sourceSummary?.labeledTermCount);
+}
