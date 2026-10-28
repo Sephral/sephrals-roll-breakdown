@@ -59,5 +59,10 @@
   "SRB.SelfTest.TestRoll": "A test roll could not be broken down.",
   "SRB.SelfTest.LatestRoll": "The latest roll in the chat could not be broken down.",
   "SRB.SelfTest.Template": "The panel template of the module is missing.",
-  "SRB.SelfTest.NoRoll": "The chat holds no roll yet, so only the test roll was checked."
+  "SRB.SelfTest.NoRoll": "The chat holds no roll yet, so only the test roll was checked.",
+  "SRB.Debug.Title": "Debug file",
+  "SRB.Debug.Save": "Save debug file",
+  "SRB.Debug.Hint": "Saves one file for bug reports about all of Sephral’s modules in this world: versions, settings and what the modules recorded, such as the latest chat messages they read. It contains chat text and whispers, check it before you share it.",
+  "SRB.Debug.Entry": "Save Debug File (Sephral’s Modules)",
+  "SRB.Debug.Saved": "Debug file {file} saved. It contains chat text and whispers, check it before you share it."
 }

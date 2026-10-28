@@ -59,5 +59,10 @@
   "SRB.SelfTest.TestRoll": "Ein Testwurf ließ sich nicht aufschlüsseln.",
   "SRB.SelfTest.LatestRoll": "Der letzte Wurf im Chat ließ sich nicht aufschlüsseln.",
   "SRB.SelfTest.Template": "Die Vorlage des Panels fehlt.",
-  "SRB.SelfTest.NoRoll": "Im Chat steht noch kein Wurf, daher wurde nur der Testwurf geprüft."
+  "SRB.SelfTest.NoRoll": "Im Chat steht noch kein Wurf, daher wurde nur der Testwurf geprüft.",
+  "SRB.Debug.Title": "Debug-Datei",
+  "SRB.Debug.Save": "Debug-Datei speichern",
+  "SRB.Debug.Hint": "Speichert eine Datei für Fehlerberichte über alle Module von Sephral in dieser Welt: Versionen, Einstellungen und was die Module aufgezeichnet haben, etwa die letzten Chatnachrichten, die sie gelesen haben. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen.",
+  "SRB.Debug.Entry": "Debug-Datei speichern (Sephral’s Module)",
+  "SRB.Debug.Saved": "Debug-Datei {file} gespeichert. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen."
 }

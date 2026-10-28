@@ -4,6 +4,8 @@ import { GenericRollAdapter } from "./adapters/generic-adapter.js";
 import { Pf2eRollAdapter } from "./adapters/pf2e-adapter.js";
 import { SwadeRollAdapter } from "./adapters/swade-adapter.js";
 import { ChatCardRenderer } from "./chat-card-renderer.js";
+import { debugTrace, registerDebug } from "./debug.js";
+import { saveDebugFile } from "./debug-file.mjs";
 import { RollBreakdownService } from "./roll-breakdown-service.js";
 import {
   ensureModuleTranslationsLoaded,
@@ -39,7 +41,8 @@ const api = createApi({
     // Adapters registered after init take over right away for the running system.
     if (systemId === game.system?.id) service.adapter = adapter;
   },
-  runSelfTest: (options) => runSelfTest(service, options)
+  runSelfTest: (options) => runSelfTest(service, options),
+  saveDebugFile: (messageId) => saveDebugFile(messageId ?? null, { moduleId: MODULE_ID })
 });
 
 function whenCardIsFinished(html, callback) {
@@ -57,7 +60,8 @@ function whenCardIsFinished(html, callback) {
 
 const service = new RollBreakdownService({
   adapter: new GenericRollAdapter(),
-  renderer: new ChatCardRenderer()
+  renderer: new ChatCardRenderer(),
+  trace: debugTrace
 });
 
 // Chat elements that dnd5e.renderChatMessage has already handed to the service.
@@ -68,6 +72,7 @@ Hooks.once("init", () => {
   const module = game.modules?.get?.(MODULE_ID);
   if (module) module.api = api;
   registerSettings();
+  registerDebug(service);
   registerUsage(MODULE_ID, {
     features: ["panelOpened", "panelSettings", "selfTestRun"],
     settings: [SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS]

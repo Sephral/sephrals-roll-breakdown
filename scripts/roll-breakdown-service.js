@@ -93,12 +93,15 @@ function isAutomaticRollTableMessage(message) {
 }
 
 export class RollBreakdownService {
-  constructor({ adapter, renderer }) {
+  constructor({ adapter, renderer, trace = null }) {
     this.adapter = adapter;
     this.renderer = renderer;
+    this.trace = trace;
   }
 
+  // Decisions always go to the debug trace, to the console only with debug logging on.
   log(message, extra) {
+    this.trace?.add(message, extra ?? {});
     if (!isDebugEnabled()) return;
     console.debug("[SRB]", message, extra ?? "");
   }
@@ -143,6 +146,7 @@ export class RollBreakdownService {
       breakdowns = await this.adapter.buildBreakdowns(message);
       if (Array.isArray(breakdowns)) breakdowns = filterVisibleBreakdowns(message, breakdowns, this.adapter);
     } catch (error) {
+      this.trace?.add("The adapter failed.", { messageId: message?.id, adapter: this.adapter?.id ?? null, error: String(error?.stack ?? error) });
       console.warn(`[SRB] The roll breakdown adapter "${this.adapter?.id ?? "unknown"}" failed for message ${message?.id}.`, error);
       return;
     }

@@ -29,8 +29,11 @@ Supported D&D 5e rolls:
 * Tool checks
 * Concentration saves
 * Death saves
+* Initiative rolls (ability modifier, proficiency, initiative bonus, Alert of the 2014 rules and the optional tiebreaker)
 
-When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown. This includes the cards of MidiQOL and Ready Set Roll.
+Penalties from conditions such as exhaustion are named on attacks, checks, saves and initiative.
+
+When a chat card holds an attack roll and a damage roll, each of them gets its own breakdown. This includes the cards of MidiQOL and Ready Set Roll. A saving throw is always named after the creature that rolled it, also when it was rolled from the button on a spell card or when MidiQOL shows the saves of its targets on the card of the caster.
 
 In D&D 5e 6 active effects can carry rules that only apply when a roll is made, a bonus to attacks for example, or advantage on Strength checks. The panel names the effect behind such a bonus and lists it as a reason for advantage or disadvantage. It checks the conditions of each rule the way D&D 5e does, with the actor as it is now.
 
@@ -104,6 +107,7 @@ Names of bonuses from the system or from other modules only appear when the roll
 * `Hide NPC and GM rolls from players` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret. On cards with rolls of several actors, such as the Crucible initiative report or a group check, this applies to each roll.
 * `Show unknown terms` keeps unresolved parts visible.
 * `Debug logging` writes extra information to the browser console for bug reports.
+* `Save debug file` (GM) saves one file for bug reports about all of Sephral’s modules, see [Debug file](#debug-file).
 * `Run self test` (GM) checks the support for your game system, a test roll, the latest roll in the chat and the panel. Run it after every update of Foundry or the system. When a newer version than the tested one is installed, the GM gets a notice once. Macros call it as `game.modules.get("sephrals-roll-breakdown").api.runSelfTest()`.
 
 The gear at the bottom of an open breakdown opens these settings.
@@ -160,6 +164,17 @@ An adapter has two functions:
 
 Missing fields are filled with empty values. An adapter that sets `waitForCard: true` gets the chat card only after the system has finished drawing it. An optional `getMessageActor(message)` returns the actor who rolled when the chat message names no speaker, so the visibility settings treat the roll as that actor's roll. `api.getAdapter(systemId)` returns the adapter registered for a system. When an adapter fails, the chat card stays as it is and the error appears in the browser console.
 
+## Debug file
+
+A debug file shows exactly what Roll Breakdown saw on a chat card. It is one file for all of Sephral’s modules in the world, and GMs save it in two places:
+
+* Right click a chat message and choose `Save Debug File (Sephral’s Modules)` for that message.
+* `Save debug file` in the module settings covers the latest 20 roll messages.
+
+The file holds the versions of Foundry, the system and the active modules, the settings of the modules, the raw data of the messages with their rolls and what each module recorded. For Roll Breakdown that is what the breakdown read from each card (roll type, item, activity, the actor of each roll and every label) and its recent decisions, such as why a message got no panel. Macros call it as `game.modules.get("sephrals-roll-breakdown").api.saveDebugFile(messageId)`, without an id for the latest messages.
+
+The file contains chat text and whispers. Check it before you share it.
+
 ## Help improve the breakdown
 
 I am happy to teach the breakdown new sources when you send concrete examples of missing or wrong labels. It is careful on purpose: an unknown part is better than a wrong label.
@@ -169,5 +184,6 @@ Useful reports include:
 * The game system and Foundry version
 * The module stack, especially modules that change rolls
 * A screenshot of the affected chat card
+* A debug file of that card (see [Debug file](#debug-file))
 
 Send them on [Discord](https://discord.gg/7BjCgDYaBP) or open an issue in this repository.

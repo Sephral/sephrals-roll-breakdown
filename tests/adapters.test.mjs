@@ -1732,3 +1732,122 @@ test("dnd5e adapter names the rule effects of dnd5e 6 and their reasons for adva
   const ruleDice = damage.map((breakdown) => breakdown.diceTerms.find((term) => term.expression === "1d4")?.sourceLabel ?? null);
   assert.deepEqual(ruleDice, ["Battle Blessing", null]);
 });
+
+test("dnd5e adapter names the terms of initiative rolls in dnd5e 6 and dnd5e 5", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const translations = {
+    ...createTranslations(),
+    "SRB.Rule.Context.INITIATIVE": "initiative roll",
+    "SRB.Rule.InitiativeAbility": "Initiative ability {ability}",
+    "SRB.Rule.InitiativeBonusLabel": "Initiative bonus",
+    "SRB.Rule.InitiativeBonus": "Initiative bonus detail",
+    "SRB.Rule.ConditionReduction": "{condition} penalty",
+    "DND5E.ConExhaustion": "Exhaustion"
+  };
+  const { game } = createGameStub({ lang: "en", systemId: "dnd5e", translations });
+  globalThis.game = game;
+  globalThis.fetch = async () => ({ ok: true, async json() { return translations; } });
+  globalThis.CONFIG ??= {};
+  globalThis.CONFIG.DND5E = { abilities: { dex: { label: "Dexterity" } }, skills: {}, tools: {}, defaultAbilities: { initiative: "dex" }, conditionTypes: { exhaustion: { name: "DND5E.ConExhaustion" } } };
+
+  // Jack of All Trades: half proficiency, an initiative bonus of 2, two levels of exhaustion (dnd5e 6 getter)
+  const actor = {
+    system: {
+      abilities: { dex: { mod: 3, value: 16, check: { roll: { bonus: "" } } } },
+      attributes: { prof: 2, init: { ability: "", mod: 3, prof: { hasProficiency: true, term: "1", multiplier: 0.5 }, roll: { bonus: "2" } } },
+      rolls: { ability: { check: { bonus: "" } } }
+    },
+    conditionRollReductions: { exhaustion: -4 },
+    items: [],
+    effects: []
+  };
+  const d20 = (result, ...mods) => [new DiceTerm("1d20", result, { number: 1, faces: 20 }), ...mods.flatMap((m) => [new OperatorTerm(m < 0 ? "-" : "+"), new NumericTerm(Math.abs(m))])];
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+  game.system.version = "6.0.6";
+  const [modern] = await adapter.buildBreakdowns({
+    type: "check", flags: { core: { initiativeRoll: true } }, system: { ability: "dex", type: "initiative", skill: null, tool: null },
+    getAssociatedActor() { return actor; },
+    rolls: [{ formula: "1d20 + 3 + 1 + 2 - 4", total: 12, options: { ability: "dex" }, terms: d20(10, 3, 1, 2, -4) }]
+  });
+  assert.deepEqual(modern.modifiers.map((term) => term.sourceLabel), ["DEX modifier", "Half Proficiency", "Initiative bonus", "Exhaustion"]);
+
+  // dnd5e 5 posts initiative without roll flags and keeps the bonus at attributes.init.bonus
+  game.system.version = "5.3.3";
+  const legacyActor = {
+    system: {
+      abilities: { dex: { mod: 2, value: 14, bonuses: { check: "1" } } },
+      attributes: { prof: 2, init: { ability: "", mod: 2, prof: { hasProficiency: false, term: "0", multiplier: 0 }, bonus: "3" } },
+      bonuses: { abilities: { check: "" } }
+    },
+    items: [],
+    effects: []
+  };
+  const [legacy] = await adapter.buildBreakdowns({
+    flags: { core: { initiativeRoll: true } },
+    getAssociatedActor() { return legacyActor; },
+    rolls: [{ formula: "1d20 + 2 + 3 + 1", total: 15, options: {}, terms: d20(9, 2, 3, 1) }]
+  });
+  assert.deepEqual(legacy.modifiers.map((term) => term.sourceLabel), ["DEX modifier", "Initiative bonus", "DEX check bonus"]);
+});
+
+test("dnd5e adapter names save terms after the roller, also on cards of the caster", async () => {
+  resetGlobals();
+  installRollEnvironment();
+
+  const { game } = createGameStub({ lang: "en", systemId: "dnd5e", translations: createTranslations() });
+  globalThis.game = game;
+  game.system.version = "6.0.6";
+  globalThis.fetch = async () => ({ ok: true, async json() { return createTranslations(); } });
+  globalThis.CONFIG ??= {};
+  globalThis.CONFIG.DND5E = { abilities: { dex: { label: "Dexterity" }, wis: { label: "Wisdom" } }, skills: {}, tools: {}, itemProperties: {} };
+
+  const caster = { id: "caster", system: { abilities: { dex: { mod: 3, save: { prof: { hasProficiency: false, multiplier: 0 } } }, wis: { mod: 4 } }, attributes: { prof: 3, ac: { cover: 0 } } }, items: [], effects: [] };
+  const target = {
+    id: "target",
+    system: { abilities: { dex: { mod: 0, save: { prof: { hasProficiency: true, term: "4", multiplier: 1 }, roll: { bonus: "5" } } } }, attributes: { prof: 4, ac: { cover: 0 } } },
+    items: [],
+    effects: []
+  };
+  const item = { name: "Sacred Flame", type: "spell", actor: caster, system: { range: { value: 60 }, source: { rules: "2024" } } };
+  const activity = { type: "save", save: { ability: new Set(["dex"]) }, damage: { parts: [{ number: 1, denomination: 8, bonus: "" }] } };
+  const token = { documentName: "Token", id: "tok", actor: target };
+  globalThis.fromUuid = async (uuid) => ({
+    "Actor.caster.Item.flame": item,
+    "Actor.caster.Item.flame.Activity.save": activity,
+    "Scene.s.Token.tok": token
+  }[uuid] ?? null);
+  const references = { item: { id: "flame", uuid: "Actor.caster.Item.flame", type: "spell" }, activity: { id: "save", uuid: "Actor.caster.Item.flame.Activity.save", type: "save" } };
+  const saveTerms = () => [new DiceTerm("2d20kh", 12, { number: 2, faces: 20 }), new OperatorTerm("+"), new NumericTerm(0), new OperatorTerm("+"), new NumericTerm(4),
+    new OperatorTerm("+"), new NumericTerm(5), new OperatorTerm("+"), new NumericTerm(0)];
+
+  const { Dnd5eRollAdapter } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const adapter = new Dnd5eRollAdapter();
+
+  // dnd5e 6 save button: the save message names the caster's item, the speaker rolled
+  const saveMessage = {
+    id: "save1", type: "save", flags: {}, speaker: { token: "tok", actor: "target" },
+    system: { ability: "dex", type: "ability", ...references },
+    getAssociatedActor() { return target; },
+    rolls: [{ formula: "2d20kh + 0 + 4 + 5 + 0", total: 21, options: { rollType: "save", advantageMode: 1, originatingMessage: "card1" }, terms: saveTerms() }]
+  };
+  const [save] = await adapter.buildBreakdowns(saveMessage);
+  assert.deepEqual(save.modifiers.map((term) => term.sourceLabel), ["DEX modifier", "Proficiency", "DEX save bonus", "Cover"]);
+
+  // midi-qol puts the target's save on its card next to the damage roll
+  game.messages = { contents: [saveMessage] };
+  const [damage, cardSave] = await adapter.buildBreakdowns({
+    id: "card1", type: "usage", flags: { "midi-qol": { messageType: "attack" } }, speaker: { actor: "caster" },
+    system: references,
+    getAssociatedActor() { return caster; },
+    rolls: [
+      { formula: "1d8", total: 2, options: { rollType: "damage", type: "radiant" }, terms: [new DiceTerm("1d8", 2, { number: 1, faces: 8 })] },
+      { formula: "2d20kh + 0 + 4 + 5 + 0", total: 21, options: { rollType: "save", advantageMode: 1, originatingMessage: "card1", "midi-qol": { rollType: "save", targetUuid: "Scene.s.Token.tok" } }, terms: saveTerms() }
+    ]
+  });
+  assert.equal(damage.diceTerms[0].sourceLabel, "Base damage");
+  assert.deepEqual(cardSave.modifiers.map((term) => term.sourceLabel), ["DEX modifier", "Proficiency", "DEX save bonus", "Cover"]);
+});

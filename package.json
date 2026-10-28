@@ -1,10 +1,10 @@
 {
   "name": "sephrals-roll-breakdown",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check scripts/srb.js && node --check scripts/settings.js && node --check scripts/roll-breakdown-service.js && node --check scripts/formula-parser.js && node --check scripts/adapter-registry.js && node --check scripts/chat-card-renderer.js && node --check scripts/adapters/generic-adapter.js && node --check scripts/adapters/system-adapter-utils.js && node --check scripts/adapters/dnd5e-adapter.js && node --check scripts/adapters/crucible-adapter.js && node --check scripts/adapters/pf2e-adapter.js && node --check scripts/adapters/swade-adapter.js",
+    "check": "node --check scripts/srb.js && node --check scripts/settings.js && node --check scripts/roll-breakdown-service.js && node --check scripts/formula-parser.js && node --check scripts/adapter-registry.js && node --check scripts/chat-card-renderer.js && node --check scripts/debug.js && node --check scripts/debug-file.mjs && node --check scripts/adapters/generic-adapter.js && node --check scripts/adapters/system-adapter-utils.js && node --check scripts/adapters/dnd5e-adapter.js && node --check scripts/adapters/crucible-adapter.js && node --check scripts/adapters/pf2e-adapter.js && node --check scripts/adapters/swade-adapter.js",
     "check:manifest": "node build/validate-manifest.mjs",
     "test": "node --test",
     "test:coverage": "node --test --experimental-test-coverage",

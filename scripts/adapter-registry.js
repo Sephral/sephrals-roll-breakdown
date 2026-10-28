@@ -109,7 +109,7 @@ export function normalizeBreakdown(breakdown) {
 }
 
 // Public API on game.modules.get("sephrals-roll-breakdown").api
-export function createApi({ registry, onRegister, runSelfTest }) {
+export function createApi({ registry, onRegister, runSelfTest, saveDebugFile }) {
   return Object.freeze({
     registerAdapter(systemId, adapter) {
       const registered = registry.register(systemId, adapter);
@@ -127,6 +127,10 @@ export function createApi({ registry, onRegister, runSelfTest }) {
     },
     runSelfTest(options) {
       return runSelfTest?.(options);
+    },
+    // One file for all of Sephral's modules, without a message id about their latest picture
+    saveDebugFile(messageId) {
+      return saveDebugFile?.(messageId);
     }
   });
 }

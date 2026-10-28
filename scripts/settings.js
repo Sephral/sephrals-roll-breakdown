@@ -1,3 +1,5 @@
+import { registerDebugMenu } from "./debug-file.mjs";
+
 export const MODULE_ID = "sephrals-roll-breakdown";
 
 export const SETTINGS = {
@@ -233,6 +235,7 @@ export function registerSettings() {
     },
     restricted: true
   });
+  registerDebugMenu(MODULE_ID, { name: localize("Debug.Title"), label: localize("Debug.Save"), hint: localize("Debug.Hint") });
 }
 
 export function localize(key, data = null) {

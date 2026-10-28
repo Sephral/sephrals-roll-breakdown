@@ -172,6 +172,7 @@ function getCheckContextLabel(rollType, rollId = null) {
   if (rollType === "death") return localizeRule("Context.DEATH", null);
   if (rollType === "skill") return rollId ? localizeRule("Context.SKILL", { skill: rollId }) : localizeRule("Context.SKILL_GENERIC", null);
   if (rollType === "tool") return rollId ? localizeRule("Context.TOOL", { tool: rollId }) : localizeRule("Context.TOOL_GENERIC", null);
+  if (rollType === "initiative") return localizeRule("Context.INITIATIVE", null);
   return localizeRule("Context.CHECK", null);
 }
 
@@ -187,6 +188,7 @@ function getActorCheckDetail(rollType, abilityLabel, rollId = null) {
   if (rollType === "death") return localizeRule("DeathSaveAbility", { ability: abilityLabel });
   if (rollType === "skill") return localizeRule("SkillAbility", { ability: abilityLabel });
   if (rollType === "tool") return localizeRule("ToolAbility", { ability: abilityLabel });
+  if (rollType === "initiative") return localizeRule("InitiativeAbility", { ability: abilityLabel });
   return localizeRule("CheckAbility", { ability: abilityLabel });
 }
 
@@ -230,6 +232,13 @@ function resolveActorRollAbility(actor, rollType, rollFlags) {
     return rollFlags.ability
       || actor.system?.attributes?.concentration?.ability
       || CONFIG.DND5E?.defaultAbilities?.concentration;
+  }
+
+  if (rollType === "initiative") {
+    return rollFlags.ability
+      || actor.system?.attributes?.init?.ability
+      || globalThis.CONFIG?.DND5E?.defaultAbilities?.initiative
+      || "dex";
   }
 
   if (rollType === "death") return null;
@@ -383,8 +392,9 @@ function createCandidate(label, expression, { sourceType = "effect", confidence 
       continue;
     }
 
+    // Foundry parses a lone "-2" as one negative number, inside a roll the same value is an operator and a 2.
     const rawNumericValue = toFiniteNumber(term?.total ?? term?.number ?? term?.term);
-    const signedValue = rawNumericValue === null ? null : (pendingOperator === "-" ? -Math.abs(rawNumericValue) : Math.abs(rawNumericValue));
+    const signedValue = rawNumericValue === null ? null : (pendingOperator === "-" ? -Math.abs(rawNumericValue) : rawNumericValue);
     segments.push({
       label,
       detail: joinDetails(detail, createFormulaDetail(getTermExpression(term))),
@@ -516,6 +526,7 @@ function buildAttackSourceCandidates(actor, item, activity, message) {
     }
   }
 
+  candidates.push(...buildConditionReductionCandidates(actor));
   return candidates;
 }
 
@@ -566,10 +577,85 @@ function buildDamageSourceCandidates(actor, item, activity) {
   return candidates;
 }
 
-function buildActorRollSourceCandidates(actor, message) {
-  const rollType = resolveMessageRollType(message);
-  const rollFlags = getRollFlags(message);
-  if (!["ability", "save", "skill", "tool", "concentration", "death"].includes(rollType) || !actor) return [];
+function readDnd5eSetting(key) {
+  try {
+    return game.settings.get("dnd5e", key);
+  } catch {
+    return null;
+  }
+}
+
+// Condition penalties on d20 rolls: dnd5e 6 adds one term per condition (actor.conditionRollReductions), dnd5e 5 one
+// exhaustion term under the 2024 rules.
+function buildConditionReductionCandidates(actor) {
+  const conditionTypes = globalThis.CONFIG?.DND5E?.conditionTypes ?? {};
+  let reductions = actor?.conditionRollReductions;
+  if (!reductions || typeof reductions !== "object") {
+    const level = toFiniteNumber(actor?.system?.attributes?.exhaustion);
+    const perLevel = toFiniteNumber(conditionTypes.exhaustion?.reduction?.rolls);
+    const immune = Boolean(actor?.system?.traits?.ci?.value?.has?.("exhaustion"));
+    const modern = globalThis.dnd5e?.settings?.rulesVersion === "modern";
+    reductions = level && perLevel && modern && !immune ? { exhaustion: -level * perLevel } : {};
+  }
+
+  return Object.entries(reductions).flatMap(([status, value]) => {
+    const name = conditionTypes[status]?.name ?? conditionTypes[status]?.label;
+    const condition = name ? game.i18n.localize(name) : status;
+    return createCandidate(condition, `${value}`, {
+      sourceType: "actor",
+      confidence: "exact",
+      detail: localizeRule("ConditionReduction", { condition })
+    });
+  });
+}
+
+// Initiative: the ability modifier comes from the caller, then proficiency (Jack of All Trades, Remarkable Athlete,
+// the 2024 Alert), the initiative, ability check and global check bonuses, the 2014 Alert and the optional tiebreaker.
+function buildInitiativeCandidates(actor, ability, abilityLabel, contextLabel) {
+  const candidates = [];
+  const init = actor.system?.attributes?.init ?? {};
+  if (init.prof?.hasProficiency) {
+    candidates.push(...createCandidate(getProficiencyLabel(init.prof.multiplier), init.prof.term, {
+      sourceType: "standard",
+      confidence: "exact",
+      detail: localizeRule("Proficiency", { context: contextLabel })
+    }));
+  }
+
+  const bonuses = [
+    [localizeRuleLabel("InitiativeBonusLabel", null, "Initiative bonus"), readMoved(actor.system, "attributes.init.roll.bonus", "attributes.init.bonus"), "exact", localizeRule("InitiativeBonus", null)],
+    [`${abilityLabel} ${localizeRule("CheckBonusLabel", null)}`, readMoved(ability, "check.roll.bonus", "bonuses.check"), "exact", getActorCheckDetail("initiative", abilityLabel)],
+    [localizeRule("GlobalCheckBonus", null), readMoved(actor.system, "rolls.ability.check.bonus", "bonuses.abilities.check"), "derived", localizeRule("GlobalBonusContext", { context: contextLabel })]
+  ];
+  for (const [label, bonus, confidence, detail] of bonuses) {
+    const expression = sanitizeExpression(bonus);
+    if (expression) candidates.push(...createCandidate(label, expression, { sourceType: "actor", confidence, detail }));
+  }
+
+  if (actor.flags?.dnd5e?.initiativeAlert && globalThis.dnd5e?.settings?.rulesVersion === "legacy") {
+    candidates.push(...createCandidate(localizeRuleLabel("AlertLabel", null, "Alert"), "5", {
+      sourceType: "actor",
+      confidence: "exact",
+      detail: localizeRule("AlertBonus", null)
+    }));
+  }
+
+  const score = toFiniteNumber(ability?.value);
+  if (score !== null && readDnd5eSetting("initiativeDexTiebreaker")) {
+    candidates.push(...createCandidate(localizeRuleLabel("TiebreakerLabel", { ability: abilityLabel }, `Tiebreaker (${abilityLabel})`), `${score / 100}`, {
+      sourceType: "standard",
+      confidence: "exact",
+      detail: localizeRule("Tiebreaker", { ability: abilityLabel })
+    }));
+  }
+
+  return candidates;
+}
+
+const ACTOR_ROLL_TYPES = new Set(["ability", "save", "skill", "tool", "concentration", "death", "initiative"]);
+
+function buildActorRollSourceCandidates(actor, rollType, rollFlags) {
+  if (!ACTOR_ROLL_TYPES.has(rollType) || !actor) return [];
 
   const candidates = [];
   const abilityId = resolveActorRollAbility(actor, rollType, rollFlags);
@@ -585,6 +671,12 @@ function buildActorRollSourceCandidates(actor, message) {
       confidence: "exact",
       detail: getActorCheckDetail(rollType, abilityLabel, rollId)
     }));
+  }
+
+  candidates.push(...buildConditionReductionCandidates(actor));
+  if (rollType === "initiative") {
+    candidates.push(...buildInitiativeCandidates(actor, ability, abilityLabel, contextLabel));
+    return candidates;
   }
 
   if (rollType === "death") {
@@ -728,7 +820,7 @@ function buildActorRollSourceCandidates(actor, message) {
 // roll is made. Their key is a category: attack, check, save, d20 (any of these three), damage or healing. dnd5e checks
 // the conditions of each rule against the roll data and adds a bonus as plain formula parts. The same check on rebuilt
 // roll data tells which effects took part in a roll.
-const RULE_CATEGORIES = { attack: "attack", ability: "check", skill: "check", tool: "check", save: "save", concentration: "save", damage: "damage" };
+const RULE_CATEGORIES = { attack: "attack", ability: "check", skill: "check", tool: "check", initiative: "check", save: "save", concentration: "save", damage: "damage" };
 
 const RULE_ADVANTAGE_TYPES = { "1": "ADV", "+1": "ADV", "=1": "ADV", "=+1": "ADV", "-1": "DIS", "=-1": "DIS", ">=0": "NODIS", "<=0": "NOADV" };
 
@@ -746,8 +838,7 @@ function collectRules(category, type, actor, item, rollData, consumed = null) {
 }
 
 // The roll data dnd5e checked the rules against, rebuilt from the card and the current actor.
-function buildRuleRollData(rollType, { actor, item, activity, message, roll = null }) {
-  const rollFlags = getRollFlags(message);
+function buildRuleRollData(rollType, { actor, item, activity, message, roll = null, rollFlags = getRollFlags(message) }) {
   try {
     if (rollType === "attack" || rollType === "damage") {
       const data = activity?.getRollData?.({ roll: { ability: rollFlags.ability, attackMode: rollFlags.attackMode } });
@@ -767,6 +858,8 @@ function buildRuleRollData(rollType, { actor, item, activity, message, roll = nu
       const id = rollType === "skill" ? rollFlags.skillId : rollFlags.toolId;
       const relevant = rollType === "skill" ? actor.system?.skills?.[id] : actor.system?.tools?.[id];
       Object.assign(data.roll, { ability: abilityId, proficient: (relevant?.prof?.multiplier ?? 0) >= 1, type: rollType, [rollType]: id });
+    } else if (rollType === "initiative") {
+      Object.assign(data.roll, { ability: abilityId, proficient: (actor.system?.attributes?.init?.prof?.multiplier ?? 0) >= 1, type: "initiative" });
     } else {
       const kind = rollType === "ability" ? "check" : "save";
       Object.assign(data.roll, {
@@ -928,7 +1021,9 @@ function resolveMessageRollType(message, roll = null) {
   const own = roll?.options?.rollType ?? roll?.options?.["midi-qol"]?.rollType;
   const fromMessage = getRollFlags(message).type;
   if (own && !REFINED_ROLL_TYPES[own]?.includes(fromMessage)) return own;
+  // dnd5e 5 posts initiative without roll flags, core marks the message
   return fromMessage
+    ?? (message?.flags?.core?.initiativeRoll ? "initiative" : undefined)
     ?? (getStoredRolls(message) ?? message?.rolls ?? []).find?.((candidate) => typeof candidate?.options?.rollType === "string")?.options?.rollType
     ?? getMessageReference(message, "activity")?.type
     ?? message?.flags?.["midi-qol"]?.messageType
@@ -983,18 +1078,18 @@ function extractAdvantageContext(message, roll, rollType, ruleAttributions = [])
 
 // The rule effects of one card: bonus candidates per roll (a damage rule counts for the first matching part only) and
 // advantage reasons per roll type.
-function createRuleSources({ actor, item, activity, message }) {
+function createRuleSources({ actor, item, activity, message, rollFlags = getRollFlags(message) }) {
   const consumed = new Set();
   const rollData = new Map();
   const dataFor = (rollType) => {
-    if (!rollData.has(rollType)) rollData.set(rollType, buildRuleRollData(rollType, { actor, item, activity, message }));
+    if (!rollData.has(rollType)) rollData.set(rollType, buildRuleRollData(rollType, { actor, item, activity, message, rollFlags }));
     return rollData.get(rollType);
   };
   return {
     bonusCandidates(rollType, roll) {
       const category = rollType === "damage" && activity?.type === "heal" ? "healing" : RULE_CATEGORIES[rollType];
       if (!category || !actor) return [];
-      const data = rollType === "damage" ? buildRuleRollData(rollType, { actor, item, activity, message, roll }) : dataFor(rollType);
+      const data = rollType === "damage" ? buildRuleRollData(rollType, { actor, item, activity, message, roll, rollFlags }) : dataFor(rollType);
       const rules = collectRules(category, "bonus", actor, ["attack", "damage"].includes(rollType) ? item : null, data, rollType === "damage" ? consumed : null);
       return buildRuleBonusCandidates(rules, data, rollType, item, actor);
     },
@@ -1006,6 +1101,32 @@ function createRuleSources({ actor, item, activity, message }) {
       return buildRuleAdvantageAttributions(collectRules(category, "advantage", actor, rollType === "attack" ? item : null, data));
     }
   };
+}
+
+// The roller of a check, save or initiative. A roll message names its roller as speaker: a dnd5e 6 save rolled from a
+// card also names the caster's item, whose actor would be the wrong one. midi-qol copies the saves of its targets onto
+// its own card, there the roll names its target and the target's save message the ability. Rolls on other cards keep
+// the speaker only when the card itself counts as such a roll (dnd5e 5 initiative, cards of other modules).
+async function resolveActorRollContext(message, roll, messageRollType, speakerActor, activity) {
+  const rollFlags = getRollFlags(message);
+  const targetUuid = roll?.options?.["midi-qol"]?.targetUuid;
+  if (ACTOR_ROLL_TYPES.has(rollFlags.type)) return { actor: speakerActor, rollFlags };
+  if (!targetUuid) return { actor: ACTOR_ROLL_TYPES.has(messageRollType) ? speakerActor : null, rollFlags };
+
+  let target = null;
+  try {
+    target = typeof fromUuid === "function" ? await fromUuid(targetUuid) : null;
+  } catch {
+    target = null;
+  }
+  const actor = target?.documentName === "Actor" ? target : target?.actor ?? null;
+  if (!actor) return { actor: null, rollFlags: {} };
+
+  const isTargetMessage = (candidate) => (target.documentName === "Token" ? candidate?.speaker?.token === target.id : candidate?.speaker?.actor === actor.id);
+  const linked = game.messages?.contents?.findLast?.((candidate) => candidate !== message && isTargetMessage(candidate)
+    && candidate.rolls?.some?.((other) => other?.options?.originatingMessage === message.id));
+  const ability = (linked ? getRollFlags(linked).ability : null) ?? getFirstAvailableAbility(activity?.save?.ability);
+  return { actor, rollFlags: { ability: ability ?? undefined } };
 }
 
 export class Dnd5eRollAdapter extends GenericRollAdapter {
@@ -1022,6 +1143,32 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
     return game.system?.id === "dnd5e" && this.getMessageRolls(message).length > 0;
   }
 
+  // What the adapter reads from a card, for debug files: roll type, item, activity and the roller of each roll.
+  async debugInfo(message) {
+    const rollType = resolveMessageRollType(message);
+    const item = await resolveMessageItem(message);
+    const speakerActor = message?.getAssociatedActor?.() ?? null;
+    const actor = item?.actor ?? speakerActor;
+    const activity = await resolveMessageActivity(message, item, actor);
+    const rolls = [];
+    for (const [index, roll] of this.getMessageRolls(message).entries()) {
+      const currentRollType = resolveMessageRollType(message, roll) ?? rollType;
+      const context = ACTOR_ROLL_TYPES.has(currentRollType)
+        ? await resolveActorRollContext(message, roll, rollType, speakerActor ?? actor, activity)
+        : { actor, rollFlags: null };
+      rolls.push({ index, rollType: currentRollType, actor: context.actor?.uuid ?? null, rollFlags: context.rollFlags });
+    }
+    return {
+      rollType,
+      rollFlags: getRollFlags(message),
+      item: item?.uuid ?? null,
+      activity: activity?.uuid ?? null,
+      speakerActor: speakerActor?.uuid ?? null,
+      readySetRoll: Boolean(getStoredRolls(message)),
+      rolls
+    };
+  }
+
   async buildBreakdowns(message) {
     await ensureSystemTranslationsLoaded();
 
@@ -1029,11 +1176,9 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
     if (!rollType) return super.buildBreakdowns(message);
 
     const item = await resolveMessageItem(message);
-    const actor = item?.actor ?? message?.getAssociatedActor?.() ?? null;
+    const speakerActor = message?.getAssociatedActor?.() ?? null;
+    const actor = item?.actor ?? speakerActor;
     const activity = await resolveMessageActivity(message, item, actor);
-    const actorRollCandidates = actor && ["ability", "save", "skill", "tool", "concentration", "death"].includes(rollType)
-      ? buildActorRollSourceCandidates(actor, message)
-      : null;
     const attackCandidates = item && activity && actor
       ? buildAttackSourceCandidates(actor, item, activity, message)
       : null;
@@ -1042,36 +1187,37 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
       : null;
     const rules = createRuleSources({ actor, item, activity, message });
 
-    return this.getMessageRolls(message)
-      .map((roll, index) => {
-        const currentRollType = resolveMessageRollType(message, roll) ?? rollType;
-        const baseCandidates = ["ability", "save", "skill", "tool", "concentration", "death"].includes(currentRollType)
-          ? actorRollCandidates
-          : currentRollType === "attack"
-            ? attackCandidates
-            : currentRollType === "damage"
-              ? damageCandidates
-              : null;
-        const ruleCandidates = rules.bonusCandidates(currentRollType, roll);
-        const candidates = baseCandidates || ruleCandidates.length ? [...(baseCandidates ?? []), ...ruleCandidates] : null;
+    const breakdowns = [];
+    for (const [index, roll] of this.getMessageRolls(message).entries()) {
+      const currentRollType = resolveMessageRollType(message, roll) ?? rollType;
+      let baseCandidates = currentRollType === "attack" ? attackCandidates : currentRollType === "damage" ? damageCandidates : null;
+      let rollRules = rules;
+      if (ACTOR_ROLL_TYPES.has(currentRollType)) {
+        const context = await resolveActorRollContext(message, roll, rollType, speakerActor ?? actor, activity);
+        baseCandidates = context.actor ? buildActorRollSourceCandidates(context.actor, currentRollType, context.rollFlags) : null;
+        rollRules = createRuleSources({ actor: context.actor, item, activity, message, rollFlags: context.rollFlags });
+      }
+      const ruleCandidates = rollRules.bonusCandidates(currentRollType, roll);
+      const candidates = baseCandidates || ruleCandidates.length ? [...(baseCandidates ?? []), ...ruleCandidates] : null;
 
-        const breakdown = parseRoll(roll, {
-          adapterId: this.id,
-          rollIndex: index,
-          termSourceResolver: candidates ? createTermSourceResolver(candidates) : null
-        });
+      const breakdown = parseRoll(roll, {
+        adapterId: this.id,
+        rollIndex: index,
+        termSourceResolver: candidates ? createTermSourceResolver(candidates) : null
+      });
 
-        if (currentRollType === "damage" && breakdown.diceTerms.length > 0) {
-          breakdown.hasVisibleContent = true;
-        }
+      if (currentRollType === "damage" && breakdown.diceTerms.length > 0) {
+        breakdown.hasVisibleContent = true;
+      }
 
-        breakdown.advantageContext = extractAdvantageContext(message, roll, currentRollType, rules.advantage(currentRollType));
-        if (breakdown.advantageContext) {
-          breakdown.hasVisibleContent = true;
-        }
+      breakdown.advantageContext = extractAdvantageContext(message, roll, currentRollType, rollRules.advantage(currentRollType));
+      if (breakdown.advantageContext) {
+        breakdown.hasVisibleContent = true;
+      }
 
-        return breakdown;
-      })
-      .filter((breakdown) => breakdown.hasVisibleContent);
+      breakdowns.push(breakdown);
+    }
+
+    return breakdowns.filter((breakdown) => breakdown.hasVisibleContent);
   }
 }
