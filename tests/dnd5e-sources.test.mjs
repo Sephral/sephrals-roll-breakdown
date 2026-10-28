@@ -252,13 +252,20 @@ test("dnd5e reads Monk's TokenBar cards per roll and names the roller of each ro
     speaker: {}, getAssociatedActor: () => null, rolls: [rollA, rollB],
     flags: { "monks-tokenbar": {
       rollmode: "roll",
-      tokena: { uuid: "Scene.s.Token.a", request: { type: "save", key: "dex" }, roll: { formula: rollA.formula, total: rollA.total } },
-      tokenb: { uuid: "Scene.s.Token.b", request: { type: "save", key: "dex" }, roll: { formula: rollB.formula, total: rollB.total } }
+      tokena: { uuid: "Scene.s.Token.a", name: "Aria", request: { type: "save", key: "dex" }, roll: { formula: rollA.formula, total: rollA.total } },
+      tokenb: { uuid: "Scene.s.Token.b", name: "Bren", request: { type: "save", key: "dex" }, roll: { formula: rollB.formula, total: rollB.total } }
     } }
   };
   const breakdowns = await adapter.buildBreakdowns(message);
   assert.deepEqual(breakdowns.map((breakdown) => breakdown.modifiers.map((term) => term.sourceLabel)), [["DEX modifier", "Proficiency"], ["DEX modifier", "Global save bonus"]]);
   assert.deepEqual(adapter.getRollActors(message), [aria, bren]);
+  // The GM sees the name of each roller above its roll, a player only for the own hero
+  assert.deepEqual(breakdowns.map((breakdown) => breakdown.title ?? null), [null, null]);
+  globalThis.game.user.isGM = true;
+  assert.deepEqual((await adapter.buildBreakdowns(message)).map((breakdown) => breakdown.title), ["Aria", "Bren"]);
+  globalThis.game.user.isGM = false;
+  aria.isOwner = true;
+  assert.deepEqual((await adapter.buildBreakdowns(message)).map((breakdown) => breakdown.title ?? null), ["Aria", null]);
   assert.equal(adapter.getRollActors({ rolls: [rollA], flags: {} }), null);
 });
 
@@ -343,4 +350,37 @@ test("dnd5e names terms after the sheet modifier when nothing else explains them
   actor.system.attributes.init.total = 5;
   const [other] = await adapter.buildBreakdowns(message(14));
   assert.deepEqual(other.modifiers.map((term) => term.sourceLabel), ["DEX modifier", null, null]);
+});
+
+test("dnd5e explains the summed damage of Mob Attack Tool: four hits in one roll without an item reference", async () => {
+  const { adapter } = await setup();
+  const base = { number: 1, denomination: 6, scaledFormula: () => "1d6", formula: "1d6" };
+  const scimitar = { name: "Scimitar", type: "weapon", system: { range: { value: 5 }, damage: { base }, activities: [{ type: "attack", attack: { ability: "dex" }, damage: { parts: [base] }, getRollData: () => ({ mod: 2 }) }] } };
+  const goblin = makeActor({ abilities: { dex: { mod: 2 } }, attributes: { prof: 2 } }, { items: [scimitar] });
+  goblin.items.getName = (name) => goblin.items.find((entry) => entry.name === name) ?? null;
+  scimitar.actor = goblin;
+  const [damage] = await adapter.buildBreakdowns({ flavor: "Scimitar - Damage Roll (Slashing)", flags: { dnd5e: { roll: { type: "damage" } } }, getAssociatedActor: () => goblin,
+    rolls: [{ formula: "4d6 + 8", total: 20, options: { type: "slashing" }, terms: terms("4d6", 8) }] });
+  assert.deepEqual(labels(damage), ["Base damage", "DEX modifier ×4"]);
+
+  // Without a speaker (as Mob Attack Tool posts it) and with a critical hit: the goblin is found among the actors
+  globalThis.game.actors = { contents: [makeActor({ abilities: { dex: { mod: 1 } } }), goblin] };
+  const [critical] = await adapter.buildBreakdowns({ flavor: "Scimitar - Damage Roll (Slashing) (Crit included)", flags: { dnd5e: { roll: { type: "damage" } } }, getAssociatedActor: () => null,
+    rolls: [{ formula: "5d6 + 8", total: 25, options: { type: "slashing" }, terms: terms("5d6", 8) }] });
+  assert.deepEqual(labels(critical), ["Base damage", "DEX modifier ×4"]);
+  delete globalThis.game.actors;
+});
+
+test("dnd5e finds the weapon of a midi-qol damage only card through the name of its temporary item", async () => {
+  const { adapter } = await setup();
+  const base = { number: 1, denomination: 6, scaledFormula: () => "1d6", formula: "1d6" };
+  const scimitar = { name: "Scimitar", type: "weapon", system: { range: { value: 5 }, damage: { base }, activities: [{ type: "attack", attack: { ability: "dex" }, damage: { parts: [base] }, getRollData: () => ({ mod: 2 }) }] } };
+  const goblin = makeActor({ abilities: { dex: { mod: 2 } }, attributes: { prof: 2 } }, { items: [scimitar] });
+  goblin.items.getName = (name) => goblin.items.find((entry) => entry.name === name) ?? null;
+  scimitar.actor = goblin;
+  globalThis.fromUuid = async () => null;
+  const [damage] = await adapter.buildBreakdowns({ type: "usage", flavor: "", getAssociatedActor: () => goblin,
+    system: { item: { id: "tmp", uuid: "Actor.g.Item.tmp", name: "Scimitar - Damage Roll (Slashing)" }, activity: { id: "a", uuid: "Actor.g.Item.tmp.Activity.a" } },
+    rolls: [{ formula: "1d6 + 2", total: 6, options: { rollType: "damage", "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d6", 2) }] });
+  assert.deepEqual(labels(damage), ["Base damage", "DEX modifier"]);
 });

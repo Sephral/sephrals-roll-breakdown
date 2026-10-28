@@ -1416,7 +1416,7 @@ async function resolveActorRollContext(message, roll, messageRollType, speakerAc
   const linked = game.messages?.contents?.findLast?.((candidate) => candidate !== message && isTargetMessage(candidate)
     && candidate.rolls?.some?.((other) => other?.options?.originatingMessage === message.id));
   const ability = (linked ? getRollFlags(linked).ability : null) ?? getFirstAvailableAbility(activity?.save?.ability);
-  return { actor, rollFlags: { ability: ability ?? undefined } };
+  return { actor, rollFlags: { ability: ability ?? undefined }, title: target.name ?? actor.name ?? null };
 }
 
 // dnd5e keeps a situational bonus from the roll dialog only in the roll data, which a chat message does not store,
@@ -1492,7 +1492,7 @@ function resolveTokenBarContext(message, roll, index) {
     const tool = actor?.items?.find?.((item) => item._stats?.compendiumSource === key || item.flags?.core?.sourceId === key || slug(item.name) === key);
     rollFlags.toolId = tool?.system?.type?.baseItem || tool?.system?.identifier || key;
   }
-  return { actor, rollFlags, rollType };
+  return { actor, rollFlags, rollType, title: entry.name ?? actor?.name ?? null };
 }
 
 // The modifier the character sheet shows for initiative, a skill or a save.
@@ -1530,11 +1530,53 @@ function applySheetTotal(breakdown, actor, rollType, rollFlags) {
 
 // Everything a card offers as term sources: item, activity and speaker, then per roll its type, roller, rule sources
 // and candidates. The breakdowns and the debug file read a card the same way.
+// A damage card that names no item, only "Scimitar - Damage Roll" in its flavor: Mob Attack Tool sums the damage of
+// several hits into one roll that way, without a speaker. With midi-qol the text is the name of a temporary item of
+// the card instead. The item of that name on the speaker, or else on the actors of the scene and the world whose
+// numbers explain the roll.
+function resolveFlavorItem(message, roll) {
+  const flavor = String(message?.flavor || getMessageReference(message, "item")?.name || "");
+  const separator = flavor.indexOf(" - ");
+  if (separator <= 0) return null;
+  const name = flavor.slice(0, separator).trim();
+  const speaker = message?.getAssociatedActor?.() ?? null;
+  const actors = speaker ? [speaker]
+    : [...new Set([...Array.from(globalThis.canvas?.scene?.tokens ?? []).map((token) => token.actor), ...(game.actors?.contents ?? [])].filter(Boolean))];
+  for (const actor of actors) {
+    const item = actor.items?.getName?.(name) ?? null;
+    const activity = item?.system?.activities?.find?.((candidate) => candidate?.damage?.parts?.length) ?? null;
+    if (!item || !activity) continue;
+    if (speaker || buildMultipliedDamageCandidates(roll, actor, item, activity).length) return { actor, item, activity };
+  }
+  return null;
+}
+
+// The damage of several hits in one roll: the item's die rolled once per hit (and more on a critical hit), the
+// ability modifier times the number of hits.
+function buildMultipliedDamageCandidates(roll, actor, item, activity) {
+  const base = activity?.damage?.parts?.[0];
+  const die = (roll?.terms ?? []).find((term) => isDiceTerm(term));
+  if (!base?.denomination || toFiniteNumber(die?.faces) !== base.denomination) return [];
+  const abilityKey = resolveActivityAbility(actor, item, activity);
+  const abilityMod = toFiniteNumber(actor?.system?.abilities?.[abilityKey]?.mod);
+  const numeric = (roll?.terms ?? []).filter((term) => getTermType(term) === "NumericTerm").map((term) => toFiniteNumber(term.number ?? term.total) ?? 0);
+  if (!abilityMod || numeric.length !== 1) return [];
+  const hits = numeric[0] / abilityMod;
+  if (!Number.isInteger(hits) || hits < 2 || toFiniteNumber(die.number) < hits * (base.number || 1)) return [];
+  const detail = localizeRule("MultipliedDamage", { hits, item: item.name });
+  return [
+    ...createCandidate(localizeRuleLabel("BaseDamageLabel", null, "Base damage"), die.expression ?? `${die.number}d${die.faces}`, { sourceType: "item", confidence: "exact", detail }),
+    ...createCandidate(`${abilityModifierLabel(localizeAbilityLabel(abilityKey))} ×${hits}`, `${numeric[0]}`, { sourceType: "standard", confidence: "exact", detail })
+  ];
+}
+
 async function readCardRolls(message, rolls, rollType) {
-  const item = await resolveMessageItem(message);
+  let item = await resolveMessageItem(message);
   const speakerActor = message?.getAssociatedActor?.() ?? null;
-  const actor = item?.actor ?? speakerActor;
-  const activity = await resolveMessageActivity(message, item, actor);
+  let activity = await resolveMessageActivity(message, item, item?.actor ?? speakerActor);
+  const flavorItem = !item && rollType === "damage" ? resolveFlavorItem(message, rolls[0]) : null;
+  if (flavorItem) ({ item, activity } = flavorItem);
+  const actor = flavorItem?.actor ?? item?.actor ?? speakerActor;
   const attackCandidates = item && activity && actor
     ? buildAttackSourceCandidates(actor, item, activity, message)
     : null;
@@ -1568,6 +1610,7 @@ async function readCardRolls(message, rolls, rollType) {
     const ruleCandidates = [...rollRules.bonusCandidates(currentRollType, roll), ...buildSituationalCandidates(roll)];
     const candidates = baseCandidates || ruleCandidates.length ? [...(baseCandidates ?? []), ...ruleCandidates] : null;
     const basePool = baseCandidates && baseCandidates === damageCandidates ? damagePool : [...(baseCandidates ?? [])];
+    if (flavorItem && currentRollType === "damage") basePool.unshift(...buildMultipliedDamageCandidates(roll, actor, item, activity));
     result.push({ index, roll, rollType: currentRollType, context, rules: rollRules, candidates, pools: [basePool, ruleCandidates] });
   }
   return { item, activity, speakerActor, rolls: result };
@@ -1638,6 +1681,8 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
         termSourceResolver: candidates ? createTermSourceResolver(...pools) : null
       });
       if (context?.actor) applySheetTotal(breakdown, context.actor, currentRollType, context.rollFlags);
+      // Cards with rolls of several actors name each roll after its roller, for the GM and for the owners of the roller
+      if (context?.title && (game.user?.isGM || context.actor?.isOwner)) breakdown.title = context.title;
 
       if (currentRollType === "damage" && breakdown.diceTerms.length > 0) {
         breakdown.hasVisibleContent = true;

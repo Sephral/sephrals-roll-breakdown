@@ -79,5 +79,6 @@
   "SRB.Rule.SituationalLabel": "Situationsbonus",
   "SRB.Rule.SituationalBonus": "Im Würfeldialog eingetragener Bonus.",
   "SRB.Rule.SheetBonusLabel": "Bonus laut Bogen",
-  "SRB.Rule.SheetBonus": "Teil des Modifikators auf dem Charakterbogen ({context}, {total})."
+  "SRB.Rule.SheetBonus": "Teil des Modifikators auf dem Charakterbogen ({context}, {total}).",
+  "SRB.Rule.MultipliedDamage": "Schaden von {hits} Treffern mit {item} in einem Wurf."
 }

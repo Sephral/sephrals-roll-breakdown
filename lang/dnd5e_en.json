@@ -79,5 +79,6 @@
   "SRB.Rule.SituationalLabel": "Situational bonus",
   "SRB.Rule.SituationalBonus": "Bonus entered in the roll dialog.",
   "SRB.Rule.SheetBonusLabel": "Sheet bonus",
-  "SRB.Rule.SheetBonus": "Part of the {context} modifier on the character sheet ({total})."
+  "SRB.Rule.SheetBonus": "Part of the {context} modifier on the character sheet ({total}).",
+  "SRB.Rule.MultipliedDamage": "Damage of {hits} hits with {item} in one roll."
 }
