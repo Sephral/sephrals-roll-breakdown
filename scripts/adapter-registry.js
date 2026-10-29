@@ -109,7 +109,7 @@ export function normalizeBreakdown(breakdown) {
 }
 
 // Public API on game.modules.get("sephrals-roll-breakdown").api
-export function createApi({ registry, onRegister, runSelfTest, saveDebugFile }) {
+export function createApi({ registry, onRegister, runSelfTest, saveDebugFile, getBreakdown }) {
   return Object.freeze({
     registerAdapter(systemId, adapter) {
       const registered = registry.register(systemId, adapter);
@@ -131,6 +131,10 @@ export function createApi({ registry, onRegister, runSelfTest, saveDebugFile }) 
     // One file for all of Sephral's modules, without a message id about their latest picture
     saveDebugFile(messageId) {
       return saveDebugFile?.(messageId);
+    },
+    // Every breakdown of a chat message (or its id), as stored when the roll was made where a copy exists
+    async getBreakdown(messageOrId) {
+      return (await getBreakdown?.(messageOrId)) ?? [];
     }
   });
 }

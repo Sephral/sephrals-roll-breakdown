@@ -259,13 +259,16 @@ test("dnd5e reads Monk's TokenBar cards per roll and names the roller of each ro
   const breakdowns = await adapter.buildBreakdowns(message);
   assert.deepEqual(breakdowns.map((breakdown) => breakdown.modifiers.map((term) => term.sourceLabel)), [["DEX modifier", "Proficiency"], ["DEX modifier", "Global save bonus"]]);
   assert.deepEqual(adapter.getRollActors(message), [aria, bren]);
-  // The GM sees the name of each roller above its roll, a player only for the own hero
-  assert.deepEqual(breakdowns.map((breakdown) => breakdown.title ?? null), [null, null]);
+  // Every roll carries the name of its roller, the panel shows it to the GM and to the owner of the roller only
+  assert.deepEqual(breakdowns.map((breakdown) => [breakdown.title, breakdown.privateTitle]), [["Aria", true], ["Bren", true]]);
+  const { __test__ } = await import("../scripts/roll-breakdown-service.js");
+  const titlesFor = async () => __test__.applyTitleVisibility(message, await adapter.buildBreakdowns(message), adapter).map((breakdown) => breakdown.title ?? null);
+  assert.deepEqual(await titlesFor(), [null, null]);
   globalThis.game.user.isGM = true;
-  assert.deepEqual((await adapter.buildBreakdowns(message)).map((breakdown) => breakdown.title), ["Aria", "Bren"]);
+  assert.deepEqual(await titlesFor(), ["Aria", "Bren"]);
   globalThis.game.user.isGM = false;
   aria.isOwner = true;
-  assert.deepEqual((await adapter.buildBreakdowns(message)).map((breakdown) => breakdown.title ?? null), ["Aria", null]);
+  assert.deepEqual(await titlesFor(), ["Aria", null]);
   assert.equal(adapter.getRollActors({ rolls: [rollA], flags: {} }), null);
 });
 
@@ -463,4 +466,27 @@ test("dnd5e picks the actor bonus of a thrown weapon by its attack mode", async 
   assert.deepEqual(labels(melee), ["Base damage", "STR modifier", "Actor damage bonus"]);
   const [, thrown] = await adapter.buildBreakdowns(card("thrownOneHanded"));
   assert.deepEqual(labels(thrown), ["Base damage", "STR modifier", null]);
+});
+
+test("dnd5e cards keep the sources of the moment they were rolled after an effect expired", async () => {
+  const { adapter } = await setup();
+  const stored = await importStable("scripts/stored-breakdown.js");
+  assert.equal(adapter.storeBreakdowns, true);
+  const bless = { name: "Bless", changes: [{ key: "system.bonuses.abilities.save", type: "add", value: "1d4" }] };
+  const actor = makeActor({ abilities: { wis: { mod: 1, save: { prof: { hasProficiency: false } } } }, attributes: { prof: 2, ac: { cover: 0 } },
+    rolls: { ability: { save: { bonus: "1d4" } } } }, { effects: [bless] });
+  const message = { id: "save", type: "save", system: { ability: "wis", type: "ability" }, flags: {}, getAssociatedActor: () => actor,
+    rolls: [{ formula: "1d20 + 1 + 1d4", total: 14, options: { rollType: "save" }, terms: terms("1d20", 1, "1d4") }] };
+  const atRoll = await adapter.buildBreakdowns(message);
+  assert.deepEqual(atRoll[0].diceTerms.map((term) => term.sourceLabel), [null, "Bless"]);
+  message.flags["sephrals-roll-breakdown"] = { breakdown: stored.buildStoreFlag(message, message.rolls, atRoll, { adapterId: adapter.id, lang: "en" }) };
+
+  // Bless ends: the card rendered from the actor as it is now lost the source, the stored copy keeps it
+  actor.effects.length = 0;
+  actor.system.rolls.ability.save.bonus = "";
+  assert.notDeepEqual((await adapter.buildBreakdowns(message))[0]?.diceTerms.map((term) => term.sourceLabel), [null, "Bless"]);
+  const [restored] = await stored.resolveBreakdowns(adapter, message);
+  assert.deepEqual(restored.diceTerms.map((term) => term.sourceLabel ?? null), [null, "Bless"]);
+  assert.equal(restored.stored, true);
+  assert.equal(restored.rollIndex, 0);
 });

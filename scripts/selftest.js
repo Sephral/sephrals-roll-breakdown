@@ -1,5 +1,6 @@
 import { GenericRollAdapter } from "./adapters/generic-adapter.js";
 import { getSetting, localize, MODULE_ID, SETTINGS } from "./settings.js";
+import { compactBreakdown, readStoredBreakdowns, restoreBreakdown } from "./stored-breakdown.js";
 import { countFeature } from "./usage.mjs";
 
 // Self-test: the support for the game system, a breakdown of a test roll, the breakdown of the latest roll in the
@@ -22,14 +23,19 @@ async function checkIntegrations(service) {
   if (SUPPORTED_SYSTEMS.includes(game.system.id)) check(service.adapter?.id === game.system.id, "Adapter", { system: game.system.title });
 
   let parsed = false;
+  let roundTrip = false;
   try {
-    const roll = await new Roll("1d20 + 3").evaluate();
+    const roll = await new Roll("1d20 + 3[Test]").evaluate();
     const breakdowns = await new GenericRollAdapter().buildBreakdowns({ id: "srb-self-test", rolls: [roll], flags: {} });
     parsed = Array.isArray(breakdowns) && breakdowns.length > 0;
+    // The copy stored on a message reads back as the same breakdown
+    const restored = parsed ? restoreBreakdown(compactBreakdown(breakdowns[0]), 0) : null;
+    roundTrip = restored?.formula === breakdowns[0].formula && restored?.modifiers?.[0]?.sourceLabel === breakdowns[0].modifiers[0]?.sourceLabel;
   } catch (error) {
     console.warn(`${MODULE_ID} | Self-test could not break down a test roll`, error);
   }
   check(parsed, "TestRoll");
+  check(roundTrip, "Stored");
 
   const latest = Array.from(game.messages ?? []).reverse().find((message) => {
     try {
@@ -42,7 +48,9 @@ async function checkIntegrations(service) {
     let built = false;
     try {
       built = Array.isArray(await service.adapter.buildBreakdowns(latest));
+      readStoredBreakdowns(latest, service.adapter.getMessageRolls?.(latest) ?? latest.rolls ?? []);
     } catch (error) {
+      built = false;
       console.warn(`${MODULE_ID} | Self-test could not break down the latest roll`, error);
     }
     check(built, "LatestRoll");

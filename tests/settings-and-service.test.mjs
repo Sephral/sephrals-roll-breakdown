@@ -106,7 +106,7 @@ test("settings load system translations, cache results, and honor render permiss
   assert.equal(settings.localizeSystemTranslation("SRB.Rule.Missing"), "SRB.Rule.Missing");
 
   settings.registerSettings();
-  assert.equal(registrations.length, 10);
+  assert.equal(registrations.length, 14);
   assert.deepEqual(registrations.find((entry) => entry.key === settings.SETTINGS.UI_LANGUAGE).data.choices, {
     default: "Follow Foundry",
     de: "Deutsch",

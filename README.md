@@ -17,6 +17,7 @@
 * **Why advantage?** When modules like MidiQOL record the reasons, the panel lists them, such as flanking, a prone target or long range. In D&D 5e 6 it also names the effects whose rules grant advantage or a bonus.
 * **Honest by design:** the panel only shows what the roll really contains. It never guesses a source.
 * **Monster bonuses stay secret:** players see no breakdown on NPC and GM rolls, unless you want them to.
+* **GM rolls stay behind the screen:** if you like, players see only the total of your rolls, and your private rolls not at all.
 * **Out of the way:** the panel stays folded until someone opens it, and an open panel stays open while the chat updates.
 * **Made for Crucible too:** see which boons and banes changed which die, where every bonus comes from, the result against the DC and how the damage adds up.
 * **More systems:** Pathfinder 2e and Savage Worlds show their named modifiers and results, every other system gets a general breakdown of dice and modifiers.

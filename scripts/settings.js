@@ -8,6 +8,10 @@ export const SETTINGS = {
   DEFAULT_EXPANDED: "defaultExpanded",
   VISIBILITY: "visibility",
   HIDE_NPC_ROLLS: "hideNpcRolls",
+  GM_ROLL_PRIVACY: "gmRollPrivacy",
+  GM_ROLL_PUBLIC: "gmRollPublic",
+  GM_ROLL_PRIVATE: "gmRollPrivate",
+  GM_ROLL_CRITS: "gmRollCrits",
   SHOW_UNKNOWN: "showUnknown",
   DEBUG: "debug",
   ACKNOWLEDGED_VERSIONS: "acknowledgedVersions",
@@ -19,6 +23,13 @@ export const SETTINGS = {
 export const VISIBILITY_MODES = Object.freeze({
   GM: "gm",
   OWNERS: "owners",
+  ALL: "all"
+});
+
+// Which GM rolls players see without formula and dice, or not at all
+export const GM_ROLL_MODES = Object.freeze({
+  OFF: "off",
+  NPC: "npc",
   ALL: "all"
 });
 
@@ -167,14 +178,25 @@ function refreshLocalizedUi() {
   }
 }
 
-function registerBooleanSetting(key, nameKey, hintKey, defaultValue, scope = "client") {
+// The messages that are in the chat log are drawn again, so a changed world setting applies to them right away.
+function refreshChatMessages() {
+  const elements = globalThis.document?.querySelectorAll?.(".chat-message[data-message-id]") ?? [];
+  const messageIds = new Set(Array.from(elements, (element) => element?.dataset?.messageId).filter(Boolean));
+  for (const messageId of messageIds) {
+    const message = game.messages?.get?.(messageId);
+    if (message) void ui?.chat?.updateMessage?.(message);
+  }
+}
+
+function registerBooleanSetting(key, nameKey, hintKey, defaultValue, scope = "client", onChange = undefined) {
   game.settings.register(MODULE_ID, key, {
     name: localize(nameKey),
     hint: localize(hintKey),
     scope,
     config: true,
     type: Boolean,
-    default: defaultValue
+    default: defaultValue,
+    ...(onChange ? { onChange } : {})
   });
 }
 
@@ -212,6 +234,23 @@ export function registerSettings() {
     }
   });
   registerBooleanSetting(SETTINGS.HIDE_NPC_ROLLS, "Settings.HideNpcRolls.Name", "Settings.HideNpcRolls.Hint", true, "world");
+  game.settings.register(MODULE_ID, SETTINGS.GM_ROLL_PRIVACY, {
+    name: localize("Settings.GmRollPrivacy.Name"),
+    hint: localize("Settings.GmRollPrivacy.Hint"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: GM_ROLL_MODES.OFF,
+    choices: {
+      [GM_ROLL_MODES.OFF]: localize("GmRollPrivacy.Off"),
+      [GM_ROLL_MODES.NPC]: localize("GmRollPrivacy.Npc"),
+      [GM_ROLL_MODES.ALL]: localize("GmRollPrivacy.All")
+    },
+    onChange: refreshChatMessages
+  });
+  registerBooleanSetting(SETTINGS.GM_ROLL_PUBLIC, "Settings.GmRollPublic.Name", "Settings.GmRollPublic.Hint", true, "world", refreshChatMessages);
+  registerBooleanSetting(SETTINGS.GM_ROLL_PRIVATE, "Settings.GmRollPrivate.Name", "Settings.GmRollPrivate.Hint", true, "world", refreshChatMessages);
+  registerBooleanSetting(SETTINGS.GM_ROLL_CRITS, "Settings.GmRollCrits.Name", "Settings.GmRollCrits.Hint", true, "world", refreshChatMessages);
   registerBooleanSetting(SETTINGS.SHOW_UNKNOWN, "Settings.ShowUnknown.Name", "Settings.ShowUnknown.Hint", true);
   registerBooleanSetting(SETTINGS.DEBUG, "Settings.Debug.Name", "Settings.Debug.Hint", false);
 
@@ -287,6 +326,16 @@ export function getVisibilityMode() {
 
 export function shouldHideNpcRolls() {
   return Boolean(getRegisteredSettingValue(SETTINGS.HIDE_NPC_ROLLS, true));
+}
+
+export function getGmRollPrivacy() {
+  const mode = getRegisteredSettingValue(SETTINGS.GM_ROLL_PRIVACY, GM_ROLL_MODES.OFF);
+  return {
+    mode: Object.values(GM_ROLL_MODES).includes(mode) ? mode : GM_ROLL_MODES.OFF,
+    publicRolls: Boolean(getRegisteredSettingValue(SETTINGS.GM_ROLL_PUBLIC, true)),
+    privateRolls: Boolean(getRegisteredSettingValue(SETTINGS.GM_ROLL_PRIVATE, true)),
+    crits: Boolean(getRegisteredSettingValue(SETTINGS.GM_ROLL_CRITS, true))
+  };
 }
 
 export async function migrateLegacyVisibility() {

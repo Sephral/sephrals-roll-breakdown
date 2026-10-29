@@ -1,6 +1,8 @@
 import { normalizeBreakdown } from "./adapter-registry.js";
 import { DebugTrace, recentMessages, registerDebugProvider } from "./debug-file.mjs";
+import { classifyGmRoll } from "./gm-roll-privacy.js";
 import { localize, MODULE_ID } from "./settings.js";
+import { readStoreFlag } from "./stored-breakdown.js";
 
 // Roll Breakdown's part of the debug file: the roll messages, how the adapter read them and why panels were skipped.
 export const debugTrace = new DebugTrace();
@@ -19,12 +21,18 @@ export async function describeMessage(service, message) {
     context: null,
     breakdowns: [],
     panelShown: Boolean(globalThis.document?.querySelector?.(`[data-message-id="${message.id}"] .srb-breakdown`)),
+    stored: null,
+    playerPrivacy: null,
     error: null
   };
+  const stored = readStoreFlag(message);
+  if (stored) description.stored = { adapter: stored.adapter ?? null, lang: stored.lang ?? null, rolls: stored.rolls.map((entry) => Boolean(entry?.b)) };
   try {
     description.supported = Boolean(adapter?.supportsMessage(message));
     if (typeof adapter?.debugInfo === "function") description.context = await adapter.debugInfo(message);
     if (description.supported) description.breakdowns = (await adapter.buildBreakdowns(message) ?? []).map(normalizeBreakdown);
+    // What a player gets to see of this roll when it is a GM roll: "private", "public" (the total) or null
+    description.playerPrivacy = classifyGmRoll(message, adapter, { isGM: false, contentVisible: !(message.whisper?.length || message.blind) });
   } catch (error) {
     description.error = String(error?.stack ?? error);
   }

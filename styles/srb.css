@@ -217,3 +217,26 @@
   opacity: 1;
   box-shadow: none;
 }
+
+/* GM rolls as players see them (setting "Hide GM rolls from players"). Core and D&D 5e show the dice in a
+   tooltip, D&D 5e 6 also the d20 next to the total and its parts in a popover, Pathfinder 2e the modifiers as tags
+   and Savage Worlds in a list. */
+.chat-message.srb-gm-private {
+  display: none !important;
+}
+
+.chat-message.srb-gm-hidden .dice-formula,
+.chat-message.srb-gm-hidden .dice-tooltip,
+.chat-message.srb-gm-hidden .roll-breakdown,
+.chat-message.srb-gm-hidden .d20die,
+.chat-message.srb-gm-hidden .tags.modifiers,
+.chat-message.srb-gm-hidden .swade-roll-message .modifiers,
+.chat-message.srb-gm-hidden .srb-breakdown {
+  display: none !important;
+}
+
+/* Inline results and D&D 5e 6 roll buttons keep their total, without the formula tooltip and the dice they unfold to */
+.chat-message.srb-gm-hidden .inline-roll.inline-result,
+.chat-message.srb-gm-hidden button.dice-roll {
+  pointer-events: none;
+}

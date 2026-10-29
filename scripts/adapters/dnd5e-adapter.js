@@ -1782,6 +1782,8 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
   constructor() {
     super();
     this.id = "dnd5e";
+    // The sources come from the current actors, items and effects, so the breakdown is stored when the roll is made
+    this.storeBreakdowns = true;
   }
 
   getMessageRolls(message) {
@@ -1844,8 +1846,12 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
         termSourceResolver: candidates ? createTermSourceResolver(...pools) : null
       });
       if (context?.actor) applySheetTotal(breakdown, context.actor, currentRollType, context.rollFlags);
-      // Cards with rolls of several actors name each roll after its roller, for the GM and for the owners of the roller
-      if (context?.title && (game.user?.isGM || context.actor?.isOwner)) breakdown.title = context.title;
+      // Cards with rolls of several actors name each roll after its roller. The panel shows the name to the GM and
+      // the owners of the roller only, the stored breakdown keeps it for all of them.
+      if (context?.title) {
+        breakdown.title = context.title;
+        breakdown.privateTitle = true;
+      }
 
       if (currentRollType === "damage" && breakdown.diceTerms.length > 0) {
         breakdown.hasVisibleContent = true;

@@ -117,13 +117,48 @@ Names of bonuses from the system or from other modules only appear when the roll
 * `Enable roll breakdowns` turns the module on or off for you.
 * `Expanded by default` opens the breakdown automatically for new supported messages.
 * `Breakdown visibility` is a world setting that decides who sees the panel: `GM only`, `Owners and GM` or `Everyone`. Owners are players who made the roll or own the speaking actor. Existing worlds keep their previous choice.
-* `Hide NPC and GM rolls from players` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret. On cards with rolls of several actors, such as the Crucible initiative report or a group check, this applies to each roll.
+* `Hide the breakdown of NPC and GM rolls` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret. On cards with rolls of several actors, such as the Crucible initiative report or a group check, this applies to each roll.
+* `Hide GM rolls from players` is a world setting and is off by default. It hides more than the panel: players see GM rolls without formula and dice, and private GM rolls not at all. Choose `Rolls of NPCs` or `All GM rolls, also for player characters`. See [Hiding GM rolls](#hiding-gm-rolls).
+* `Hide formula and dice of GM rolls`, `Remove private GM rolls` and `Show critical hits and fumbles` are world settings that choose what `Hide GM rolls from players` does. All three are on by default.
 * `Show unknown terms` keeps unresolved parts visible.
 * `Debug logging` writes extra information to the browser console for bug reports.
 * `Save debug file` (GM) saves one file for bug reports about all of Sephral’s modules, see [Debug file](#debug-file).
 * `Run self test` (GM) checks the support for your game system, a test roll, the latest roll in the chat and the panel. Run it after every update of Foundry or the system. When a newer version than the tested one is installed, the GM gets a notice once. Macros call it as `game.modules.get("sephrals-roll-breakdown").api.runSelfTest()`.
 
 The gear at the bottom of an open breakdown opens these settings.
+
+## Hiding GM rolls
+
+With `Hide GM rolls from players` the GM decides how much players learn from GM rolls. Choose which rolls count:
+
+* `Rolls of NPCs`: rolls of the GM for actors that no player owns, and GM rolls without an actor.
+* `All GM rolls, also for player characters`: every roll the GM makes, also a hidden perception check for a hero.
+
+For these rolls players see:
+
+* **Public rolls:** the total only. The formula, the dice, the d20 next to the total in D&D 5e 6, the tooltip with the parts of the roll and the breakdown panel are hidden. Inline rolls in a message of the GM keep their result without the formula on hover. With `Show critical hits and fumbles` turned off, a critical hit or a fumble looks like any other roll.
+* **Private rolls:** GM rolls for the GM only, blind rolls and self rolls disappear from the chat of players. Without this, Foundry shows them as a line that the GM rolled privately.
+
+Rolls of players never change. A card that holds rolls of several actors without a speaker, such as a Monk's TokenBar request, counts as a GM roll only when no player owns any of these actors. The GM always sees everything, and a change of these settings applies to the chat at once.
+
+This changes only what the chat shows. The roll itself is still in the browser of every player, as it is with every module of this kind, so a player who opens the browser console can read it.
+
+Other modules:
+
+* **MidiQOL** has its own settings for GM rolls on its cards (`GM Attack Roll Display` and `GM Damage Roll Display` on the GM tab of its workflow settings). When one of them hides anything, Roll Breakdown leaves MidiQOL cards to MidiQOL and only handles the other cards and the private rolls. When its setting `Really Hide private/blind/self-rolls` is on, MidiQOL removes private rolls itself.
+* **Dice So Nice** shows the dice of public rolls on the table. Its settings `Disable 3D dice on NPC rolls` and `Show Ghost dice for hidden rolls` decide that.
+* **Pathfinder 2e** and **Savage Worlds** list the modifiers of a roll on the card. For hidden GM rolls Roll Breakdown hides these lists too. Pathfinder 2e's own setting for the breakdowns of NPC rolls keeps working as before.
+
+## Breakdowns stored on the message
+
+In D&D 5e the panel reads its sources from the actor, the item and the effects. Since version 1.0.15 Roll Breakdown stores the breakdown on the chat message when the roll is made, so a card keeps its sources after a reload, also when an effect such as Bless has ended since then or a bonus was changed.
+
+* The browser that makes the roll stores it, the same moment the roll appears. A roll that is added to a card later, such as damage on a MidiQOL card or a roll of Ready Set Roll, gets its own entry when it is added. A reroll replaces the entry of that roll.
+* The copy is small, usually one or two kilobytes per roll, and only rolls with a panel are stored.
+* The names in the panel stay in the language of the player who rolled, like the rest of the card.
+* Chat messages from before version 1.0.15 are still read from the actors as they are now.
+
+Crucible, Pathfinder 2e and Savage Worlds keep everything the panel needs in the roll itself, so they need no stored copy.
 
 ## Usage statistics
 
@@ -133,7 +168,8 @@ With the GM’s consent only the active GM’s browser counts, and it sends at m
 
 * on how many of the last 30 days the module was used
 * how often a breakdown panel is opened, the settings are opened from a panel and the self test runs
-* the settings *Breakdown visibility*, *Expanded by default* and *Hide NPC and GM rolls from players* (only the chosen option)
+* how often the GM makes a roll that players see without formula and dice or not at all
+* the settings *Breakdown visibility*, *Expanded by default*, *Hide the breakdown of NPC and GM rolls*, *Hide GM rolls from players*, *Hide formula and dice of GM rolls* and *Remove private GM rolls* (only the chosen option)
 * where errors occur in the module code: file, line and error type, never the error message
 
 No names, chat messages, notes, dice results or other content of the world are sent.
@@ -175,7 +211,19 @@ An adapter has two functions:
 * `sections`: extra lists with `label`, `placement` (`"top"` above the dice, otherwise below the modifiers) and `items`, each item with `text`, `tag`, `value`, `tooltip` and `muted`.
 * `pills`: short facts in the footer, each with `text`, `tooltip` and `emphasis`.
 
-Missing fields are filled with empty values. An adapter that sets `waitForCard: true` gets the chat card only after the system has finished drawing it. An optional `getMessageActor(message)` returns the actor who rolled when the chat message names no speaker, so the visibility settings treat the roll as that actor's roll. `api.getAdapter(systemId)` returns the adapter registered for a system. When an adapter fails, the chat card stays as it is and the error appears in the browser console.
+Missing fields are filled with empty values. An adapter that sets `storeBreakdowns: true` gets its breakdowns stored on the chat message when the roll is made (see [Breakdowns stored on the message](#breakdowns-stored-on-the-message)). Set it when your adapter reads the current state of actors, items or effects. An adapter that sets `waitForCard: true` gets the chat card only after the system has finished drawing it. An optional `getMessageActor(message)` returns the actor who rolled when the chat message names no speaker, so the visibility settings treat the roll as that actor's roll. `api.getAdapter(systemId)` returns the adapter registered for a system. When an adapter fails, the chat card stays as it is and the error appears in the browser console.
+
+## Reading breakdowns
+
+Other modules read the breakdown of a chat message with:
+
+```js
+const breakdowns = await game.modules.get("sephrals-roll-breakdown")?.api?.getBreakdown(message);
+```
+
+It takes a chat message or its id and returns one entry per roll that has a panel, with the fields listed in [Adding a system](#adding-a-system) and `rollIndex`, the index of the roll in the message. Entries from the stored copy carry `stored: true` and show the sources at the moment of the roll, the others are built from the current state. No visibility setting applies, so a module that shows the result to players has to check them itself.
+
+The stored copy is in `flags.sephrals-roll-breakdown.breakdown` of the chat message: `{ v: 1, adapter, lang, rolls }` with one entry per roll of the message, `{ s, b }` with a signature of the roll and the breakdown without empty fields. An entry without `b` means that the roll has no panel. The copy is written right after the message is created or a roll is added, in an update of the message. Use `getBreakdown` instead of reading the flag: it checks that each entry still belongs to its roll and fills in what the copy leaves out.
 
 ## Debug file
 

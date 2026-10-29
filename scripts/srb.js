@@ -6,7 +6,9 @@ import { SwadeRollAdapter } from "./adapters/swade-adapter.js";
 import { ChatCardRenderer } from "./chat-card-renderer.js";
 import { debugTrace, registerDebug } from "./debug.js";
 import { saveDebugFile } from "./debug-file.mjs";
+import { applyGmRollPrivacy, isOwnHiddenGmRoll, PRIVACY_KINDS } from "./gm-roll-privacy.js";
 import { RollBreakdownService } from "./roll-breakdown-service.js";
+import { BreakdownStore } from "./stored-breakdown.js";
 import {
   ensureModuleTranslationsLoaded,
   ensureSystemTranslationsLoaded,
@@ -17,7 +19,7 @@ import {
 } from "./settings.js";
 import { Dnd5eRollAdapter, rememberRollContext } from "./adapters/dnd5e-adapter.js";
 import { noticeNewVersions, runSelfTest } from "./selftest.js";
-import { registerUsage } from "./usage.mjs";
+import { countFeature, registerUsage } from "./usage.mjs";
 
 // How long the core hook waits for dnd5e's own render hook before it renders the panel itself.
 // Systems such as Crucible finish their chat card after the render hook. The panel waits until the card is
@@ -42,7 +44,11 @@ const api = createApi({
     if (systemId === game.system?.id) service.adapter = adapter;
   },
   runSelfTest: (options) => runSelfTest(service, options),
-  saveDebugFile: (messageId) => saveDebugFile(messageId ?? null, { moduleId: MODULE_ID })
+  saveDebugFile: (messageId) => saveDebugFile(messageId ?? null, { moduleId: MODULE_ID }),
+  getBreakdown: (messageOrId) => {
+    const message = typeof messageOrId === "string" ? game.messages?.get?.(messageOrId) : messageOrId;
+    return service.getBreakdowns(message ?? null);
+  }
 });
 
 function whenCardIsFinished(html, callback) {
@@ -64,6 +70,11 @@ const service = new RollBreakdownService({
   trace: debugTrace
 });
 
+const store = new BreakdownStore({
+  getAdapter: () => service.adapter,
+  log: (message, extra) => service.log(message, extra)
+});
+
 // Chat elements that dnd5e.renderChatMessage has already handed to the service.
 const systemHookElements = new WeakSet();
 
@@ -74,8 +85,8 @@ Hooks.once("init", () => {
   registerSettings();
   registerDebug(service);
   registerUsage(MODULE_ID, {
-    features: ["panelOpened", "panelSettings", "selfTestRun"],
-    settings: [SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS]
+    features: ["panelOpened", "panelSettings", "selfTestRun", "gmRollHidden"],
+    settings: [SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS, SETTINGS.GM_ROLL_PRIVACY, SETTINGS.GM_ROLL_PUBLIC, SETTINGS.GM_ROLL_PRIVATE]
   });
   void ensureModuleTranslationsLoaded();
   void ensureSystemTranslationsLoaded();
@@ -92,6 +103,9 @@ Hooks.once("ready", () => {
 });
 
 Hooks.on("renderChatMessageHTML", (message, html) => {
+  // Players see GM rolls without formula and dice, private GM rolls not at all
+  if (applyGmRollPrivacy(message, html, service.adapter) === PRIVACY_KINDS.PRIVATE) return;
+
   if (game.system?.id !== "dnd5e") {
     if (service.adapter?.waitForCard && html && typeof html === "object") {
       whenCardIsFinished(html, () => void service.enhanceChatMessage(message, html));
@@ -122,4 +136,14 @@ Hooks.on("dnd5e.postRollConfiguration", (rolls, config) => {
 Hooks.on("dnd5e.renderChatMessage", (message, html) => {
   if (html && typeof html === "object") systemHookElements.add(html);
   void service.enhanceChatMessage(message, html);
+});
+
+// The client that adds rolls to a message stores their breakdown on it (adapters with storeBreakdowns).
+Hooks.on("createChatMessage", (message, options, userId) => {
+  store.onCreate(message, options, userId);
+  if (game.user?.isGM && isOwnHiddenGmRoll(message, service.adapter)) countFeature(MODULE_ID, "gmRollHidden");
+});
+
+Hooks.on("updateChatMessage", (message, changes, options, userId) => {
+  store.onUpdate(message, changes, options, userId);
 });
