@@ -236,6 +236,10 @@ The file holds the versions of Foundry, the system and the active modules, the s
 
 The file contains chat text and whispers. Check it before you share it.
 
+## Sephral’s Modules
+
+The first button in the module settings, *Sephral’s Modules* (GMs only), opens one window for all of Sephral's modules in the world: the version, self test, settings, manual and demo video of each, a button that switches on an installed module that is off (Foundry then reloads the world for everyone), and the debug file. Below, *More from Sephral* lists other modules that fit the game system of the world, shown only after a click, each with its demo video. The list is part of the module. Only a video you start is loaded, from the module page on GitHub.
+
 ## Help improve the breakdown
 
 I am happy to teach the breakdown new sources when you send concrete examples of missing or wrong labels. It is careful on purpose: an unknown part is better than a wrong label.

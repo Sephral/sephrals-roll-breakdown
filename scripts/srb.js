@@ -6,6 +6,7 @@ import { SwadeRollAdapter } from "./adapters/swade-adapter.js";
 import { ChatCardRenderer } from "./chat-card-renderer.js";
 import { debugTrace, registerDebug } from "./debug.js";
 import { saveDebugFile } from "./debug-file.mjs";
+import { registerHubModule } from "./hub.mjs";
 import { applyGmRollPrivacy, isOwnHiddenGmRoll, PRIVACY_KINDS } from "./gm-roll-privacy.js";
 import { RollBreakdownService } from "./roll-breakdown-service.js";
 import { BreakdownStore } from "./stored-breakdown.js";
@@ -18,7 +19,7 @@ import {
   SETTINGS
 } from "./settings.js";
 import { Dnd5eRollAdapter, rememberRollContext } from "./adapters/dnd5e-adapter.js";
-import { noticeNewVersions, runSelfTest } from "./selftest.js";
+import { TESTED_VERSIONS, noticeNewVersions, runSelfTest } from "./selftest.js";
 import { countFeature, registerUsage } from "./usage.mjs";
 
 // How long the core hook waits for dnd5e's own render hook before it renders the panel itself.
@@ -79,6 +80,7 @@ const store = new BreakdownStore({
 const systemHookElements = new WeakSet();
 
 Hooks.once("init", () => {
+  registerHubModule({ moduleId: MODULE_ID, tested: TESTED_VERSIONS });
   service.adapter = createAdapter();
   const module = game.modules?.get?.(MODULE_ID);
   if (module) module.api = api;
