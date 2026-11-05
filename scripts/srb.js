@@ -99,6 +99,12 @@ Hooks.once("init", () => {
   }
 });
 
+// Foundry sets the language after init, so a client that follows Foundry only now knows which translations it needs.
+Hooks.once("i18nInit", () => {
+  void ensureModuleTranslationsLoaded();
+  void ensureSystemTranslationsLoaded();
+});
+
 Hooks.once("ready", () => {
   void migrateLegacyVisibility();
   noticeNewVersions();
