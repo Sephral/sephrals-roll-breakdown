@@ -171,6 +171,7 @@ test("crucible skill check shows changed dice, labeled bonuses, boon sources and
     const message = { id: "m1", rolls: [roll], flags: { crucible: { skill: "athletics" } } };
 
     assert.equal(adapter.supportsMessage(message), true);
+    assert.equal(adapter.supportsMessage({ ...message, flags: { crucible: { reversed: true } } }), false);
     assert.equal(adapter.waitForCard, true);
     const [breakdown] = await adapter.buildBreakdowns(message);
 

@@ -436,7 +436,9 @@ export class CrucibleRollAdapter extends GenericRollAdapter {
     this.waitForCard = true;
   }
 
+  // Crucible 0.11.3 collapses a reversed action card, a panel under it would explain a roll that no longer counts.
   supportsMessage(message) {
+    if ( message?.flags?.crucible?.reversed ) return false;
     return globalThis.game?.system?.id === "crucible" && super.supportsMessage(message);
   }
 

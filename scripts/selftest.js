@@ -8,7 +8,7 @@ import { countFeature } from "./usage.mjs";
 // gets a notice once when a newer version than the verified one is installed.
 
 // The versions the module was verified against.
-export const TESTED_VERSIONS = Object.freeze({ core: "14.370", dnd5e: "6.0.6", crucible: "0.11.2", pf2e: "8.6.1", swade: "6.0.4" });
+export const TESTED_VERSIONS = Object.freeze({ core: "14.370", dnd5e: "6.0.6", crucible: "0.11.3", pf2e: "8.6.1", swade: "6.0.4" });
 const SUPPORTED_SYSTEMS = ["dnd5e", "crucible", "pf2e", "swade"];
 
 async function checkIntegrations(service) {
