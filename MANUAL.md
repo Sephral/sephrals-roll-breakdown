@@ -170,7 +170,7 @@ With the GM’s consent only the active GM’s browser counts, and it sends at m
 * how often a breakdown panel is opened, the settings are opened from a panel and the self test runs
 * how often the GM makes a roll that players see without formula and dice or not at all
 * the settings *Breakdown visibility*, *Expanded by default*, *Hide the breakdown of NPC and GM rolls*, *Hide GM rolls from players*, *Hide formula and dice of GM rolls* and *Remove private GM rolls* (only the chosen option)
-* where errors occur in the module code: file, line and error type, never the error message
+* where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
 No names, chat messages, notes, dice results or other content of the world are sent.
 
