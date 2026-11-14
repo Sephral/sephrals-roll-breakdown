@@ -6,10 +6,18 @@ This manual covers the details. For a quick overview see the [README](README.md)
 
 1. Enable the module in Foundry.
 2. Roll as usual.
-3. Open the `Breakdown` section on the chat card to see dice, modifiers and the other parts of the formula.
+3. Read the short line on the chat card, then click it (or the `Breakdown` button) to see dice, modifiers and the other parts of the formula.
 4. For D&D 5e attack rolls, the top of the panel lists the reasons for Advantage or Disadvantage when the roll contains them.
 
 An opened panel stays open when the chat card updates or the chat log redraws. Rolls with nothing meaningful to explain get no panel. In D&D 5e, Crucible, Pathfinder 2e and Savage Worlds this includes rolls typed into the chat, rolled with a dice tray, inline rolls and macro rolls, unless their formula names a part, as in `/r 1d20 + 2[Bless]`.
+
+## The short line
+
+Every card with a breakdown shows one line above the panel button, for example `+5 STR, +3 Prof, +1d4 Bless, advantage from Help`. It lists the modifiers with a value and a source, every die after the main die (such as a Bless die), the sum of modifiers without a source as `other`, and the reason for advantage or disadvantage when the roll names one. Filler words such as `modifier` and `attack bonus` are cut and long names end with an ellipsis. After five parts the line says how many more there are, and hovering the line lists all of them.
+
+A card with several rolls, such as an attack and its damage merged by a module, shows one entry per roll, named by the roll title or `Roll 1`, `Roll 2`. A roll without anything to say adds nothing, and a card without a line shows the `Breakdown` button as before.
+
+The line is built from the same breakdown as the panel, so it follows every visibility rule: hidden NPC and GM rolls, GM only, owners only, hidden GM rolls and whispers show no line to those who must not see them. It works with every adapter (D&D 5e, Crucible, Pathfinder 2e, Savage Worlds, other systems) and with the breakdown stored on the message.
 
 ## Supported systems
 
@@ -115,6 +123,7 @@ Names of bonuses from the system or from other modules only appear when the roll
 
 * `Language` follows Foundry (including community translations) or uses English or German.
 * `Enable roll breakdowns` turns the module on or off for you.
+* `Breakdown on the card` is a client setting, so every player picks their own: `Short line and breakdown button` (default), `Short line only` (a click on the line opens the panel) or `Breakdown button only` (as in earlier versions).
 * `Expanded by default` opens the breakdown automatically for new supported messages.
 * `Breakdown visibility` is a world setting that decides who sees the panel: `GM only`, `Owners and GM` or `Everyone`. Owners are players who made the roll or own the speaking actor. Existing worlds keep their previous choice.
 * `Hide the breakdown of NPC and GM rolls` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret. On cards with rolls of several actors, such as the Crucible initiative report or a group check, this applies to each roll.
@@ -167,9 +176,9 @@ The module can take part in a small usage report shared by all of Sephral’s mo
 With the GM’s consent only the active GM’s browser counts, and it sends at most one report a day. The counts are kept in a hidden world setting, so all browsers and computers of the GM count together, and turning the statistics off deletes them. A copy of a world gets its own world ID. The question lists everything the report contains, from the Foundry version to a random world ID. For Roll Breakdown it holds:
 
 * on how many of the last 30 days the module was used
-* how often a breakdown panel is opened, the settings are opened from a panel and the self test runs
+* how often a short line is shown, a panel is opened (also by a click on the line), the settings are opened from a panel and the self test runs
 * how often the GM makes a roll that players see without formula and dice or not at all
-* the settings *Breakdown visibility*, *Expanded by default*, *Hide the breakdown of NPC and GM rolls*, *Hide GM rolls from players*, *Hide formula and dice of GM rolls* and *Remove private GM rolls* (only the chosen option)
+* the settings *Breakdown on the card*, *Breakdown visibility*, *Expanded by default*, *Hide the breakdown of NPC and GM rolls*, *Hide GM rolls from players*, *Hide formula and dice of GM rolls* and *Remove private GM rolls* (only the chosen option)
 * where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
 No names, chat messages, notes, dice results or other content of the world are sent.

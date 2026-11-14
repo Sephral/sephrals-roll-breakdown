@@ -22,6 +22,44 @@
   display: none;
 }
 
+/* The one line on the card: the summary shows it and a click opens the full breakdown */
+.srb-breakdown--with-line > .srb-breakdown__toggle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.srb-breakdown__line {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.srb-breakdown__toggle-label {
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.srb-breakdown--with-line > .srb-breakdown__toggle::after {
+  content: "▾";
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.srb-breakdown--with-line[open] > .srb-breakdown__toggle::after {
+  content: "▴";
+}
+
 .srb-breakdown__panel {
   display: grid;
   gap: 0.5rem;

@@ -76,5 +76,17 @@
   "SRB.Debug.Save": "Save debug file",
   "SRB.Debug.Hint": "Saves one file for bug reports about all of Sephral’s modules in this world: versions, settings and what the modules recorded, such as the latest chat messages they read. It contains chat text and whispers, check it before you share it.",
   "SRB.Debug.Entry": "Save Debug File (Sephral’s Modules)",
-  "SRB.Debug.Saved": "Debug file {file} saved. It contains chat text and whispers, check it before you share it."
+  "SRB.Debug.Saved": "Debug file {file} saved. It contains chat text and whispers, check it before you share it.",
+  "SRB.Settings.CardDisplay.Name": "Breakdown on the card",
+  "SRB.Settings.CardDisplay.Hint": "What a roll card shows of its breakdown. The line gives the main parts at a glance, a click opens the full breakdown.",
+  "SRB.CardDisplay.Line": "Short line only",
+  "SRB.CardDisplay.Both": "Short line and breakdown button",
+  "SRB.CardDisplay.Panel": "Breakdown button only",
+  "SRB.Line.From": "from",
+  "SRB.Line.Other": "other",
+  "SRB.Line.More": "+{count} more",
+  "SRB.Line.Proficiency": "Prof",
+  "SRB.Line.Trims": " attack bonus| damage bonus| modifier| bonus",
+  "SRB.Line.Advantage": "advantage",
+  "SRB.Line.Disadvantage": "disadvantage"
 }

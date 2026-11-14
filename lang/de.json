@@ -76,5 +76,17 @@
   "SRB.Debug.Save": "Debug-Datei speichern",
   "SRB.Debug.Hint": "Speichert eine Datei für Fehlerberichte über alle Module von Sephral in dieser Welt: Versionen, Einstellungen und was die Module aufgezeichnet haben, etwa die letzten Chatnachrichten, die sie gelesen haben. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen.",
   "SRB.Debug.Entry": "Debug-Datei speichern (Sephral’s Module)",
-  "SRB.Debug.Saved": "Debug-Datei {file} gespeichert. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen."
+  "SRB.Debug.Saved": "Debug-Datei {file} gespeichert. Sie enthält Chattext und Flüsternachrichten, prüfe sie vor dem Teilen.",
+  "SRB.Settings.CardDisplay.Name": "Aufschlüsselung auf der Karte",
+  "SRB.Settings.CardDisplay.Hint": "Was eine Wurfkarte von ihrer Aufschlüsselung zeigt. Die Zeile nennt die wichtigsten Anteile auf einen Blick, ein Klick öffnet die ganze Aufschlüsselung.",
+  "SRB.CardDisplay.Line": "Nur die kurze Zeile",
+  "SRB.CardDisplay.Both": "Kurze Zeile und Aufschlüsselungs-Knopf",
+  "SRB.CardDisplay.Panel": "Nur der Aufschlüsselungs-Knopf",
+  "SRB.Line.From": "durch",
+  "SRB.Line.Other": "Sonstiges",
+  "SRB.Line.More": "+{count} weitere",
+  "SRB.Line.Proficiency": "Übung",
+  "SRB.Line.Trims": "^Angriffsbonus von |^Schadensbonus von |-Modifikator| Modifikator",
+  "SRB.Line.Advantage": "Vorteil",
+  "SRB.Line.Disadvantage": "Nachteil"
 }

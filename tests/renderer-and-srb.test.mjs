@@ -57,7 +57,14 @@ test("chat card renderer decorates template data and avoids duplicate markup", a
     "SRB.Chat.Disadvantage": "Disadvantage",
     "SRB.Chat.Normal": "Normal",
     "SRB.Chat.SuppressedAdvantage": "Suppressed advantage",
-    "SRB.Chat.SuppressedDisadvantage": "Suppressed disadvantage"
+    "SRB.Chat.SuppressedDisadvantage": "Suppressed disadvantage",
+    "SRB.Line.Advantage": "advantage",
+    "SRB.Line.Disadvantage": "disadvantage",
+    "SRB.Line.From": "from",
+    "SRB.Line.Other": "other",
+    "SRB.Line.More": "+{count} more",
+    "SRB.Line.Proficiency": "Prof",
+    "SRB.Line.Trims": " modifier| bonus"
   };
 
   const { game } = createGameStub({ translations });
@@ -104,6 +111,19 @@ test("chat card renderer decorates template data and avoids duplicate markup", a
   assert.equal(capturedTemplateData.breakdowns[0].advantageContext.attributions[0].typeLabel, "Disadvantage");
   assert.equal(capturedTemplateData.breakdowns[0].unresolvedTerms.length, 0);
   assert.equal(capturedTemplateData.breakdowns[0].totalStaticModifierText, "+5");
+
+  // Default mode (no cardDisplay given) shows the line and keeps the toggle label
+  assert.match(capturedTemplateData.line.text, /^\+5 .*disadvantage .*Nearby foe$/);
+  assert.equal(capturedTemplateData.showToggleLabel, true);
+
+  const lineRoot = createRendererRoot();
+  const lineBreakdown = { formula: "1d20 + 5", modifiers: [{ value: 5, sourceLabel: "STR" }], diceTerms: [], computedTerms: [], unresolvedTerms: [], rollTotal: 12 };
+  await renderer.appendBreakdown({ id: "line-1" }, lineRoot, [lineBreakdown], { cardDisplay: "line", defaultExpanded: false, showUnknown: true });
+  assert.equal(capturedTemplateData.line.text, "+5 STR");
+  assert.equal(capturedTemplateData.showToggleLabel, false);
+  await renderer.appendBreakdown({ id: "line-2" }, createRendererRoot(), [lineBreakdown], { cardDisplay: "panel", defaultExpanded: false, showUnknown: true });
+  assert.equal(capturedTemplateData.line, null);
+  assert.equal(capturedTemplateData.showToggleLabel, true);
 
   const duplicateRoot = createRendererRoot({ existingMarkup: true });
   assert.equal(await renderer.appendBreakdown({ id: "message-1" }, duplicateRoot, [], { defaultExpanded: false, showUnknown: true }), false);
@@ -156,8 +176,8 @@ test("srb registers hooks, initializes the correct adapter, and forwards render 
     assert.equal(typeof onHandlers.get("dnd5e.renderChatMessage"), "function");
 
     await onceHandlers.get("init")();
-    // The module's fourteen settings and the hidden consent and state settings of the usage statistics.
-    assert.equal(registrations.length, 16);
+    // The module’s fifteen settings and the hidden consent and state settings of the usage statistics.
+    assert.equal(registrations.length, 17);
     assert.deepEqual(templateLoads, [["modules/sephrals-roll-breakdown/templates/breakdown-panel.hbs"]]);
 
     // dnd5e replaces usage card content after the core hook, so only the system hook may render the panel.

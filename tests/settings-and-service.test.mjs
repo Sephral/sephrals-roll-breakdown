@@ -106,7 +106,7 @@ test("settings load system translations, cache results, and honor render permiss
   assert.equal(settings.localizeSystemTranslation("SRB.Rule.Missing"), "SRB.Rule.Missing");
 
   settings.registerSettings();
-  assert.equal(registrations.length, 14);
+  assert.equal(registrations.length, 15);
   assert.deepEqual(registrations.find((entry) => entry.key === settings.SETTINGS.UI_LANGUAGE).data.choices, {
     default: "Follow Foundry",
     de: "Deutsch",
@@ -137,7 +137,7 @@ test("settings load system translations, cache results, and honor render permiss
   settingsValues.enabled = true;
   game.user.isGM = true;
   assert.equal(settings.shouldRenderForCurrentUser(), true);
-  assert.deepEqual(settings.getRenderOptions(), { defaultExpanded: true, showUnknown: false });
+  assert.deepEqual(settings.getRenderOptions(), { cardDisplay: "both", defaultExpanded: true, showUnknown: false });
   assert.equal(settings.isDebugEnabled(), true);
 });
 
@@ -202,7 +202,7 @@ test("roll breakdown service skips hidden cases and renders supported messages",
       ["build", "ok"]
     ]);
     assert.equal(rendererCalls.length, 1);
-    assert.deepEqual(rendererCalls[0].options, { defaultExpanded: false, showUnknown: true });
+    assert.deepEqual(rendererCalls[0].options, { cardDisplay: "both", defaultExpanded: false, showUnknown: true });
     assert.equal(consoleCalls.length, 6);
   } finally {
     console.debug = originalDebug;
@@ -271,7 +271,7 @@ test("settings tolerate translation fetch failures and service handles array roo
   await service.enhanceChatMessage({ id: "no-root" }, { not: "an element" });
 
   settingsValues.showUnknown = true;
-  assert.deepEqual(settings.getRenderOptions(), { defaultExpanded: true, showUnknown: true });
+  assert.deepEqual(settings.getRenderOptions(), { cardDisplay: "both", defaultExpanded: true, showUnknown: true });
 });
 
 test("settings language overrides load module translations and rerender chat on change", async () => {

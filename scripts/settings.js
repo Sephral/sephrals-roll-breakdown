@@ -1,10 +1,12 @@
 import { registerDebugMenu } from "./debug-file.mjs";
+import { CARD_DISPLAY, DEFAULT_CARD_DISPLAY, normalizeCardDisplay } from "./summary-line.js";
 
 export const MODULE_ID = "sephrals-roll-breakdown";
 
 export const SETTINGS = {
   UI_LANGUAGE: "uiLanguage",
   ENABLED: "enabled",
+  CARD_DISPLAY: "cardDisplay",
   DEFAULT_EXPANDED: "defaultExpanded",
   VISIBILITY: "visibility",
   HIDE_NPC_ROLLS: "hideNpcRolls",
@@ -219,6 +221,20 @@ export function registerSettings() {
   });
 
   registerBooleanSetting(SETTINGS.ENABLED, "Settings.Enabled.Name", "Settings.Enabled.Hint", true);
+  game.settings.register(MODULE_ID, SETTINGS.CARD_DISPLAY, {
+    name: localize("Settings.CardDisplay.Name"),
+    hint: localize("Settings.CardDisplay.Hint"),
+    scope: "client",
+    config: true,
+    type: String,
+    default: DEFAULT_CARD_DISPLAY,
+    choices: {
+      [CARD_DISPLAY.LINE]: localize("CardDisplay.Line"),
+      [CARD_DISPLAY.BOTH]: localize("CardDisplay.Both"),
+      [CARD_DISPLAY.PANEL]: localize("CardDisplay.Panel")
+    },
+    onChange: refreshChatMessages
+  });
   registerBooleanSetting(SETTINGS.DEFAULT_EXPANDED, "Settings.DefaultExpanded.Name", "Settings.DefaultExpanded.Hint", false);
   game.settings.register(MODULE_ID, SETTINGS.VISIBILITY, {
     name: localize("Settings.Visibility.Name"),
@@ -358,6 +374,7 @@ export function shouldRenderForCurrentUser() {
 
 export function getRenderOptions() {
   return {
+    cardDisplay: normalizeCardDisplay(getRegisteredSettingValue(SETTINGS.CARD_DISPLAY, DEFAULT_CARD_DISPLAY)),
     defaultExpanded: Boolean(getSetting(SETTINGS.DEFAULT_EXPANDED)),
     showUnknown: Boolean(getSetting(SETTINGS.SHOW_UNKNOWN))
   };

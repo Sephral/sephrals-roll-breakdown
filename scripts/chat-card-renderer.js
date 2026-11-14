@@ -1,5 +1,6 @@
 import { normalizeBreakdown } from "./adapter-registry.js";
 import { MODULE_ID, hasOwnSettings, localize, openModuleSettings } from "./settings.js";
+import { buildSummaryLine, showsLine, showsToggleLabel } from "./summary-line.js";
 import { countFeature } from "./usage.mjs";
 
 const TEMPLATE_PATH = `modules/${MODULE_ID}/templates/breakdown-panel.hbs`;
@@ -52,6 +53,29 @@ function getRootElement(html) {
   return null;
 }
 
+function getLineWords(labels) {
+  return {
+    advantage: localize("Line.Advantage"),
+    disadvantage: localize("Line.Disadvantage"),
+    from: localize("Line.From"),
+    other: localize("Line.Other"),
+    more: localize("Line.More"),
+    roll: labels.rollLabel,
+    trims: localize("Line.Trims").split("|").filter(Boolean)
+  };
+}
+
+// System words that are too long for one line, by the label the adapters take from the system.
+function getLineAliases() {
+  const aliases = {};
+  const proficiency = game.i18n?.localize?.("DND5E.Proficiency");
+  const short = localize("Line.Proficiency");
+  for (const word of [proficiency, "Proficiency", "Proficiency bonus"]) {
+    if (typeof word === "string" && word && word !== "DND5E.Proficiency") aliases[word.toLowerCase()] = short;
+  }
+  return aliases;
+}
+
 function buildTemplateData(message, rawBreakdowns, options, expanded) {
   const breakdowns = rawBreakdowns.map(normalizeBreakdown);
   const labels = {
@@ -83,9 +107,14 @@ function buildTemplateData(message, rawBreakdowns, options, expanded) {
     suppressedDisadvantage: localize("Chat.SuppressedDisadvantage")
   };
 
+  const line = showsLine(options.cardDisplay) ? buildSummaryLine(breakdowns, getLineWords(labels), getLineAliases()) : null;
+
   return {
     messageId: message.id,
     expanded,
+    line,
+    // Without a line the toggle always keeps its text, otherwise there would be nothing to click
+    showToggleLabel: !line || showsToggleLabel(options.cardDisplay),
     labels,
     settingsLabel: hasOwnSettings() ? localize("Chat.Settings") : null,
     breakdowns: breakdowns.map((breakdown, index) => ({
@@ -138,6 +167,8 @@ export class ChatCardRenderer {
     // Open state per message id for this client session. A message has one panel that holds all of its rolls,
     // and every re-render (Midi-QOL updates, chat log refresh, popout) builds that panel anew.
     this.openPanels = new Map();
+    // Messages whose line was counted already: a card is drawn again on every chat update
+    this.countedLines = new Set();
   }
 
   async appendBreakdown(message, html, breakdowns, options) {
@@ -158,8 +189,14 @@ export class ChatCardRenderer {
     const panel = root.querySelector(selector);
     panel?.addEventListener?.("toggle", () => this.openPanels.set(message.id, panel.open));
     // Counted on the click: the toggle event also fires for panels that are rendered open.
-    panel?.querySelector?.(".srb-breakdown__toggle")?.addEventListener?.("click", () => {
-      if (!panel.open) countFeature(MODULE_ID, "panelOpened");
+    if (templateData.line && !this.countedLines.has(message.id)) {
+      this.countedLines.add(message.id);
+      countFeature(MODULE_ID, "lineShown");
+    }
+    panel?.querySelector?.(".srb-breakdown__toggle")?.addEventListener?.("click", (event) => {
+      if (panel.open) return;
+      countFeature(MODULE_ID, "panelOpened");
+      if (event?.target?.closest?.(".srb-breakdown__line")) countFeature(MODULE_ID, "lineClicked");
     });
     panel?.querySelector?.(".srb-breakdown__settings")?.addEventListener?.("click", (event) => {
       event.preventDefault();

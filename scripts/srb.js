@@ -87,8 +87,8 @@ Hooks.once("init", () => {
   registerSettings();
   registerDebug(service);
   registerUsage(MODULE_ID, {
-    features: ["panelOpened", "panelSettings", "selfTestRun", "gmRollHidden"],
-    settings: [SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS, SETTINGS.GM_ROLL_PRIVACY, SETTINGS.GM_ROLL_PUBLIC, SETTINGS.GM_ROLL_PRIVATE]
+    features: ["panelOpened", "panelSettings", "lineShown", "lineClicked", "selfTestRun", "gmRollHidden"],
+    settings: [SETTINGS.CARD_DISPLAY, SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS, SETTINGS.GM_ROLL_PRIVACY, SETTINGS.GM_ROLL_PUBLIC, SETTINGS.GM_ROLL_PRIVATE]
   });
   void ensureModuleTranslationsLoaded();
   void ensureSystemTranslationsLoaded();
