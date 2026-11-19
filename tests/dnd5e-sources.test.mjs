@@ -514,3 +514,36 @@ test("the midi-qol attack roll comes from the workflow once the card flag is onl
   assert.equal(midiAttackRoll({ uuid: "ChatMessage.e", flags: {} }), null);
   delete globalThis.MidiQOL;
 });
+
+test("dnd5e names the damage that Chris's Premades 2 adds through the automation toolkit: Hunter's Mark, Colossus Slayer", async () => {
+  const { adapter } = await setup();
+  // Foundry 14: no chrisPremades global, the toolkit is globalThis.cat, macros and numbers are in flags.cat
+  globalThis.cat = { utils: {} };
+  const slayer = { name: "Colossus Slayer", type: "feat", documentName: "Item", system: {},
+    flags: { cat: { macros: { roll: [{ source: "chris-premades", rules: "all", identifier: "damageBonusToOneRoll" }] },
+      genericConfig: { "chris-premades": { damageBonusToOneRoll: { bonus: "1d8", attackType: "weaponAttack" } } } } } };
+  // Archery is a plain effect bonus, a macro without a damage formula adds no candidate
+  const deflect = { name: "Deflect Attacks", type: "feat", documentName: "Item", system: {},
+    flags: { cat: { macros: { roll: [{ source: "chris-premades", rules: "2024", identifier: "deflect-attacks" }] } } } };
+  const mark = { name: "Hunter's Mark", documentName: "ActiveEffect", changes: [],
+    flags: { cat: { identifier: "huntersMark", macros: { roll: [{ source: "chris-premades", rules: "2024", identifier: "hunters-mark-attack" }] } },
+      "chris-premades": { huntersMark: { targets: ["Scene.s.Token.t"], formula: "1d6", damageType: "force" } } } };
+  const actor = makeActor({ abilities: { dex: { mod: 4 } }, attributes: { prof: 3 } }, { items: [slayer, deflect], effects: [mark] });
+  actor.appliedEffects = [mark];
+  const base = { number: 1, denomination: 6, scaledFormula: () => "1d6", formula: "1d6" };
+  const sword = { name: "Shortsword", type: "weapon", actor, system: { damage: { base } } };
+  const activity = { id: "stab", type: "attack", attack: { ability: "dex" }, damage: { parts: [base] }, getRollData: () => ({ mod: 4 }), getActionType: () => "mwak" };
+  globalThis.fromUuid = async (uuid) => ({ "Item.sword": sword, "Item.sword.Activity.stab": activity }[uuid] ?? null);
+  const [attack, weapon, hunted, slain] = await adapter.buildBreakdowns({ type: "usage", system: { item: { uuid: "Item.sword" }, activity: { uuid: "Item.sword.Activity.stab" } },
+    rolls: [
+      { formula: "1d20 + 4 + 3", total: 18, options: { rollType: "attack" }, terms: terms("1d20", 4, 3) },
+      { formula: "1d6 + 4", total: 7, options: { rollType: "damage", "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d6", 4) },
+      { formula: "1d6", total: 3, options: { rollType: "damage", type: "force", "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d6") },
+      { formula: "1d8", total: 5, options: { rollType: "damage", "midi-qol": { rollType: "defaultDamage" } }, terms: terms("1d8") }
+    ] });
+  assert.deepEqual(labels(attack), [null, "DEX modifier", "Proficiency"]);
+  assert.deepEqual(labels(weapon), ["Base damage", "DEX modifier"]);
+  assert.deepEqual(labels(hunted), ["Hunter's Mark"]);
+  assert.deepEqual(labels(slain), ["Colossus Slayer"]);
+  delete globalThis.cat;
+});

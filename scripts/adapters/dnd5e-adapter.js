@@ -1564,14 +1564,50 @@ function automationMacro(cpr, identifier, rules) {
   return null;
 }
 
+// Chris's Premades 2 runs on Coven's Automation Toolkit: items and effects name their macros in flags.cat.macros and keep
+// their numbers in flags.cat.genericConfig (Colossus Slayer: damageBonusToOneRoll with bonus 1d8) or in the flags of the
+// module that made them (the die of Hunter's Mark with its damage type on the caster's effect). Which roll a macro acts
+// on is not stored, so only bonuses that are damage (a generic damage macro, a formula with a damage type) are named,
+// for damage rolls. Returns the formulas and the module that adds them.
+function toolkitAutomation(entity) {
+  const cat = entity?.flags?.cat;
+  if (!cat || typeof cat !== "object") return null;
+  const macros = Object.values(cat.macros ?? {}).flat().filter((macro) => macro && typeof macro === "object");
+  if (!macros.length) return null;
+  const formulas = new Set();
+  for (const perSource of Object.values(cat.genericConfig ?? {})) {
+    for (const [identifier, config] of Object.entries(perSource ?? {})) {
+      if (!/damage/i.test(identifier) || !config || typeof config !== "object") continue;
+      for (const key of ["bonus", "formula", "damage"]) if (isFormulaText(config[key])) formulas.add(sanitizeExpression(config[key]));
+    }
+  }
+  const sources = [...new Set(macros.map((macro) => macro.source).filter((source) => typeof source === "string" && source))];
+  for (const source of sources) {
+    for (const value of Object.values(entity.flags?.[source] ?? {})) {
+      if (value && typeof value === "object" && value.damageType && isFormulaText(value.formula)) formulas.add(sanitizeExpression(value.formula));
+    }
+  }
+  if (!formulas.size) return null;
+  const module = sources.map((source) => globalThis.game?.modules?.get?.(source)?.title).find(Boolean) ?? sources[0] ?? "";
+  return { formulas: [...formulas], module };
+}
+
 function buildAutomationCandidates(actor, rollType) {
   const cpr = globalThis.chrisPremades;
-  if (!actor || !cpr || !rollType) return [];
+  if (!actor || !rollType || (!cpr && !globalThis.cat)) return [];
   const create = withRollData(getRollDataOf(actor));
   const candidates = [];
   for (const entity of [...(actor.items ?? []), ...(actor.appliedEffects ?? [])]) {
+    const toolkit = rollType === "damage" ? toolkitAutomation(entity) : null;
+    for (const formula of toolkit?.formulas ?? []) {
+      candidates.push(...create(entity.name, formula, {
+        sourceType: "effect",
+        confidence: "derived",
+        detail: localizeRule("AutomationBonus", { item: entity.name, module: toolkit.module })
+      }));
+    }
     const flags = entity?.flags?.["chris-premades"];
-    if (!flags || typeof flags !== "object") continue;
+    if (!cpr || toolkit || !flags || typeof flags !== "object") continue;
     const rules = entity.documentName === "Item"
       ? (["", "2014"].includes(String(entity.system?.source?.rules ?? "")) ? "legacy" : "modern")
       : flags.rules ?? "legacy";
