@@ -153,9 +153,27 @@ function inferAttackBucket(item, activity = null, attackMode = null) {
   return ATTACK_BUCKETS.has(type) ? type : guessAttackBucket(item);
 }
 
+// The attack roll of a midi-qol usage card. Older midi-qol keeps it in flags.midi-qol.attackRoll. Since 14.6.9 that flag is
+// only a deprecated getter on the workflow (removed in 14.8.0), so the workflow is asked directly: getWorkflow for the
+// cards of other users, cardView (the read-only copy the getter itself uses) for one's own cards after a reload.
+export function midiAttackRoll(message) {
+  const flags = message?.flags?.["midi-qol"];
+  if (!flags || (typeof flags !== "object")) return null;
+  const stored = Object.getOwnPropertyDescriptor(flags, "attackRoll");
+  if (stored && ("value" in stored)) return stored.value ?? null;
+  const workflows = globalThis.MidiQOL?.Workflow;
+  if (!message?.uuid || !workflows) return null;
+  try {
+    const workflow = workflows.getWorkflow?.(message.uuid) ?? workflows.cardView?.(message.uuid);
+    return workflow?.attackRoll ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // The attack mode of a card (two handed, thrown, offhand): on its attack roll, else the one the item used last
 function resolveAttackMode(message, item, activity) {
-  const rolls = [...(getStoredRolls(message) ?? message?.rolls ?? []), message?.flags?.["midi-qol"]?.attackRoll];
+  const rolls = [...(getStoredRolls(message) ?? message?.rolls ?? []), midiAttackRoll(message)];
   const mode = rolls.find((roll) => typeof roll?.options?.attackMode === "string")?.options?.attackMode ?? getRollFlags(message).attackMode;
   if (mode) return mode;
   try {
@@ -1317,8 +1335,8 @@ function getRollAttributions(message, roll, rollType) {
   if (directAttributions) return directAttributions;
 
   if (rollType === "attack") {
-    const midiAttackRoll = message?.flags?.["midi-qol"]?.attackRoll;
-    if (Array.isArray(midiAttackRoll?.options?.attributions)) return midiAttackRoll.options.attributions;
+    const attackRoll = midiAttackRoll(message);
+    if (Array.isArray(attackRoll?.options?.attributions)) return attackRoll.options.attributions;
   }
 
   return [];
@@ -1338,7 +1356,7 @@ function extractAdvantageContext(message, roll, rollType, ruleAttributions = [])
   if (!attributions.length) return null;
 
   const sourceRoll = rollType === "attack" && !Array.isArray(roll?.options?.attributions)
-    ? message?.flags?.["midi-qol"]?.attackRoll
+    ? midiAttackRoll(message)
     : roll;
   const state = resolveAdvantageState(sourceRoll ?? roll);
 

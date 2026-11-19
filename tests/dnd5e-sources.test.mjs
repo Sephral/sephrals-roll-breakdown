@@ -490,3 +490,27 @@ test("dnd5e cards keep the sources of the moment they were rolled after an effec
   assert.equal(restored.stored, true);
   assert.equal(restored.rollIndex, 0);
 });
+
+test("the midi-qol attack roll comes from the workflow once the card flag is only a deprecated getter", async () => {
+  resetGlobals();
+  createGameStub();
+  const { midiAttackRoll } = await importStable("scripts/adapters/dnd5e-adapter.js");
+  const roll = { formula: "1d20 + 5", options: { attributions: [{ type: "ADV", displayName: "Faerie Fire" }] } };
+  // Older midi-qol: the roll is stored in the flag
+  assert.equal(midiAttackRoll({ uuid: "ChatMessage.a", flags: { "midi-qol": { attackRoll: roll } } }), roll);
+  // midi-qol 14.6.9 to 14.7: a getter that warns, the workflow holds the roll
+  let warned = 0;
+  const flags = {};
+  Object.defineProperty(flags, "attackRoll", { enumerable: false, configurable: true, get() { warned++; return roll; } });
+  const asked = [];
+  globalThis.MidiQOL = { Workflow: { getWorkflow: (uuid) => { asked.push(uuid); return uuid === "ChatMessage.b" ? { attackRoll: roll } : undefined; },
+    cardView: (uuid) => (uuid === "ChatMessage.c" ? { attackRoll: roll } : undefined) } };
+  assert.equal(midiAttackRoll({ uuid: "ChatMessage.b", flags: { "midi-qol": flags } }), roll);
+  assert.equal(warned, 0);
+  // One's own card after a reload: getWorkflow has none, the read-only copy has it
+  assert.equal(midiAttackRoll({ uuid: "ChatMessage.c", flags: { "midi-qol": {} } }), roll);
+  // midi-qol 14.8 without the flag and without a workflow
+  assert.equal(midiAttackRoll({ uuid: "ChatMessage.d", flags: { "midi-qol": {} } }), null);
+  assert.equal(midiAttackRoll({ uuid: "ChatMessage.e", flags: {} }), null);
+  delete globalThis.MidiQOL;
+});
