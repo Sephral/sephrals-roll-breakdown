@@ -12,10 +12,11 @@
 
 ## Highlights
 
-* **The answer at a glance:** one short line on the card names the main parts, such as "+5 STR, +3 Prof, +1d4 Bless, advantage from Help". No click needed, and resting the mouse on it shows the full breakdown.
+* **The answer at a glance:** one short line on the card names the main parts, such as "+5 STR, +3 Prof, +1d4 Bless, advantage from Help". No click needed, and resting the mouse on it shows the full breakdown with the chance of success against the target.
 * **Every number explained:** a click on the line opens a compact panel on the chat card shows the dice, the modifiers and every other part of the formula.
 * **Made for D&D 5e:** attacks, damage, saves, ability, skill and tool checks, concentration and death saves, each with its real sources.
 * **Why advantage?** When modules like MidiQOL record the reasons, the panel lists them, such as flanking, a prone target or long range. In D&D 5e 6 it also names the effects whose rules grant advantage or a bonus.
+* **Fits your chat:** the breakdown takes the colors of the chat card, and the parchment look stays available as Classic. *My dice luck* shows how your d20s went this evening.
 * **Honest by design:** the panel only shows what the roll really contains. It never guesses a source.
 * **Monster bonuses stay secret:** players see no breakdown on NPC and GM rolls, unless you want them to.
 * **GM rolls stay behind the screen:** if you like, players see only the total of your rolls, and your private rolls not at all.
