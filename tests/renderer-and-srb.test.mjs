@@ -176,8 +176,8 @@ test("srb registers hooks, initializes the correct adapter, and forwards render 
     assert.equal(typeof onHandlers.get("dnd5e.renderChatMessage"), "function");
 
     await onceHandlers.get("init")();
-    // The module’s sixteen settings and the hidden consent and state settings of the usage statistics.
-    assert.equal(registrations.length, 20);
+    // The module’s seventeen settings and the hidden consent and state settings of the usage statistics.
+    assert.equal(registrations.length, 21);
     assert.deepEqual(templateLoads, [["modules/sephrals-roll-breakdown/templates/breakdown-panel.hbs"]]);
 
     // dnd5e replaces usage card content after the core hook, so only the system hook may render the panel.

@@ -412,3 +412,43 @@
   display: flex;
   justify-content: flex-end;
 }
+
+/* Look "matching the chat" (setting look, default): the panel takes the text colour of the chat card it sits in and
+   builds its tints from it, so it fits light and dark cards and themes. Without the class the classic look applies. */
+body.srb-look-chat .srb-breakdown {
+  border-color: color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+body.srb-look-chat .srb-breakdown__toggle {
+  color: inherit;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+
+body.srb-look-chat .srb-breakdown__toggle:hover,
+body.srb-look-chat .srb-breakdown__toggle:focus-visible {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+body.srb-look-chat .srb-breakdown[open] > .srb-breakdown__toggle {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+}
+
+body.srb-look-chat .srb-breakdown__pill,
+body.srb-look-chat .crucible .srb-breakdown__pill {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+body.srb-look-chat .srb-breakdown__pill--emphasis,
+body.srb-look-chat .crucible .srb-breakdown__pill--emphasis {
+  background: color-mix(in srgb, #c9973a 32%, transparent);
+}
+
+body.srb-look-chat .srb-breakdown__item-tag {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+body.srb-look-chat .srb-breakdown__item-tag--note {
+  background: color-mix(in srgb, #4a8ad8 24%, transparent);
+}

@@ -9,6 +9,7 @@ export const SETTINGS = {
   ENABLED: "enabled",
   CARD_DISPLAY: "cardDisplay",
   LINE_HOVER: "lineHover",
+  LOOK: "look",
   SHOW_CHANCE: "showChance",
   LUCK_EVENING: "luckEvening",
   DEFAULT_EXPANDED: "defaultExpanded",
@@ -202,6 +203,18 @@ function refreshChatMessages() {
   }
 }
 
+// The look of the breakdown on chat cards: "chat" takes the colours of the card around it (light or dark), "classic"
+// keeps the light parchment panel of earlier versions.
+export const LOOKS = Object.freeze({ CHAT: "chat", CLASSIC: "classic" });
+
+export function applyLook(value) {
+  const body = globalThis.document?.body;
+  if (!body?.classList) return;
+  const classic = value === LOOKS.CLASSIC;
+  body.classList.toggle("srb-look-classic", classic);
+  body.classList.toggle("srb-look-chat", !classic);
+}
+
 function registerBooleanSetting(key, nameKey, hintKey, defaultValue, scope = "client", onChange = undefined) {
   game.settings.register(MODULE_ID, key, {
     name: localize(nameKey),
@@ -248,6 +261,17 @@ export function registerSettings() {
     onChange: refreshChatMessages
   });
   registerBooleanSetting(SETTINGS.LINE_HOVER, "Settings.LineHover.Name", "Settings.LineHover.Hint", true, "client", refreshChatMessages);
+  game.settings.register(MODULE_ID, SETTINGS.LOOK, {
+    name: localize("Settings.Look.Name"),
+    hint: localize("Settings.Look.Hint"),
+    scope: "client",
+    config: true,
+    type: String,
+    default: LOOKS.CHAT,
+    choices: { [LOOKS.CHAT]: localize("Look.Chat"), [LOOKS.CLASSIC]: localize("Look.Classic") },
+    onChange: (value) => applyLook(value)
+  });
+  applyLook(getRegisteredSettingValue(SETTINGS.LOOK, LOOKS.CHAT));
   registerBooleanSetting(SETTINGS.SHOW_CHANCE, "Settings.ShowChance.Name", "Settings.ShowChance.Hint", true, "client", refreshChatMessages);
   game.settings.register(MODULE_ID, SETTINGS.LUCK_EVENING, { scope: "world", config: false, type: Number, default: 0, onChange: () => refreshLuckWindow() });
   registerBooleanSetting(SETTINGS.DEFAULT_EXPANDED, "Settings.DefaultExpanded.Name", "Settings.DefaultExpanded.Hint", false);
