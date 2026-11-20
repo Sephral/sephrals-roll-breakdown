@@ -91,6 +91,28 @@ export function buildParts(breakdown, words = {}, aliases = {}) {
   return parts;
 }
 
+// What the adapters know beyond the sources (breakdown.lineInfo): advantage chosen without a named reason, advantage and
+// disadvantage cancelling each other, a wider critical range, a natural 20 or 1 that moves the result. Each part only
+// shows when its words exist, so a missing translation drops the part and never prints a key.
+export function buildExtraParts(breakdown, words = {}) {
+  const parts = [];
+  const info = breakdown?.lineInfo && typeof breakdown.lineInfo === "object" ? breakdown.lineInfo : {};
+  const context = breakdown?.advantageContext;
+  if (!context && (info.advantage === "advantage" || info.advantage === "disadvantage")) {
+    const word = info.advantage === "advantage" ? words.advantage : words.disadvantage;
+    if (word) parts.push(word);
+  }
+  const types = new Set((Array.isArray(context?.attributions) ? context.attributions : []).map((entry) => entry?.type));
+  if (context?.state === "normal" && types.has("ADV") && types.has("DIS") && words.cancelled) parts.push(words.cancelled);
+  const from = Number(info.critFrom);
+  if (Number.isInteger(from) && from >= 2 && from <= 20 && words.crit) parts.push(words.crit.replace("{range}", from >= 20 ? "20" : `${from}–20`));
+  const margin = Number(info.critMargin);
+  if (Number.isFinite(margin) && margin > 0 && words.critMargin) parts.push(words.critMargin.replace("{margin}", margin));
+  if (info.natural === 20 && words.nat20) parts.push(words.nat20);
+  else if (info.natural === 1 && words.nat1) parts.push(words.nat1);
+  return parts;
+}
+
 // The text for a whole card. Several rolls on one card get their roll label in front.
 // Returns { text, full } where full lists every part for the tooltip. Null when no roll has anything to say.
 export function buildSummaryLine(breakdowns, words = {}, aliases = {}) {
@@ -98,9 +120,12 @@ export function buildSummaryLine(breakdowns, words = {}, aliases = {}) {
   const lines = [];
   const fullLines = [];
   list.forEach((breakdown, index) => {
-    const parts = buildParts(breakdown, words, aliases);
+    const main = buildParts(breakdown, words, aliases);
+    const extra = buildExtraParts(breakdown, words);
+    const parts = [...main, ...extra];
     if (!parts.length) return;
-    const shown = parts.slice(0, MAX_PARTS);
+    // The extras are short and rare, so they keep their place when the sources are cut
+    const shown = [...main.slice(0, Math.max(MAX_PARTS - extra.length, Math.min(2, main.length))), ...extra];
     const hidden = parts.length - shown.length;
     let text = join(shown);
     if (hidden > 0) text += ` (${(words.more ?? "+{count} more").replace("{count}", hidden)})`;
@@ -112,4 +137,4 @@ export function buildSummaryLine(breakdowns, words = {}, aliases = {}) {
   return { text: lines.join(" · "), full: fullLines.join("\n") };
 }
 
-export const __test__ = { buildParts, shortenLabel, signed, MAX_PARTS, MAX_LABEL_LENGTH };
+export const __test__ = { buildParts, buildExtraParts, shortenLabel, signed, MAX_PARTS, MAX_LABEL_LENGTH };

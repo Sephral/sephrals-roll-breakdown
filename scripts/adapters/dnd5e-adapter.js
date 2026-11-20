@@ -1,6 +1,7 @@
 import { GenericRollAdapter } from "./generic-adapter.js";
 import { getTermExpression, getTermType, hasNestedDice, isDiceTerm, namesOwnTerms, parseRoll, toFiniteNumber } from "../formula-parser.js";
 import { ensureSystemTranslationsLoaded, localizeSystemTranslation, MODULE_ID } from "../settings.js";
+import { createPill, systemText } from "./system-adapter-utils.js";
 
 // dnd5e 6.0 moved the roll bonuses: bonuses.mwak.attack is rolls.attack.mwak.bonus, abilities.str.bonuses.check is
 // abilities.str.check.roll.bonus, checkProf is check.prof and so on. The old paths still answer through deprecation
@@ -1366,6 +1367,30 @@ function extractAdvantageContext(message, roll, rollType, ruleAttributions = [])
   };
 }
 
+// What the short line adds to the sources: the critical range when it is wider than 20 (Improved Critical, Champion,
+// item or activity thresholds) and the advantage state of a roll that has no named source (chosen in the dialog).
+function buildLineInfo(message, roll, rollType, advantageContext) {
+  const info = {};
+  const d20 = ["attack", "ability", "skill", "tool", "initiative", "save", "concentration", "death"].includes(rollType);
+  if (d20) {
+    const options = [roll?.options, rollType === "attack" ? midiAttackRoll(message)?.options : null];
+    const normal = Number(globalThis.CONFIG?.Dice?.D20Die?.CRITICAL_SUCCESS_TOTAL ?? 20) || 20;
+    for (const option of options) {
+      const threshold = Number(option?.criticalSuccess);
+      if (Number.isInteger(threshold) && threshold >= 2 && threshold < normal) {
+        info.critFrom = threshold;
+        break;
+      }
+    }
+    if (!advantageContext) {
+      const state = resolveAdvantageState(roll);
+      const midiState = state === "normal" && rollType === "attack" ? resolveAdvantageState(midiAttackRoll(message)) : state;
+      if (midiState !== "normal") info.advantage = midiState;
+    }
+  }
+  return Object.keys(info).length ? info : null;
+}
+
 // The fields whose mode decides advantage for a roll, as dnd5e combines them.
 function rollModePaths(rollType, abilityId, rollFlags, item, activity) {
   const check = [`abilities.${abilityId}.check.roll`, "rolls.ability.check"];
@@ -1914,6 +1939,12 @@ export class Dnd5eRollAdapter extends GenericRollAdapter {
       breakdown.advantageContext = extractAdvantageContext(message, roll, currentRollType, rollRules.advantage(currentRollType));
       if (breakdown.advantageContext) {
         breakdown.hasVisibleContent = true;
+      }
+      const lineInfo = buildLineInfo(message, roll, currentRollType, breakdown.advantageContext);
+      if (lineInfo) {
+        breakdown.lineInfo = lineInfo;
+        const range = lineInfo.critFrom ? createPill(systemText("Dnd5e.CritRange", { range: `${lineInfo.critFrom}–20` }), { tooltip: systemText("Dnd5e.CritRangeHint") }) : null;
+        if (range) breakdown.pills = [...(Array.isArray(breakdown.pills) ? breakdown.pills : []), range];
       }
 
       breakdowns.push(breakdown);

@@ -229,6 +229,11 @@ export function buildPf2eCheckBreakdown(roll, flags, { rollIndex = 0, isGM = fal
     summarizeBreakdown(breakdown);
   }
 
+  // A natural 20 or 1 moves the degree of success by one step, the short line says so
+  const d20 = (roll?.dice ?? []).find((die) => toFiniteNumber(die?.faces) === 20);
+  const natural = toFiniteNumber(d20?.total);
+  if (natural === 20 || natural === 1) breakdown.lineInfo = { natural };
+
   return finalizeBreakdown(breakdown, {
     sections: [buildFortuneSection(context), buildNotCountedSection(rawModifiers)],
     pills: buildCheckPills(roll, context, isGM),

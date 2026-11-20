@@ -90,5 +90,10 @@
   "SRB.Line.Proficiency": "Übung",
   "SRB.Line.Trims": "^Angriffsbonus von |^Schadensbonus von |-Modifikator| Modifikator",
   "SRB.Line.Advantage": "Vorteil",
-  "SRB.Line.Disadvantage": "Nachteil"
+  "SRB.Line.Disadvantage": "Nachteil",
+  "SRB.Line.Crit": "Krit. {range}",
+  "SRB.Line.CritMargin": "Krit. ab +{margin}",
+  "SRB.Line.Nat20": "natürliche 20",
+  "SRB.Line.Nat1": "natürliche 1",
+  "SRB.Line.Cancelled": "Vorteil und Nachteil heben sich auf"
 }

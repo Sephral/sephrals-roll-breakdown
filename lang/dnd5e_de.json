@@ -80,9 +80,12 @@
   "SRB.Rule.SituationalBonus": "Im Würfeldialog eingetragener Bonus.",
   "SRB.Rule.SheetBonusLabel": "Bonus laut Bogen",
   "SRB.Rule.SheetBonus": "Teil des Modifikators auf dem Charakterbogen ({context}, {total}).",
-  "SRB.Rule.MultipliedDamage": "Schaden von {hits} Treffern mit {item} in einem Wurf.",
+  "SRB.Rule.MultipliedDamage": "Schaden von {hits} Treffern mit {item} in einem Wurf."
+,
   "SRB.Rule.ClassLevelLabel": "{class}-Stufe",
   "SRB.Rule.CharacterLevelLabel": "Charakterstufe",
   "SRB.Rule.ActivityFormula": "Teil der Wurfformel von {item}: {formula}",
-  "SRB.Rule.AutomationBonus": "Von {module} für {item} nach dem Wurf hinzugefügt."
+  "SRB.Rule.AutomationBonus": "Von {module} für {item} nach dem Wurf hinzugefügt.",
+  "SRB.Dnd5e.CritRange": "Kritisch bei {range}",
+  "SRB.Dnd5e.CritRangeHint": "Eine natürliche Zahl in diesem Bereich ist ein kritischer Treffer, weiter als die übliche 20"
 }

@@ -61,6 +61,11 @@ function getLineWords(labels) {
     from: localize("Line.From"),
     other: localize("Line.Other"),
     more: localize("Line.More"),
+    cancelled: localize("Line.Cancelled"),
+    crit: localize("Line.Crit"),
+    critMargin: localize("Line.CritMargin"),
+    nat20: localize("Line.Nat20"),
+    nat1: localize("Line.Nat1"),
     roll: labels.rollLabel,
     trims: localize("Line.Trims").split("|").filter(Boolean)
   };

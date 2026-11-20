@@ -65,3 +65,37 @@ test("cards with several rolls name each roll, rolls without parts are left out"
   assert.equal(buildSummaryLine([{ modifiers: [] }], words), null);
   assert.equal(buildSummaryLine(null, words), null);
 });
+
+const extraWords = { ...words, cancelled: "adv and dis cancel", crit: "crit {range}", critMargin: "crit at +{margin}", nat20: "natural 20", nat1: "natural 1" };
+
+test("extras: critical range, natural 20 or 1, advantage without a named reason", async () => {
+  const { buildExtraParts } = await import("../scripts/summary-line.js");
+  assert.deepEqual(buildExtraParts({ lineInfo: { critFrom: 19 } }, extraWords), ["crit 19–20"]);
+  assert.deepEqual(buildExtraParts({ lineInfo: { critFrom: 18 } }, extraWords), ["crit 18–20"]);
+  assert.deepEqual(buildExtraParts({ lineInfo: { critMargin: 5 } }, extraWords), ["crit at +5"]);
+  assert.deepEqual(buildExtraParts({ lineInfo: { natural: 20 } }, extraWords), ["natural 20"]);
+  assert.deepEqual(buildExtraParts({ lineInfo: { natural: 1 } }, extraWords), ["natural 1"]);
+  assert.deepEqual(buildExtraParts({ lineInfo: { advantage: "advantage" } }, extraWords), ["advantage"]);
+  // a named reason already says it, so it is not repeated
+  assert.deepEqual(buildExtraParts({ lineInfo: { advantage: "advantage" }, advantageContext: { state: "advantage", attributions: [{ type: "ADV", displayName: "Help" }] } }, extraWords), []);
+  assert.deepEqual(buildExtraParts({ advantageContext: { state: "normal", attributions: [{ type: "ADV", displayName: "A" }, { type: "DIS", displayName: "B" }] } }, extraWords), ["adv and dis cancel"]);
+});
+
+test("extras degrade silently without data or words", async () => {
+  const { buildExtraParts } = await import("../scripts/summary-line.js");
+  assert.deepEqual(buildExtraParts({}, extraWords), []);
+  assert.deepEqual(buildExtraParts(null, extraWords), []);
+  assert.deepEqual(buildExtraParts({ lineInfo: { critFrom: 19, natural: 20 } }, words), []);
+  assert.deepEqual(buildExtraParts({ lineInfo: { critFrom: "x", critMargin: -2, natural: 7 } }, extraWords), []);
+});
+
+test("extras keep their place when the sources are cut and show in the full text", () => {
+  const mods = Array.from({ length: 8 }, (_, i) => ({ value: i + 1, sourceLabel: `M${i}` }));
+  const result = buildSummaryLine([{ modifiers: mods, lineInfo: { critFrom: 19 } }], extraWords);
+  assert.match(result.text, /crit 19–20/);
+  assert.match(result.text, /more/);
+  assert.equal(result.text.split(", ").length <= 6, true);
+  assert.match(result.full, /M7/);
+  assert.match(result.full, /crit 19–20/);
+  assert.equal(buildSummaryLine([{ lineInfo: { natural: 20 } }], extraWords).text, "natural 20");
+});

@@ -420,6 +420,11 @@ export function buildCrucibleBreakdown(roll, { rollIndex = 0, title = null, isGM
     buildBoonSection(boons, banes),
     buildDamageSection(data)
   ];
+  // A critical threshold other than the usual 6 above the DC (only the GM sees the check's DC and thresholds)
+  if (isGM && !isInitiativeCheck(roll)) {
+    const threshold = toFiniteNumber(data.criticalSuccessThreshold);
+    if (threshold !== null && threshold > 0 && threshold < DEFAULT_CRITICAL_THRESHOLD) breakdown.lineInfo = { critMargin: threshold };
+  }
   return finalizeBreakdown(breakdown, {
     sections,
     pills: buildOutcomePills(roll, data, isGM),

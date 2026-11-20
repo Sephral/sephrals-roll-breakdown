@@ -90,5 +90,10 @@
   "SRB.Line.Proficiency": "Prof",
   "SRB.Line.Trims": " attack bonus| damage bonus| modifier| bonus",
   "SRB.Line.Advantage": "advantage",
-  "SRB.Line.Disadvantage": "disadvantage"
+  "SRB.Line.Disadvantage": "disadvantage",
+  "SRB.Line.Crit": "crit {range}",
+  "SRB.Line.CritMargin": "crit at +{margin}",
+  "SRB.Line.Nat20": "natural 20",
+  "SRB.Line.Nat1": "natural 1",
+  "SRB.Line.Cancelled": "advantage and disadvantage cancel"
 }
