@@ -203,6 +203,7 @@ test("the public API registers adapters and the running system switches to them"
     assert.equal(api.getAdapter("dnd5e").id, "dnd5e");
     assert.equal(api.getAdapter("crucible").id, "crucible");
     assert.equal(api.getAdapter("pf2e").id, "pf2e");
+    assert.equal(api.getAdapter("sf2e").id, "sf2e");
     assert.equal(api.getAdapter("swade").id, "swade");
 
     const render = env.onHandlers.get("renderChatMessageHTML");

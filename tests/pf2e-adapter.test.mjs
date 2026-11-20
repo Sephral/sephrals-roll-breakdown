@@ -305,3 +305,66 @@ test("pf2e damage rolls list dice per damage type, the instances and the listed 
     cleanup();
   }
 });
+
+// Starfinder 2e (sf2e 1.7.1) runs on the PF2e engine: same roll classes and game.pf2e, flags under flags.sf2e.
+function installSf2e(options) {
+  const game = installPf2e(options);
+  game.system.id = "sf2e";
+  return game;
+}
+
+function sf2eStrike() {
+  const flags = strikeFlags();
+  return { sf2e: flags.pf2e };
+}
+
+test("sf2e reads its own flag scope and breaks the strike down like PF2e", async () => {
+  installSf2e({ isGM: true });
+  try {
+    const module = await importStable("scripts/adapters/pf2e-adapter.js");
+    const adapter = new module.Pf2eRollAdapter("sf2e");
+    assert.equal(adapter.id, "sf2e");
+    const roll = new CheckRoll({ dice: [new Die({ faces: 20, results: [14] })], totalModifier: 5, options: { degreeOfSuccess: 2 } });
+    const message = { id: "s1", rolls: [roll], flags: sf2eStrike() };
+
+    assert.equal(adapter.supportsMessage(message), true);
+    const [breakdown] = await adapter.buildBreakdowns(message);
+    assert.deepEqual(breakdown.modifiers.map((entry) => [entry.sourceLabel, entry.value]), [
+      ["Strength", 4], ["Trained", 5], ["Multiple Attack Penalty", -5], ["Spell Effect: Bless", 1]
+    ]);
+    assert.deepEqual(breakdown.pills.map((pill) => pill.text), ["DC 18", "Success", "Margin +1"]);
+
+    // A message that still carries its data under the PF2e scope reads as well
+    const legacy = { id: "s2", rolls: [roll], flags: strikeFlags() };
+    const [fromLegacy] = await adapter.buildBreakdowns(legacy);
+    assert.equal(fromLegacy.modifiers.length, 4);
+
+    // The PF2e adapter does not claim a Starfinder 2e world and the other way round
+    assert.equal(new module.Pf2eRollAdapter("pf2e").supportsMessage(message), false);
+    globalThis.game.system.id = "pf2e";
+    assert.equal(adapter.supportsMessage(message), false);
+  } finally {
+    cleanup();
+  }
+});
+
+test("sf2e uses the PF2e texts and flag helpers pick the scope that holds data", async () => {
+  installSf2e({ isGM: true });
+  try {
+    const settings = await importStable("scripts/settings.js");
+    await settings.ensureSystemTranslationsLoaded();
+    assert.notEqual(settings.localizeSystemTranslation("SRB.Pf2e.Outcome.Success"), "SRB.Pf2e.Outcome.Success");
+
+    const { readSystemFlags, isPf2eFamily } = await importStable("scripts/adapters/pf2e-adapter.js");
+    assert.equal(isPf2eFamily("sf2e"), true);
+    assert.equal(isPf2eFamily("dnd5e"), false);
+    const own = { context: { type: "attack-roll" } };
+    const other = { context: { type: "skill-check" } };
+    assert.equal(readSystemFlags({ flags: { sf2e: own, pf2e: other } }, "sf2e"), own);
+    assert.equal(readSystemFlags({ flags: { pf2e: other } }, "sf2e"), other);
+    assert.deepEqual(readSystemFlags({ flags: {} }, "sf2e"), {});
+    assert.deepEqual(readSystemFlags(null, "sf2e"), {});
+  } finally {
+    cleanup();
+  }
+});

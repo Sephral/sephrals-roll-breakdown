@@ -7,6 +7,7 @@ export const SETTINGS = {
   UI_LANGUAGE: "uiLanguage",
   ENABLED: "enabled",
   CARD_DISPLAY: "cardDisplay",
+  LINE_HOVER: "lineHover",
   DEFAULT_EXPANDED: "defaultExpanded",
   VISIBILITY: "visibility",
   HIDE_NPC_ROLLS: "hideNpcRolls",
@@ -123,8 +124,16 @@ function getSystemTranslationLanguages() {
   return getTranslationLanguages();
 }
 
-export async function ensureSystemTranslationsLoaded() {
+// Systems that share the texts of another one (Starfinder 2e runs on the PF2e engine)
+const SYSTEM_TRANSLATION_ALIASES = Object.freeze({ sf2e: "pf2e" });
+
+function getTranslationSystemId() {
   const systemId = String(game.system?.id ?? "").trim();
+  return SYSTEM_TRANSLATION_ALIASES[systemId] ?? systemId;
+}
+
+export async function ensureSystemTranslationsLoaded() {
+  const systemId = getTranslationSystemId();
   if (!systemId) return;
 
   const cacheKey = `${systemId}:${getTranslationCacheKey()}`;
@@ -153,7 +162,7 @@ function formatSystemTranslation(template, data) {
 }
 
 export function localizeSystemTranslation(key, data) {
-  const systemId = String(game.system?.id ?? "").trim();
+  const systemId = getTranslationSystemId();
   const cacheKey = `${systemId}:${getTranslationCacheKey()}`;
   const translations = systemTranslationData.get(cacheKey);
   const template = translations?.[key];
@@ -235,6 +244,7 @@ export function registerSettings() {
     },
     onChange: refreshChatMessages
   });
+  registerBooleanSetting(SETTINGS.LINE_HOVER, "Settings.LineHover.Name", "Settings.LineHover.Hint", true, "client", refreshChatMessages);
   registerBooleanSetting(SETTINGS.DEFAULT_EXPANDED, "Settings.DefaultExpanded.Name", "Settings.DefaultExpanded.Hint", false);
   game.settings.register(MODULE_ID, SETTINGS.VISIBILITY, {
     name: localize("Settings.Visibility.Name"),
@@ -375,6 +385,7 @@ export function shouldRenderForCurrentUser() {
 export function getRenderOptions() {
   return {
     cardDisplay: normalizeCardDisplay(getRegisteredSettingValue(SETTINGS.CARD_DISPLAY, DEFAULT_CARD_DISPLAY)),
+    lineHover: getRegisteredSettingValue(SETTINGS.LINE_HOVER, true) !== false,
     defaultExpanded: Boolean(getSetting(SETTINGS.DEFAULT_EXPANDED)),
     showUnknown: Boolean(getSetting(SETTINGS.SHOW_UNKNOWN))
   };

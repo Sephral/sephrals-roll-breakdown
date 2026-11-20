@@ -12,7 +12,7 @@
 
 ## Highlights
 
-* **The answer at a glance:** one short line on the card names the main parts, such as "+5 STR, +3 Prof, +1d4 Bless, advantage from Help". No click needed.
+* **The answer at a glance:** one short line on the card names the main parts, such as "+5 STR, +3 Prof, +1d4 Bless, advantage from Help". No click needed, and resting the mouse on it shows the full breakdown.
 * **Every number explained:** a click on the line opens a compact panel on the chat card shows the dice, the modifiers and every other part of the formula.
 * **Made for D&D 5e:** attacks, damage, saves, ability, skill and tool checks, concentration and death saves, each with its real sources.
 * **Why advantage?** When modules like MidiQOL record the reasons, the panel lists them, such as flanking, a prone target or long range. In D&D 5e 6 it also names the effects whose rules grant advantage or a bonus.
@@ -21,7 +21,7 @@
 * **GM rolls stay behind the screen:** if you like, players see only the total of your rolls, and your private rolls not at all.
 * **Out of the way:** the panel stays folded until someone opens it, and an open panel stays open while the chat updates. Each player picks for themselves: line only, line and button, or button only.
 * **Made for Crucible too:** see which boons and banes changed which die, where every bonus comes from, the result against the DC and how the damage adds up.
-* **More systems:** Pathfinder 2e and Savage Worlds show their named modifiers and results, every other system gets a general breakdown of dice and modifiers.
+* **More systems:** Pathfinder 2e, Starfinder 2e and Savage Worlds show their named modifiers and results, every other system gets a general breakdown of dice and modifiers.
 
 ## How it works
 
@@ -35,7 +35,7 @@ You decide who sees the line and the panel: only the GM, the GM and the owner of
 
 Search for **Roll Breakdown** in Foundry's module browser or open the [package page](https://foundryvtt.com/packages/sephrals-roll-breakdown).
 
-Foundry VTT 13 and 14 · any game system, extra details for D&D 5e, Crucible, Pathfinder 2e and Savage Worlds · English and German
+Foundry VTT 13 and 14 · any game system, extra details for D&D 5e, Crucible, Pathfinder 2e, Starfinder 2e and Savage Worlds · English and German
 
 ## Help it get better
 

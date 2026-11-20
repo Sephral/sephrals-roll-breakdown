@@ -13,15 +13,23 @@ An opened panel stays open when the chat card updates or the chat log redraws. R
 
 ## The short line
 
-Every card with a breakdown shows one line above the panel button, for example `+5 STR, +3 Prof, +1d4 Bless, advantage from Help`. It lists the modifiers with a value and a source, every die after the main die (such as a Bless die), the sum of modifiers without a source as `other`, and the reason for advantage or disadvantage when the roll names one. Filler words such as `modifier` and `attack bonus` are cut and long names end with an ellipsis. After five parts the line says how many more there are, and hovering the line lists all of them.
+Every card with a breakdown shows one line above the panel button, for example `+5 STR, +3 Prof, +1d4 Bless, advantage from Help`. It lists the modifiers with a value and a source, every die after the main die (such as a Bless die), the sum of modifiers without a source as `other`, and the reason for advantage or disadvantage when the roll names one. Filler words such as `modifier` and `attack bonus` are cut and long names end with an ellipsis. After five parts the line says how many more there are.
 
 A card with several rolls, such as an attack and its damage merged by a module, shows one entry per roll, named by the roll title or `Roll 1`, `Roll 2`. A roll without anything to say adds nothing, and a card without a line shows the `Breakdown` button as before.
 
 The line is built from the same breakdown as the panel, so it follows every visibility rule: hidden NPC and GM rolls, GM only, owners only, hidden GM rolls and whispers show no line to those who must not see them. It works with every adapter (D&D 5e, Crucible, Pathfinder 2e, Savage Worlds, other systems) and with the breakdown stored on the message.
 
+### Preview on hover
+
+Resting the mouse on the short line (about a third of a second) shows the full breakdown next to the card as a popover, without a click. The same happens when the line has keyboard focus. The popover is a copy of the panel that is already on the card, so it shows exactly what the panel would show to that user and follows every visibility rule above: a roll without a panel has no line and nothing to preview. A click on the line still opens the panel in the card and replaces the popover, and no popover shows while the panel is open.
+
+The popover goes to the left of the card (the chat sits at the screen edge), otherwise to the right, below or above it, and always inside the window. Moving the pointer into it keeps it open, so a long breakdown can be scrolled. It closes when the pointer leaves, on scrolling the chat or anywhere else, on a click outside, and with Escape. Scrolling right after the pointer entered the line shows nothing, so a moving chat does not flicker. Touch and pen input never hover: a tap opens the panel as before.
+
+While the hover is on, the line has no native tooltip, because the popover replaces it. With the hover off the tooltip with all parts is back.
+
 ## Supported systems
 
-Roll Breakdown has its own breakdown for D&D 5e, Crucible, Pathfinder 2e and Savage Worlds. Every other system gets a general breakdown of dice and modifiers.
+Roll Breakdown has its own breakdown for D&D 5e, Crucible, Pathfinder 2e, Starfinder 2e and Savage Worlds. Every other system gets a general breakdown of dice and modifiers.
 
 ### D&D 5e
 
@@ -85,6 +93,10 @@ When Pathfinder 2e hides the breakdown of a roll from players, Roll Breakdown hi
 
 Tested with Pathfinder 2e 7.12.2 on Foundry 13 and 8.6.1 on Foundry 14.
 
+### Starfinder 2e
+
+Starfinder 2e (system id `sf2e`, built on the Pathfinder 2e engine) uses the Pathfinder 2e adapter and the same texts. The system keeps the data of a chat message under its own flag scope (`flags.sf2e`), the adapter reads that scope first and falls back to `flags.pf2e` for messages that still carry it. Everything listed for Pathfinder 2e applies, including the Pathfinder 2e settings that hide DCs, results and NPC breakdowns from players (Starfinder 2e keeps them under `game.pf2e`). Tested with Starfinder 2e 1.7.1 on Foundry 14 (strikes with multiple attack penalty, damage, critical damage, skill checks, saves, perception, initiative, NPC strikes and damage).
+
 ### Savage Worlds
 
 * **Trait rolls:** trait die and Wild Die, which die counted, aces, the named modifiers, the target number and the result with its raises. Modifiers that were switched off in the roll dialog are listed as not counted.
@@ -124,6 +136,7 @@ Names of bonuses from the system or from other modules only appear when the roll
 * `Language` follows Foundry (including community translations) or uses English or German.
 * `Enable roll breakdowns` turns the module on or off for you.
 * `Breakdown on the card` is a client setting, so every player picks their own: `Short line and breakdown button` (default), `Short line only` (a click on the line opens the panel) or `Breakdown button only` (as in earlier versions).
+* `Preview on hover` is a client setting (default on): the full breakdown as a popover while the pointer rests on the short line or the line has keyboard focus. Off, the line shows its native tooltip again.
 * `Expanded by default` opens the breakdown automatically for new supported messages.
 * `Breakdown visibility` is a world setting that decides who sees the panel: `GM only`, `Owners and GM` or `Everyone`. Owners are players who made the roll or own the speaking actor. Existing worlds keep their previous choice.
 * `Hide the breakdown of NPC and GM rolls` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret. On cards with rolls of several actors, such as the Crucible initiative report or a group check, this applies to each roll.
@@ -167,7 +180,7 @@ In D&D 5e the panel reads its sources from the actor, the item and the effects. 
 * The names in the panel stay in the language of the player who rolled, like the rest of the card.
 * Chat messages from before version 1.0.15 are still read from the actors as they are now.
 
-Crucible, Pathfinder 2e and Savage Worlds keep everything the panel needs in the roll itself, so they need no stored copy.
+Crucible, Pathfinder 2e, Starfinder 2e and Savage Worlds keep everything the panel needs in the roll itself, so they need no stored copy.
 
 ## Usage statistics
 
@@ -176,9 +189,9 @@ The module can take part in a small usage report shared by all of Sephral’s mo
 With the GM’s consent only the active GM’s browser counts, and it sends at most one report a day. The counts are kept in a hidden world setting, so all browsers and computers of the GM count together, and turning the statistics off deletes them. A copy of a world gets its own world ID. The question lists everything the report contains, from the Foundry version to a random world ID. For Roll Breakdown it holds:
 
 * on how many of the last 30 days the module was used
-* how often a short line is shown, a panel is opened (also by a click on the line), the settings are opened from a panel and the self test runs
+* how often a short line is shown, a panel is opened (also by a click on the line), a preview is shown by hovering the line (once per card and session), the settings are opened from a panel and the self test runs
 * how often the GM makes a roll that players see without formula and dice or not at all
-* the settings *Breakdown on the card*, *Breakdown visibility*, *Expanded by default*, *Hide the breakdown of NPC and GM rolls*, *Hide GM rolls from players*, *Hide formula and dice of GM rolls* and *Remove private GM rolls* (only the chosen option)
+* the settings *Breakdown on the card*, *Preview on hover*, *Breakdown visibility*, *Expanded by default*, *Hide the breakdown of NPC and GM rolls*, *Hide GM rolls from players*, *Hide formula and dice of GM rolls* and *Remove private GM rolls* (only the chosen option)
 * where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
 No names, chat messages, notes, dice results or other content of the world are sent.

@@ -79,6 +79,8 @@
   "SRB.Debug.Saved": "Debug file {file} saved. It contains chat text and whispers, check it before you share it.",
   "SRB.Settings.CardDisplay.Name": "Breakdown on the card",
   "SRB.Settings.CardDisplay.Hint": "What a roll card shows of its breakdown. The line gives the main parts at a glance, a click opens the full breakdown.",
+  "SRB.Settings.LineHover.Name": "Preview on hover",
+  "SRB.Settings.LineHover.Hint": "Rest the pointer on the short line, or focus it with the keyboard, to see the full breakdown without a click. Taps on touch screens work as before.",
   "SRB.CardDisplay.Line": "Short line only",
   "SRB.CardDisplay.Both": "Short line and breakdown button",
   "SRB.CardDisplay.Panel": "Breakdown button only",

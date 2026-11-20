@@ -1,6 +1,6 @@
 <details class="srb-breakdown{{#if line}} srb-breakdown--with-line{{/if}}" data-message-id="{{messageId}}" {{#if expanded}}open{{/if}}>
   <summary class="srb-breakdown__toggle">
-    {{#if line}}<span class="srb-breakdown__line" data-tooltip="{{line.full}}">{{line.text}}</span>{{/if}}
+    {{#if line}}<span class="srb-breakdown__line" {{#unless lineHover}} data-tooltip="{{line.full}}"{{/unless}}>{{line.text}}</span>{{/if}}
     {{#if showToggleLabel}}<span class="srb-breakdown__toggle-label">{{labels.toggle}}</span>{{/if}}
   </summary>
   <div class="srb-breakdown__panel">

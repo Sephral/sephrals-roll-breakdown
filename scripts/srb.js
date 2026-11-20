@@ -31,7 +31,8 @@ const CARD_POLL_MS = 50;
 const registry = new AdapterRegistry();
 registry.register("dnd5e", new Dnd5eRollAdapter());
 registry.register("crucible", new CrucibleRollAdapter());
-registry.register("pf2e", new Pf2eRollAdapter());
+registry.register("pf2e", new Pf2eRollAdapter("pf2e"));
+registry.register("sf2e", new Pf2eRollAdapter("sf2e"));
 registry.register("swade", new SwadeRollAdapter());
 
 function createAdapter() {
@@ -87,8 +88,8 @@ Hooks.once("init", () => {
   registerSettings();
   registerDebug(service);
   registerUsage(MODULE_ID, {
-    features: ["panelOpened", "panelSettings", "lineShown", "lineClicked", "selfTestRun", "gmRollHidden"],
-    settings: [SETTINGS.CARD_DISPLAY, SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS, SETTINGS.GM_ROLL_PRIVACY, SETTINGS.GM_ROLL_PUBLIC, SETTINGS.GM_ROLL_PRIVATE]
+    features: ["panelOpened", "panelSettings", "lineShown", "lineClicked", "lineHovered", "selfTestRun", "gmRollHidden"],
+    settings: [SETTINGS.CARD_DISPLAY, SETTINGS.LINE_HOVER, SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS, SETTINGS.GM_ROLL_PRIVACY, SETTINGS.GM_ROLL_PUBLIC, SETTINGS.GM_ROLL_PRIVATE]
   });
   void ensureModuleTranslationsLoaded();
   void ensureSystemTranslationsLoaded();

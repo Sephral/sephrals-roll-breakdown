@@ -278,3 +278,22 @@
 .chat-message.srb-gm-hidden button.dice-roll {
   pointer-events: none;
 }
+
+/* Preview of the full breakdown while the pointer rests on the short line (copy of the panel, see line-hover.js) */
+.srb-hover {
+  position: fixed;
+  z-index: var(--z-index-tooltip, 9999);
+  box-sizing: border-box;
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  border: 1px solid rgba(106, 106, 106, 0.72);
+  border-radius: 10px;
+  background: var(--color-cool-5, #1b1b1f);
+  color: var(--color-light-1, #e8e6e0);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  font-size: 0.85rem;
+}
+
+.srb-hover .srb-breakdown__panel {
+  padding: 0.6rem 0.7rem 0.7rem;
+}

@@ -1,6 +1,7 @@
 import { normalizeBreakdown } from "./adapter-registry.js";
-import { MODULE_ID, hasOwnSettings, localize, openModuleSettings } from "./settings.js";
+import { MODULE_ID, getRenderOptions, hasOwnSettings, localize, openModuleSettings } from "./settings.js";
 import { buildSummaryLine, showsLine, showsToggleLabel } from "./summary-line.js";
+import { attachLineHover } from "./line-hover.js";
 import { countFeature } from "./usage.mjs";
 
 const TEMPLATE_PATH = `modules/${MODULE_ID}/templates/breakdown-panel.hbs`;
@@ -113,6 +114,7 @@ function buildTemplateData(message, rawBreakdowns, options, expanded) {
     messageId: message.id,
     expanded,
     line,
+    lineHover: Boolean(line) && options.lineHover !== false,
     // Without a line the toggle always keeps its text, otherwise there would be nothing to click
     showToggleLabel: !line || showsToggleLabel(options.cardDisplay),
     labels,
@@ -169,6 +171,8 @@ export class ChatCardRenderer {
     this.openPanels = new Map();
     // Messages whose line was counted already: a card is drawn again on every chat update
     this.countedLines = new Set();
+    // Same for the hover preview: counted once per message and session
+    this.countedHovers = new Set();
   }
 
   async appendBreakdown(message, html, breakdowns, options) {
@@ -192,6 +196,16 @@ export class ChatCardRenderer {
     if (templateData.line && !this.countedLines.has(message.id)) {
       this.countedLines.add(message.id);
       countFeature(MODULE_ID, "lineShown");
+    }
+    if (templateData.lineHover && panel) {
+      attachLineHover(panel, {
+        isEnabled: () => getRenderOptions().lineHover,
+        onShown: () => {
+          if (this.countedHovers.has(message.id)) return;
+          this.countedHovers.add(message.id);
+          countFeature(MODULE_ID, "lineHovered");
+        }
+      });
     }
     panel?.querySelector?.(".srb-breakdown__toggle")?.addEventListener?.("click", (event) => {
       if (panel.open) return;

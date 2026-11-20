@@ -16,7 +16,7 @@ import {
   systemText
 } from "./system-adapter-utils.js";
 
-// Data shapes follow the PF2e system source: CheckRoll and DamageRoll options, and the message flags
+// Data shapes follow the PF2e system source (sf2e 1.7 uses the same ones under flags.sf2e): CheckRoll and DamageRoll options, and the message flags
 // flags.pf2e.context, flags.pf2e.modifiers (RawModifier[]) and flags.pf2e.dice (RawDamageDice[]).
 const OUTCOME_KEYS = {
   criticalSuccess: "CriticalSuccess",
@@ -26,6 +26,26 @@ const OUTCOME_KEYS = {
 };
 const NON_CHECK_CONTEXTS = new Set(["damage-roll", "spell-cast", "self-effect", "damage-taken"]);
 const MODIFIER_TYPES = new Set(["ability", "circumstance", "item", "potency", "proficiency", "status", "untyped"]);
+
+// Starfinder 2e (sf2e) is built on the PF2e engine: same roll classes, same game.pf2e helpers, same modifier and
+// context data, but the message flags live under its own system id (flags.sf2e). Both are read.
+export const PF2E_FAMILY = Object.freeze(["pf2e", "sf2e"]);
+
+export function isPf2eFamily(systemId) {
+  return PF2E_FAMILY.includes(systemId);
+}
+
+// The flags of a message of the running system. The own scope comes first, a message that carries its data under the
+// other scope (a world converted from PF2e to Starfinder 2e) still reads.
+export function readSystemFlags(message, systemId = globalThis.game?.system?.id) {
+  const flags = message?.flags ?? {};
+  const scopes = [systemId, ...PF2E_FAMILY].filter((scope, index, all) => scope && all.indexOf(scope) === index);
+  const holds = (entry) => entry && typeof entry === "object" && (entry.context || entry.modifiers || entry.dice);
+  for (const scope of scopes) {
+    if (holds(flags[scope])) return flags[scope];
+  }
+  return flags[systemId] ?? {};
+}
 
 function getMetagameSettings() {
   return globalThis.game?.pf2e?.settings?.metagame ?? {};
@@ -324,20 +344,20 @@ export function buildPf2eDamageBreakdown(roll, flags, { rollIndex = 0 } = {}) {
 }
 
 export class Pf2eRollAdapter extends GenericRollAdapter {
-  constructor() {
+  constructor(systemId = "pf2e") {
     super();
-    this.id = "pf2e";
+    this.id = isPf2eFamily(systemId) ? systemId : "pf2e";
     this.waitForCard = true;
   }
 
   supportsMessage(message) {
-    return globalThis.game?.system?.id === "pf2e" && super.supportsMessage(message);
+    return globalThis.game?.system?.id === this.id && super.supportsMessage(message);
   }
 
   async buildBreakdowns(message) {
     await ensureSystemTranslationsLoaded();
     const isGM = isCurrentUserGM();
-    const flags = message?.flags?.pf2e ?? {};
+    const flags = readSystemFlags(message, this.id);
     const context = flags.context ?? null;
 
     return (message?.rolls ?? [])
