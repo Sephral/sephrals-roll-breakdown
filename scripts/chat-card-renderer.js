@@ -2,6 +2,8 @@ import { normalizeBreakdown } from "./adapter-registry.js";
 import { MODULE_ID, getRenderOptions, hasOwnSettings, localize, openModuleSettings } from "./settings.js";
 import { buildSummaryLine, showsLine, showsToggleLabel } from "./summary-line.js";
 import { attachLineHover } from "./line-hover.js";
+import { describeChance, resolveChance } from "./chance-target.js";
+import { openLuck } from "./luck-app.js";
 import { countFeature } from "./usage.mjs";
 
 const TEMPLATE_PATH = `modules/${MODULE_ID}/templates/breakdown-panel.hbs`;
@@ -82,7 +84,48 @@ function getLineAliases() {
   return aliases;
 }
 
-function buildTemplateData(message, rawBreakdowns, options, expanded) {
+function getChanceWords() {
+  return {
+    success: localize("Chance.Success"),
+    better: localize("Chance.Better"),
+    successHint: localize("Chance.SuccessHint"),
+    betterHint: localize("Chance.BetterHint"),
+    dc: localize("Chance.Dc"),
+    ac: localize("Chance.Ac"),
+    percent: localize("Chance.Percent"),
+    under: localize("Chance.Under"),
+    over: localize("Chance.Over")
+  };
+}
+
+// What the current user may know: a monster's armor class is the GM's secret, a DC the system hides stays hidden.
+function getChanceEnvironment() {
+  return {
+    isGM: Boolean(game.user?.isGM),
+    actorHasPlayerOwner: (uuid) => {
+      try {
+        return Boolean(globalThis.fromUuidSync?.(uuid)?.hasPlayerOwner);
+      } catch {
+        return false;
+      }
+    },
+    pf2eShowsDcs: game.pf2e?.settings?.metagame?.dcs === true
+  };
+}
+
+function buildChance(message, breakdown, rolls, options) {
+  if (options.showChance === false) return null;
+  const roll = Array.isArray(rolls) ? rolls[breakdown.rollIndex ?? 0] : null;
+  if (!roll) return null;
+  try {
+    return describeChance(resolveChance({ roll, message, systemId: game.system?.id, env: getChanceEnvironment() }), getChanceWords());
+  } catch (error) {
+    console.warn(`${MODULE_ID} | The chance could not be worked out`, error);
+    return null;
+  }
+}
+
+function buildTemplateData(message, rawBreakdowns, options, expanded, rolls = null) {
   const breakdowns = rawBreakdowns.map(normalizeBreakdown);
   const labels = {
     toggle: localize("Chat.Toggle"),
@@ -124,6 +167,7 @@ function buildTemplateData(message, rawBreakdowns, options, expanded) {
     showToggleLabel: !line || showsToggleLabel(options.cardDisplay),
     labels,
     settingsLabel: hasOwnSettings() ? localize("Chat.Settings") : null,
+    luckLabel: localize("Luck.Title"),
     breakdowns: breakdowns.map((breakdown, index) => ({
       rollLabel: breakdown.title ?? (breakdowns.length > 1 ? `${labels.rollLabel} ${index + 1}` : null),
       formula: breakdown.formula,
@@ -164,7 +208,8 @@ function buildTemplateData(message, rawBreakdowns, options, expanded) {
         ? breakdown.unresolvedTerms.map((term) => decorateTerm(term, labels.unresolvedTerm))
         : [],
       totalStaticModifierText: formatSignedNumber(breakdown.totalStaticModifier),
-      rollTotalText: breakdown.rollTotal === null ? null : String(breakdown.rollTotal)
+      rollTotalText: breakdown.rollTotal === null ? null : String(breakdown.rollTotal),
+      chance: buildChance(message, breakdown, rolls, options)
     }))
   };
 }
@@ -178,15 +223,17 @@ export class ChatCardRenderer {
     this.countedLines = new Set();
     // Same for the hover preview: counted once per message and session
     this.countedHovers = new Set();
+    // And the chance line
+    this.countedChances = new Set();
   }
 
-  async appendBreakdown(message, html, breakdowns, options) {
+  async appendBreakdown(message, html, breakdowns, options, context = {}) {
     const root = getRootElement(html);
     const selector = `.srb-breakdown[data-message-id="${message.id}"]`;
     if (!root || root.querySelector(selector)) return false;
 
     const expanded = this.openPanels.get(message.id) ?? options.defaultExpanded;
-    const templateData = buildTemplateData(message, breakdowns, options, expanded);
+    const templateData = buildTemplateData(message, breakdowns, options, expanded, context?.rolls ?? null);
     const render = globalThis.foundry?.applications?.handlebars?.renderTemplate ?? globalThis.renderTemplate;
     const markup = await render(TEMPLATE_PATH, templateData);
 
@@ -201,6 +248,10 @@ export class ChatCardRenderer {
     if (templateData.line && !this.countedLines.has(message.id)) {
       this.countedLines.add(message.id);
       countFeature(MODULE_ID, "lineShown");
+    }
+    if (templateData.breakdowns.some((entry) => entry.chance) && !this.countedChances.has(message.id)) {
+      this.countedChances.add(message.id);
+      countFeature(MODULE_ID, "chanceShown");
     }
     if (templateData.lineHover && panel) {
       attachLineHover(panel, {
@@ -221,6 +272,10 @@ export class ChatCardRenderer {
       event.preventDefault();
       countFeature(MODULE_ID, "panelSettings");
       void openModuleSettings();
+    });
+    panel?.querySelector?.(".srb-breakdown__luck")?.addEventListener?.("click", (event) => {
+      event.preventDefault();
+      void openLuck();
     });
     return true;
   }

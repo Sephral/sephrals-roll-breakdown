@@ -155,6 +155,10 @@
           </div>
         {{/if}}
 
+        {{#if breakdown.chance}}
+          <div class="srb-breakdown__chance srb-breakdown__chance--{{breakdown.chance.kind}}" {{#if breakdown.chance.hint}}data-tooltip="{{breakdown.chance.hint}}"{{/if}}>{{breakdown.chance.text}}</div>
+        {{/if}}
+
         <div class="srb-breakdown__summary srb-breakdown__summary--footer">
           <div class="srb-breakdown__summary-side">
             {{#each breakdown.pills as |pill|}}
@@ -168,10 +172,11 @@
         </div>
       </section>
     {{/each}}
-    {{#if settingsLabel}}
-      <div class="srb-breakdown__tools">
+    <div class="srb-breakdown__tools">
+      <button type="button" class="srb-breakdown__luck" data-tooltip="{{luckLabel}}" aria-label="{{luckLabel}}"><i class="fa-solid fa-clover" inert></i></button>
+      {{#if settingsLabel}}
         <button type="button" class="srb-breakdown__settings" data-tooltip="{{settingsLabel}}" aria-label="{{settingsLabel}}"><i class="fa-solid fa-gear" inert></i></button>
-      </div>
-    {{/if}}
+      {{/if}}
+    </div>
   </div>
 </details>

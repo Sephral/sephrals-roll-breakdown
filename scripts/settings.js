@@ -1,4 +1,5 @@
 import { registerDebugMenu } from "./debug-file.mjs";
+import { refreshLuckWindow } from "./luck-app.js";
 import { CARD_DISPLAY, DEFAULT_CARD_DISPLAY, normalizeCardDisplay } from "./summary-line.js";
 
 export const MODULE_ID = "sephrals-roll-breakdown";
@@ -8,6 +9,8 @@ export const SETTINGS = {
   ENABLED: "enabled",
   CARD_DISPLAY: "cardDisplay",
   LINE_HOVER: "lineHover",
+  SHOW_CHANCE: "showChance",
+  LUCK_EVENING: "luckEvening",
   DEFAULT_EXPANDED: "defaultExpanded",
   VISIBILITY: "visibility",
   HIDE_NPC_ROLLS: "hideNpcRolls",
@@ -245,6 +248,8 @@ export function registerSettings() {
     onChange: refreshChatMessages
   });
   registerBooleanSetting(SETTINGS.LINE_HOVER, "Settings.LineHover.Name", "Settings.LineHover.Hint", true, "client", refreshChatMessages);
+  registerBooleanSetting(SETTINGS.SHOW_CHANCE, "Settings.ShowChance.Name", "Settings.ShowChance.Hint", true, "client", refreshChatMessages);
+  game.settings.register(MODULE_ID, SETTINGS.LUCK_EVENING, { scope: "world", config: false, type: Number, default: 0, onChange: () => refreshLuckWindow() });
   registerBooleanSetting(SETTINGS.DEFAULT_EXPANDED, "Settings.DefaultExpanded.Name", "Settings.DefaultExpanded.Hint", false);
   game.settings.register(MODULE_ID, SETTINGS.VISIBILITY, {
     name: localize("Settings.Visibility.Name"),
@@ -287,6 +292,20 @@ export function registerSettings() {
 
   // The unit tests register the settings without Foundry's application classes.
   if (!globalThis.foundry?.applications?.api || typeof game.settings.registerMenu !== "function") return;
+  game.settings.registerMenu(MODULE_ID, "luck", {
+    name: localize("Luck.Title"),
+    label: localize("Luck.Open"),
+    hint: localize("Luck.MenuHint"),
+    icon: "fa-solid fa-clover",
+    type: class RollBreakdownLuckMenu extends foundry.applications.api.ApplicationV2 {
+      async render() {
+        const { openLuck } = await import("./luck-app.js");
+        await openLuck();
+        return this;
+      }
+    },
+    restricted: false
+  });
   game.settings.registerMenu(MODULE_ID, "selfTest", {
     name: localize("SelfTest.Title"),
     label: localize("SelfTest.Run"),
@@ -386,6 +405,7 @@ export function getRenderOptions() {
   return {
     cardDisplay: normalizeCardDisplay(getRegisteredSettingValue(SETTINGS.CARD_DISPLAY, DEFAULT_CARD_DISPLAY)),
     lineHover: getRegisteredSettingValue(SETTINGS.LINE_HOVER, true) !== false,
+    showChance: getRegisteredSettingValue(SETTINGS.SHOW_CHANCE, true) !== false,
     defaultExpanded: Boolean(getSetting(SETTINGS.DEFAULT_EXPANDED)),
     showUnknown: Boolean(getSetting(SETTINGS.SHOW_UNKNOWN))
   };

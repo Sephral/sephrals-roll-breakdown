@@ -149,7 +149,8 @@ export class RollBreakdownService {
       return;
     }
 
-    const appended = await this.renderer.appendBreakdown(message, html, breakdowns, getRenderOptions());
+    const rolls = this.adapter?.getMessageRolls?.(message) ?? message?.rolls ?? [];
+    const appended = await this.renderer.appendBreakdown(message, html, breakdowns, getRenderOptions(), { rolls });
     if (appended) {
       this.log("Rendered roll breakdown.", { messageId: message?.id, count: breakdowns.length, stored: breakdowns.filter((breakdown) => breakdown?.stored).length });
     }

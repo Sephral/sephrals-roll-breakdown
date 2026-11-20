@@ -228,13 +228,27 @@
 
 }
 
-/* The gear at the end of the panel opens the module settings. */
+/* How likely the roll was. */
+.srb-breakdown__chance {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  opacity: 0.85;
+  cursor: help;
+}
+
+.srb-breakdown__chance--success {
+  font-weight: 600;
+}
+
+/* The gear at the end of the panel opens the module settings. The clover next to it opens the dice luck. */
 .srb-breakdown__tools {
   display: flex;
   justify-content: flex-end;
+  gap: 0.1rem;
   margin-top: 0.25rem;
 }
 
+.srb-breakdown__luck,
 .srb-breakdown__settings {
   flex: 0 0 auto;
   width: 1.5rem;
@@ -250,6 +264,8 @@
   cursor: pointer;
 }
 
+.srb-breakdown__luck:hover,
+.srb-breakdown__luck:focus-visible,
 .srb-breakdown__settings:hover,
 .srb-breakdown__settings:focus-visible {
   opacity: 1;
@@ -296,4 +312,103 @@
 
 .srb-hover .srb-breakdown__panel {
   padding: 0.6rem 0.7rem 0.7rem;
+}
+
+
+/* My dice luck */
+.srb-luck {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.25rem;
+}
+
+.srb-luck p {
+  margin: 0;
+}
+
+.srb-luck__intro,
+.srb-luck__small,
+.srb-luck__block dl span {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+.srb-luck__blocks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.srb-luck__block {
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(127, 127, 127, 0.12);
+}
+
+.srb-luck__block h3 {
+  margin: 0 0 0.2rem;
+  font-size: 0.95em;
+  border: none;
+}
+
+.srb-luck__big {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.srb-luck__block dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.1rem 0.5rem;
+  margin: 0.4rem 0 0;
+}
+
+.srb-luck__block dt {
+  opacity: 0.8;
+}
+
+.srb-luck__block dd {
+  margin: 0;
+  text-align: right;
+}
+
+.srb-luck__curve {
+  margin: 0;
+}
+
+.srb-luck__curve figcaption {
+  font-size: 0.8em;
+  opacity: 0.65;
+}
+
+.srb-luck__verdict {
+  font-weight: 600;
+}
+
+.srb-luck__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+}
+
+.srb-luck__table th,
+.srb-luck__table td {
+  padding: 0.15rem 0.3rem;
+  text-align: right;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+}
+
+.srb-luck__table th:first-child {
+  text-align: left;
+}
+
+.srb-luck__table .is-self {
+  font-weight: 700;
+}
+
+.srb-luck__footer {
+  display: flex;
+  justify-content: flex-end;
 }

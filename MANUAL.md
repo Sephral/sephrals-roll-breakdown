@@ -29,6 +29,34 @@ The popover goes to the left of the card (the chat sits at the screen edge), oth
 
 While the hover is on, the line has no native tooltip, because the popover replaces it. With the hover off the tooltip with all parts is back.
 
+## The chance of a roll
+
+Below the parts of each roll the panel (and so the hover preview) has one line about how likely the roll was, worked out from the dice before they were thrown:
+
+* `Chance of success: 65 %` (German `Chance auf Erfolg: 65 %`) when the card has a target number: the DC of a save or check, the armor class of the one targeted creature on a D&D 5e attack, the DC of a Pathfinder 2e check. The hint on the line names the number.
+* `This result or better: 15 %` (German `Dieses Ergebnis oder besser: 15 %`) otherwise, for every roll of every system that is made of plain dice and numbers. It is the chance that the roll reaches the rolled total or more.
+
+The engine works out the exact distribution of the formula: sums of dice, the best or worst dice of an advantage roll (`kh`, `kl`, `dh`, `dl`), minimum and maximum, rerolls (`r`, `rr`) and flat modifiers. Exploding dice stop after three explosions per die, which changes the number by far less than a percent. Counted successes, dice pools, nested dice, multiplication and anything that needs more than 100 dice or about 200 000 combinations are skipped: such a roll shows no chance line. A roll whose total the formula cannot produce (a module changed the result after the roll) shows none either.
+
+Critical rules count where the system has simple ones. A D&D 5e attack hits on a natural result in the critical range (20 unless the roll says otherwise) and misses on a natural 1. A Pathfinder 2e check raises the degree of success by one step on a natural 20 and lowers it on a natural 1, so the chance of success is the chance of reaching at least a success. Saves and checks in D&D 5e have no such rule. Damage rolls get no line.
+
+Players only get a number they may know. The chance against a target number needs the number to be visible to the user, otherwise the line falls back to `This result or better`:
+
+* D&D 5e DC: shown to players when the roll is not private (the same condition under which dnd5e marks the card with success or failure). A DC the GM keeps secret is not part of the roll, so it never reaches the line.
+* D&D 5e armor class: shown to players only for creatures a player owns (a monster's armor class is the GM's secret). Several targets give no single armor class.
+* Pathfinder 2e: the DC follows the visibility the system gives it (the DC shown on the card or the metagame setting for DCs).
+* Other systems and rolls without a known target: only `This result or better`.
+
+The GM sees every chance. The setting `Show the chance` (client setting, default on) turns the line off for you. The Roll Breakdown API is not changed by this: the line is computed when the card is drawn and is not stored on the message.
+
+## My dice luck
+
+The clover button next to the gear at the bottom of an open panel, and the entry `My dice luck` in the module settings (for every player), open a small window with the natural d20 results of the player against the expected average of 10.5: the average, the number of rolls, the natural 20s and 1s (each with the number to expect), for tonight and overall, a curve of the average through tonight's rolls and one plain sentence about it.
+
+* A natural result is the leading d20 of a roll. With advantage or disadvantage it is the die that counts, and a die that was rerolled counts once. Rolls without a leading d20 do not count.
+* Tonight is a session: it starts with the first roll after a gap of eight hours, or after the GM chose `Start a new evening` in the GM's window. The overall numbers stay.
+* The numbers live in the user flag `flags.sephrals-roll-breakdown.luck` of each user. Only the client of the user who rolls writes it, so nobody needs extra permissions, and each window shows only the own numbers. The GM sees a table with every user and the button `Start a new evening` (world setting `luckEvening`, a time stamp). Foundry shares user flags with every client, so the privacy is a matter of the window, not of the data. To reset your own numbers, remove the flag: `game.user.unsetFlag("sephrals-roll-breakdown", "luck")`.
+
 ## Supported systems
 
 Roll Breakdown has its own breakdown for D&D 5e, Crucible, Pathfinder 2e, Starfinder 2e and Savage Worlds. Every other system gets a general breakdown of dice and modifiers.
@@ -139,6 +167,8 @@ Names of bonuses from the system or from other modules only appear when the roll
 * `Enable roll breakdowns` turns the module on or off for you.
 * `Breakdown on the card` is a client setting, so every player picks their own: `Short line and breakdown button` (default), `Short line only` (a click on the line opens the panel) or `Breakdown button only` (as in earlier versions).
 * `Preview on hover` is a client setting (default on): the full breakdown as a popover while the pointer rests on the short line or the line has keyboard focus. Off, the line shows its native tooltip again.
+* `Show the chance` is a client setting (default on): the line about how likely the roll was, see [The chance of a roll](#the-chance-of-a-roll).
+* `My dice luck` opens the window with your natural d20 results, see [My dice luck](#my-dice-luck).
 * `Expanded by default` opens the breakdown automatically for new supported messages.
 * `Breakdown visibility` is a world setting that decides who sees the panel: `GM only`, `Owners and GM` or `Everyone`. Owners are players who made the roll or own the speaking actor. Existing worlds keep their previous choice.
 * `Hide the breakdown of NPC and GM rolls` is a world setting and is on by default. Players get no panel on rolls from actors that no player owns or on GM rolls without a speaker owned by a player. This keeps monster bonuses secret. On cards with rolls of several actors, such as the Crucible initiative report or a group check, this applies to each roll.
@@ -149,7 +179,7 @@ Names of bonuses from the system or from other modules only appear when the roll
 * `Save debug file` (GM) saves one file for bug reports about all of Sephral’s modules, see [Debug file](#debug-file).
 * `Run self test` (GM) checks the support for your game system, a test roll, the latest roll in the chat and the panel. Run it after every update of Foundry or the system. When a newer version than the tested one is installed, the GM gets a notice once. Macros call it as `game.modules.get("sephrals-roll-breakdown").api.runSelfTest()`.
 
-The gear at the bottom of an open breakdown opens these settings.
+The gear at the bottom of an open breakdown opens these settings, the clover next to it your dice luck.
 
 ## Hiding GM rolls
 
@@ -191,9 +221,9 @@ The module can take part in a small usage report shared by all of Sephral’s mo
 With the GM’s consent only the active GM’s browser counts, and it sends at most one report a day. The counts are kept in a hidden world setting, so all browsers and computers of the GM count together, and turning the statistics off deletes them. A copy of a world gets its own world ID. The question lists everything the report contains, from the Foundry version to a random world ID. For Roll Breakdown it holds:
 
 * on how many of the last 30 days the module was used
-* how often a short line is shown, a panel is opened (also by a click on the line), a preview is shown by hovering the line (once per card and session), the settings are opened from a panel and the self test runs
+* how often a short line is shown, a panel is opened (also by a click on the line), a preview is shown by hovering the line (once per card and session), a chance line is shown (once per card and session), the dice luck window is opened, the settings are opened from a panel and the self test runs
 * how often the GM makes a roll that players see without formula and dice or not at all
-* the settings *Breakdown on the card*, *Preview on hover*, *Breakdown visibility*, *Expanded by default*, *Hide the breakdown of NPC and GM rolls*, *Hide GM rolls from players*, *Hide formula and dice of GM rolls* and *Remove private GM rolls* (only the chosen option)
+* the settings *Breakdown on the card*, *Preview on hover*, *Show the chance*, *Breakdown visibility*, *Expanded by default*, *Hide the breakdown of NPC and GM rolls*, *Hide GM rolls from players*, *Hide formula and dice of GM rolls* and *Remove private GM rolls* (only the chosen option)
 * where errors occur in the module code: file, line, error type and whether the error arose in the module itself, in Foundry, in the game system or in another module, never the error message or the name of another module
 
 No names, chat messages, notes, dice results or other content of the world are sent.

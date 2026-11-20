@@ -20,6 +20,7 @@ import {
 } from "./settings.js";
 import { Dnd5eRollAdapter, rememberRollContext } from "./adapters/dnd5e-adapter.js";
 import { TESTED_VERSIONS, noticeNewVersions, runSelfTest } from "./selftest.js";
+import { refreshLuckWindow, trackLuck } from "./luck-app.js";
 import { countFeature, registerUsage } from "./usage.mjs";
 
 // How long the core hook waits for dnd5e's own render hook before it renders the panel itself.
@@ -88,8 +89,8 @@ Hooks.once("init", () => {
   registerSettings();
   registerDebug(service);
   registerUsage(MODULE_ID, {
-    features: ["panelOpened", "panelSettings", "lineShown", "lineClicked", "lineHovered", "selfTestRun", "gmRollHidden"],
-    settings: [SETTINGS.CARD_DISPLAY, SETTINGS.LINE_HOVER, SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS, SETTINGS.GM_ROLL_PRIVACY, SETTINGS.GM_ROLL_PUBLIC, SETTINGS.GM_ROLL_PRIVATE]
+    features: ["panelOpened", "panelSettings", "lineShown", "lineClicked", "lineHovered", "selfTestRun", "gmRollHidden", "chanceShown", "luckViewed"],
+    settings: [SETTINGS.CARD_DISPLAY, SETTINGS.LINE_HOVER, SETTINGS.SHOW_CHANCE, SETTINGS.VISIBILITY, SETTINGS.DEFAULT_EXPANDED, SETTINGS.HIDE_NPC_ROLLS, SETTINGS.GM_ROLL_PRIVACY, SETTINGS.GM_ROLL_PUBLIC, SETTINGS.GM_ROLL_PRIVATE]
   });
   void ensureModuleTranslationsLoaded();
   void ensureSystemTranslationsLoaded();
@@ -150,7 +151,13 @@ Hooks.on("dnd5e.renderChatMessage", (message, html) => {
 // The client that adds rolls to a message stores their breakdown on it (adapters with storeBreakdowns).
 Hooks.on("createChatMessage", (message, options, userId) => {
   store.onCreate(message, options, userId);
+  trackLuck(message, userId, service.adapter?.getMessageRolls?.(message) ?? message?.rolls ?? []);
   if (game.user?.isGM && isOwnHiddenGmRoll(message, service.adapter)) countFeature(MODULE_ID, "gmRollHidden");
+});
+
+// A flag changed: an open dice luck window shows the new numbers.
+Hooks.on("updateUser", (user, changes) => {
+  if (changes?.flags?.[MODULE_ID]) refreshLuckWindow();
 });
 
 Hooks.on("updateChatMessage", (message, changes, options, userId) => {
