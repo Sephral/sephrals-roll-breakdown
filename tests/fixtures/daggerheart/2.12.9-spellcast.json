@@ -1,0 +1,84 @@
+{
+  "source": "daggerheart 2.12.9, live capture",
+  "speaker": {
+    "alias": "Mira Sol"
+  },
+  "type": "dualityRoll",
+  "rolls": [
+    {
+      "class": "DualityRoll",
+      "options": {
+        "actionType": "action",
+        "experiences": [],
+        "roll": {
+          "type": "spellcast",
+          "difficulty": null,
+          "advantage": 0,
+          "modifiers": [],
+          "breakdown": [],
+          "success": false
+        },
+        "data": {
+          "experiences": {
+            "ahHYdDgX3pmGDukP": {
+              "name": "Scholar of the Old Tongues",
+              "value": 2
+            }
+          }
+        }
+      },
+      "formula": "1d12h + 1d12f",
+      "terms": [
+        {
+          "class": "HopeDie",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "h"
+          ],
+          "results": [
+            {
+              "result": 4,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "FearDie",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "f"
+          ],
+          "results": [
+            {
+              "result": 1,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 5,
+      "evaluated": true
+    }
+  ],
+  "system": {
+    "targets": [
+      {
+        "name": "Skeleton Warrior",
+        "difficulty": 10
+      }
+    ],
+    "hasHealing": false
+  }
+}

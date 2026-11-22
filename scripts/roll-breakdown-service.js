@@ -5,6 +5,7 @@ import {
   getRenderOptions,
   getVisibilityMode,
   isDebugEnabled,
+  MODULE_ID,
   shouldHideNpcRolls,
   shouldRenderForCurrentUser,
   VISIBILITY_MODES
@@ -103,7 +104,10 @@ export class RollBreakdownService {
     const root = getRootElement(html);
     if (!root) return;
 
-    if (!shouldRenderForCurrentUser()) {
+    // A sample card (sample-windows.js) shows its panel whatever the visibility settings of the world say
+    const isSample = Boolean(message?.flags?.[MODULE_ID]?.sample);
+
+    if (!isSample && !shouldRenderForCurrentUser()) {
       this.log("Skipping message because rendering is disabled for the current user.", { messageId: message?.id });
       return;
     }
@@ -113,7 +117,7 @@ export class RollBreakdownService {
       return;
     }
 
-    if (!canSeeBreakdown(message, this.adapter)) {
+    if (!isSample && !canSeeBreakdown(message, this.adapter)) {
       this.log("Skipping message because its breakdown is hidden from the current user.", { messageId: message?.id });
       return;
     }
@@ -137,7 +141,7 @@ export class RollBreakdownService {
       }
 
       breakdowns = await resolveBreakdowns(this.adapter, message);
-      if (Array.isArray(breakdowns)) breakdowns = applyTitleVisibility(message, filterVisibleBreakdowns(message, breakdowns, this.adapter), this.adapter);
+      if (Array.isArray(breakdowns) && !isSample) breakdowns = applyTitleVisibility(message, filterVisibleBreakdowns(message, breakdowns, this.adapter), this.adapter);
     } catch (error) {
       this.trace?.add("The adapter failed.", { messageId: message?.id, adapter: this.adapter?.id ?? null, error: String(error?.stack ?? error) });
       console.warn(`[SRB] The roll breakdown adapter "${this.adapter?.id ?? "unknown"}" failed for message ${message?.id}.`, error);

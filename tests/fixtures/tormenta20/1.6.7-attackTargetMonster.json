@@ -1,0 +1,177 @@
+{
+  "source": "tormenta20 1.6.7, live capture",
+  "speaker": {
+    "alias": "T20 Ayla"
+  },
+  "actor": "ayla",
+  "content": "<div class=\"tormenta20 chat-card item-card\" data-item-id=\"weapon\"><h3 class=\"item-name\"><div>Espada longa</div></h3></div>",
+  "flags": {
+    "tormenta20": {
+      "itemData": {
+        "rolls": [
+          {
+            "name": "Ataque",
+            "key": "ataque0",
+            "type": "ataque",
+            "parts": [
+              [
+                "1d20",
+                "",
+                ""
+              ],
+              [
+                "luta",
+                "",
+                ""
+              ],
+              [
+                "0",
+                "",
+                ""
+              ]
+            ],
+            "versatil": "",
+            "adaptavel": ""
+          },
+          {
+            "name": "Dano",
+            "key": "dano1",
+            "type": "dano",
+            "parts": [
+              [
+                "1d8",
+                "corte",
+                ""
+              ],
+              [
+                "@for",
+                "",
+                ""
+              ]
+            ],
+            "versatil": "",
+            "adaptavel": ""
+          }
+        ],
+        "criticoM": 19,
+        "criticoX": 2
+      }
+    },
+    "sephrals-roll-breakdown": {
+      "t20Target": {
+        "defense": 23,
+        "uuid": "Scene.scene.Token.token.Actor.actor",
+        "name": "Ogro"
+      }
+    }
+  },
+  "rolls": [
+    {
+      "class": "RollT20",
+      "options": {
+        "type": "attack",
+        "title": "Ataque"
+      },
+      "formula": "1d20 + 7 + 0 + 0",
+      "total": 21,
+      "evaluated": true,
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "critical": 19,
+            "fumble": 1
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 14,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 7
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 0
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 0
+        }
+      ]
+    },
+    {
+      "class": "RollT20",
+      "options": {
+        "type": "damage",
+        "rd": 0,
+        "title": "Dano"
+      },
+      "formula": "1d8 + 3",
+      "total": 6,
+      "evaluated": true,
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "corte"
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 8,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 3,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 3
+        }
+      ]
+    }
+  ],
+  "itemId": "weapon"
+}

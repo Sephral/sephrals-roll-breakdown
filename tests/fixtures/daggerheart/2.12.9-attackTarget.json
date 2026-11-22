@@ -1,0 +1,160 @@
+{
+  "source": "daggerheart 2.12.9, live capture",
+  "speaker": {
+    "alias": "Aria Vale"
+  },
+  "type": "dualityRoll",
+  "rolls": [
+    {
+      "class": "DualityRoll",
+      "options": {
+        "actionType": "action",
+        "experiences": [],
+        "roll": {
+          "type": "attack",
+          "trait": "agility",
+          "difficulty": null,
+          "advantage": 0,
+          "modifiers": [
+            {
+              "label": "Agility",
+              "value": 1
+            }
+          ],
+          "breakdown": [
+            {
+              "label": "Agility",
+              "value": 1
+            }
+          ],
+          "success": false
+        },
+        "data": {
+          "experiences": {
+            "p5yxabl3rHq7rzzL": {
+              "name": "Veteran of the Border Wars",
+              "value": 2
+            },
+            "Ifrihz5eYEgbPwli": {
+              "name": "Tough as Nails",
+              "value": 2
+            }
+          }
+        }
+      },
+      "formula": "1d12h + 1d12f + 1",
+      "terms": [
+        {
+          "class": "HopeDie",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "h"
+          ],
+          "results": [
+            {
+              "result": 6,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "FearDie",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "f"
+          ],
+          "results": [
+            {
+              "result": 2,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 1
+        }
+      ],
+      "total": 9,
+      "evaluated": true
+    }
+  ],
+  "system": {
+    "targets": [
+      {
+        "name": "Skeleton Warrior",
+        "difficulty": 10
+      }
+    ],
+    "hasHealing": false,
+    "damage": {
+      "main": {
+        "class": "DamageRoll",
+        "options": {
+          "breakdown": [
+            {
+              "label": "Combat Training",
+              "value": 1
+            }
+          ],
+          "damageTypes": [
+            "physical"
+          ],
+          "fullRestore": false
+        },
+        "formula": "1d8 + 1",
+        "terms": [
+          {
+            "class": "BaseDie",
+            "options": {},
+            "evaluated": true,
+            "number": 1,
+            "faces": 8,
+            "modifiers": [],
+            "results": [
+              {
+                "result": 8,
+                "active": true
+              }
+            ]
+          },
+          {
+            "class": "OperatorTerm",
+            "options": {},
+            "evaluated": true,
+            "operator": "+"
+          },
+          {
+            "class": "NumericTerm",
+            "options": {},
+            "evaluated": true,
+            "number": 1
+          }
+        ],
+        "total": 9,
+        "evaluated": true
+      },
+      "resources": {}
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "source": "daggerheart 2.12.9, live capture",
+  "speaker": {
+    "alias": "Aria Vale"
+  },
+  "type": "fateRoll",
+  "rolls": [
+    {
+      "class": "FateRoll",
+      "options": {
+        "actionType": "action",
+        "experiences": [],
+        "roll": {
+          "type": "trait",
+          "trait": "agility",
+          "advantage": 0,
+          "modifiers": [],
+          "breakdown": []
+        },
+        "data": {
+          "experiences": {
+            "p5yxabl3rHq7rzzL": {
+              "name": "Veteran of the Border Wars",
+              "value": 2
+            },
+            "Ifrihz5eYEgbPwli": {
+              "name": "Tough as Nails",
+              "value": 2
+            }
+          }
+        }
+      },
+      "formula": "1d12h",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "h"
+          ],
+          "results": [
+            {
+              "result": 8,
+              "active": true
+            }
+          ]
+        }
+      ],
+      "total": 8,
+      "evaluated": true
+    }
+  ],
+  "system": {
+    "targets": [],
+    "hasHealing": false
+  }
+}

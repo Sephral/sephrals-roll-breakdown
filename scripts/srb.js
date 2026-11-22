@@ -1,8 +1,11 @@
 import { AdapterRegistry, createApi } from "./adapter-registry.js";
 import { CrucibleRollAdapter } from "./adapters/crucible-adapter.js";
+import { DaggerheartRollAdapter } from "./adapters/daggerheart-adapter.js";
 import { GenericRollAdapter } from "./adapters/generic-adapter.js";
 import { Pf2eRollAdapter } from "./adapters/pf2e-adapter.js";
 import { SwadeRollAdapter } from "./adapters/swade-adapter.js";
+import { Tormenta20RollAdapter } from "./adapters/tormenta20-adapter.js";
+import { secretTargets, snapshotTormenta20Target, T20_TARGET_FLAG } from "./tormenta20-targets.js";
 import { ChatCardRenderer } from "./chat-card-renderer.js";
 import { debugTrace, registerDebug } from "./debug.js";
 import { saveDebugFile } from "./debug-file.mjs";
@@ -22,6 +25,7 @@ import { Dnd5eRollAdapter, rememberRollContext } from "./adapters/dnd5e-adapter.
 import { TESTED_VERSIONS, noticeNewVersions, runSelfTest } from "./selftest.js";
 import { refreshLuckWindow, trackLuck } from "./luck-app.js";
 import { countFeature, registerUsage } from "./usage.mjs";
+import { sampleWindows } from "./sample-windows.js";
 
 // How long the core hook waits for dnd5e's own render hook before it renders the panel itself.
 // Systems such as Crucible finish their chat card after the render hook. The panel waits until the card is
@@ -35,6 +39,8 @@ registry.register("crucible", new CrucibleRollAdapter());
 registry.register("pf2e", new Pf2eRollAdapter("pf2e"));
 registry.register("sf2e", new Pf2eRollAdapter("sf2e"));
 registry.register("swade", new SwadeRollAdapter());
+registry.register("daggerheart", new DaggerheartRollAdapter());
+registry.register("tormenta20", new Tormenta20RollAdapter());
 
 function createAdapter() {
   return registry.resolve(game.system?.id, new GenericRollAdapter());
@@ -48,6 +54,8 @@ const api = createApi({
   },
   runSelfTest: (options) => runSelfTest(service, options),
   saveDebugFile: (messageId) => saveDebugFile(messageId ?? null, { moduleId: MODULE_ID }),
+  // Chat cards and the dice luck window with made-up rolls, nothing saved (translators, testing; see samples.mjs)
+  samples: () => sampleWindows(),
   getBreakdown: (messageOrId) => {
     const message = typeof messageOrId === "string" ? game.messages?.get?.(messageOrId) : messageOrId;
     return service.getBreakdowns(message ?? null);
@@ -148,8 +156,27 @@ Hooks.on("dnd5e.renderChatMessage", (message, html) => {
   void service.enhanceChatMessage(message, html);
 });
 
+// Tormenta20 works out no hit and keeps no targets on its cards. The client that makes an item roll stores the Defense of
+// the single creature it targets, so the chance and the hit stay on the card when it is read later.
+const pendingSecretTargets = new WeakMap();
+Hooks.on("preCreateChatMessage", (message, data, options, userId) => {
+  if (game.system?.id !== "tormenta20" || userId !== game.user?.id) return;
+  try {
+    if (!message?.flags?.tormenta20?.itemData) return;
+    // A message flag reaches every client, so only the Defense of a creature a player owns is stored. The Defense of a monster stays secret.
+    const target = snapshotTormenta20Target(game.user?.targets);
+    const owned = target?.uuid ? Boolean(globalThis.fromUuidSync?.(target.uuid)?.hasPlayerOwner) : false;
+    if (target && !owned && game.user?.isGM) { pendingSecretTargets.set(message, target); if (options && typeof options === "object") options.sephralsT20Secret = target; }
+    if (target && owned) message.updateSource({ [`flags.${MODULE_ID}.${T20_TARGET_FLAG}`]: target });
+  } catch (error) {
+    console.warn(`${MODULE_ID} | The target of the roll could not be stored`, error);
+  }
+});
+
 // The client that adds rolls to a message stores their breakdown on it (adapters with storeBreakdowns).
 Hooks.on("createChatMessage", (message, options, userId) => {
+  const secret = pendingSecretTargets.get(message) ?? options?.sephralsT20Secret;
+  if (secret && message.id) secretTargets.set(message.id, secret);
   store.onCreate(message, options, userId);
   trackLuck(message, userId, service.adapter?.getMessageRolls?.(message) ?? message?.rolls ?? []);
   if (game.user?.isGM && isOwnHiddenGmRoll(message, service.adapter)) countFeature(MODULE_ID, "gmRollHidden");

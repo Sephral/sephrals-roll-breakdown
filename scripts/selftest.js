@@ -8,8 +8,8 @@ import { countFeature } from "./usage.mjs";
 // gets a notice once when a newer version than the verified one is installed.
 
 // The versions the module was verified against.
-export const TESTED_VERSIONS = Object.freeze({ core: "14.370", dnd5e: "6.1.1", crucible: "0.11.3", pf2e: "8.6.1", sf2e: "1.7.1", swade: "6.0.4" });
-const SUPPORTED_SYSTEMS = ["dnd5e", "crucible", "pf2e", "sf2e", "swade"];
+export const TESTED_VERSIONS = Object.freeze({ core: "14.370", dnd5e: "6.1.1", crucible: "0.11.3", daggerheart: "2.12.9", pf2e: "8.6.1", sf2e: "1.7.1", swade: "6.0.4", tormenta20: "1.6.7" });
+const SUPPORTED_SYSTEMS = ["dnd5e", "crucible", "daggerheart", "pf2e", "sf2e", "swade", "tormenta20"];
 
 async function checkIntegrations(service) {
   const problems = [];

@@ -1,0 +1,188 @@
+{
+  "ayla": {
+    "type": "character",
+    "nivel": 5,
+    "treino": 2,
+    "cd": 12,
+    "atributos": {
+      "for": 3,
+      "des": 2,
+      "con": 2,
+      "int": 0,
+      "sab": 1,
+      "car": 0
+    },
+    "pericias": {
+      "perc": {
+        "atributo": "sab",
+        "treinado": true,
+        "value": 5,
+        "label": "Percepção"
+      },
+      "fort": {
+        "atributo": "con",
+        "treinado": true,
+        "value": 6,
+        "label": "Fortitude"
+      },
+      "atle": {
+        "atributo": "for",
+        "treinado": true,
+        "value": 7,
+        "label": "Atletismo"
+      },
+      "inic": {
+        "atributo": "des",
+        "treinado": false,
+        "value": 4,
+        "label": "Iniciativa"
+      },
+      "luta": {
+        "atributo": "for",
+        "treinado": true,
+        "value": 7,
+        "label": "Luta"
+      },
+      "pont": {
+        "atributo": "des",
+        "treinado": false,
+        "value": 4,
+        "label": "Pontaria"
+      },
+      "furt": {
+        "atributo": "des",
+        "treinado": false,
+        "value": 4,
+        "label": "Furtividade"
+      }
+    },
+    "items": []
+  },
+  "bran": {
+    "type": "character",
+    "nivel": 5,
+    "treino": 2,
+    "cd": 12,
+    "atributos": {
+      "for": 0,
+      "des": 1,
+      "con": 1,
+      "int": 4,
+      "sab": 2,
+      "car": 1
+    },
+    "pericias": {
+      "perc": {
+        "atributo": "sab",
+        "treinado": true,
+        "value": 6,
+        "label": "Percepção"
+      },
+      "fort": {
+        "atributo": "con",
+        "treinado": false,
+        "value": 3,
+        "label": "Fortitude"
+      },
+      "atle": {
+        "atributo": "for",
+        "treinado": false,
+        "value": 2,
+        "label": "Atletismo"
+      },
+      "inic": {
+        "atributo": "des",
+        "treinado": false,
+        "value": 3,
+        "label": "Iniciativa"
+      },
+      "luta": {
+        "atributo": "for",
+        "treinado": false,
+        "value": 2,
+        "label": "Luta"
+      },
+      "pont": {
+        "atributo": "des",
+        "treinado": false,
+        "value": 3,
+        "label": "Pontaria"
+      },
+      "furt": {
+        "atributo": "des",
+        "treinado": false,
+        "value": 3,
+        "label": "Furtividade"
+      }
+    },
+    "items": [
+      {
+        "name": "Bola de Fogo",
+        "cd": 16
+      },
+      {
+        "name": "Curar Ferimentos",
+        "cd": 0
+      }
+    ]
+  },
+  "wolf": {
+    "type": "npc",
+    "nivel": 1,
+    "treino": 2,
+    "cd": 10,
+    "atributos": {
+      "for": 3,
+      "des": 3,
+      "con": 3,
+      "int": -4,
+      "sab": 2,
+      "car": -2
+    },
+    "pericias": {
+      "perc": {
+        "atributo": "sab",
+        "treinado": true,
+        "value": 6,
+        "label": "Percepção"
+      },
+      "fort": {
+        "atributo": "con",
+        "treinado": false,
+        "value": 6,
+        "label": "Fortitude"
+      },
+      "atle": {
+        "atributo": "for",
+        "treinado": false,
+        "value": 3,
+        "label": "Atletismo"
+      },
+      "inic": {
+        "atributo": "des",
+        "treinado": true,
+        "value": 5,
+        "label": "Iniciativa"
+      },
+      "luta": {
+        "atributo": "for",
+        "treinado": true,
+        "value": 7,
+        "label": "Luta"
+      },
+      "pont": {
+        "atributo": "des",
+        "treinado": false,
+        "value": 3,
+        "label": "Pontaria"
+      },
+      "furt": {
+        "atributo": "des",
+        "treinado": false,
+        "value": 3,
+        "label": "Furtividade"
+      }
+    },
+    "items": []
+  }
+}

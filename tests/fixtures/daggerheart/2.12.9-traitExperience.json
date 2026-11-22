@@ -1,0 +1,126 @@
+{
+  "source": "daggerheart 2.12.9, live capture",
+  "speaker": {
+    "alias": "Aria Vale"
+  },
+  "type": "dualityRoll",
+  "rolls": [
+    {
+      "class": "DualityRoll",
+      "options": {
+        "actionType": "action",
+        "experiences": [
+          "p5yxabl3rHq7rzzL"
+        ],
+        "roll": {
+          "type": "trait",
+          "trait": "strength",
+          "advantage": 0,
+          "modifiers": [
+            {
+              "label": "Strength",
+              "value": 2
+            },
+            {
+              "label": "Veteran of the Border Wars",
+              "value": 2
+            }
+          ],
+          "breakdown": [
+            {
+              "label": "Strength",
+              "value": 2
+            },
+            {
+              "label": "Veteran of the Border Wars",
+              "value": 2
+            }
+          ]
+        },
+        "data": {
+          "experiences": {
+            "p5yxabl3rHq7rzzL": {
+              "name": "Veteran of the Border Wars",
+              "value": 2
+            },
+            "Ifrihz5eYEgbPwli": {
+              "name": "Tough as Nails",
+              "value": 2
+            }
+          }
+        }
+      },
+      "formula": "1d12h + 1d12f + 2 + 2",
+      "terms": [
+        {
+          "class": "HopeDie",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "h"
+          ],
+          "results": [
+            {
+              "result": 7,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "FearDie",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "f"
+          ],
+          "results": [
+            {
+              "result": 10,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 2
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 2
+        }
+      ],
+      "total": 21,
+      "evaluated": true
+    }
+  ],
+  "system": {
+    "targets": [],
+    "hasHealing": false
+  }
+}

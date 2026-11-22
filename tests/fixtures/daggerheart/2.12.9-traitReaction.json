@@ -1,0 +1,104 @@
+{
+  "source": "daggerheart 2.12.9, live capture",
+  "speaker": {
+    "alias": "Aria Vale"
+  },
+  "type": "dualityRoll",
+  "rolls": [
+    {
+      "class": "DualityRoll",
+      "options": {
+        "actionType": "reaction",
+        "experiences": [],
+        "roll": {
+          "type": "trait",
+          "trait": "agility",
+          "advantage": 0,
+          "modifiers": [
+            {
+              "label": "Agility",
+              "value": 1
+            }
+          ],
+          "breakdown": [
+            {
+              "label": "Agility",
+              "value": 1
+            }
+          ]
+        },
+        "data": {
+          "experiences": {
+            "p5yxabl3rHq7rzzL": {
+              "name": "Veteran of the Border Wars",
+              "value": 2
+            },
+            "Ifrihz5eYEgbPwli": {
+              "name": "Tough as Nails",
+              "value": 2
+            }
+          }
+        }
+      },
+      "formula": "1d12h + 1d12f + 1",
+      "terms": [
+        {
+          "class": "HopeDie",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "h"
+          ],
+          "results": [
+            {
+              "result": 7,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "FearDie",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 12,
+          "modifiers": [
+            "f"
+          ],
+          "results": [
+            {
+              "result": 6,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 1
+        }
+      ],
+      "total": 14,
+      "evaluated": true
+    }
+  ],
+  "system": {
+    "targets": [],
+    "hasHealing": false
+  }
+}

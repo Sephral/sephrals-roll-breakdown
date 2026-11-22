@@ -3,6 +3,7 @@ import { MODULE_ID, getRenderOptions, hasOwnSettings, localize, openModuleSettin
 import { buildSummaryLine, showsLine, showsToggleLabel } from "./summary-line.js";
 import { attachLineHover } from "./line-hover.js";
 import { describeChance, resolveChance } from "./chance-target.js";
+import { daggerheartHidesTargets } from "./daggerheart-targets.js";
 import { openLuck } from "./luck-app.js";
 import { countFeature } from "./usage.mjs";
 
@@ -92,6 +93,10 @@ function getChanceWords() {
     betterHint: localize("Chance.BetterHint"),
     dc: localize("Chance.Dc"),
     ac: localize("Chance.Ac"),
+    difficulty: localize("Chance.Difficulty"),
+    evasion: localize("Chance.Evasion"),
+    defense: localize("Chance.Defense"),
+    dualityHint: localize("Chance.DualityHint"),
     percent: localize("Chance.Percent"),
     under: localize("Chance.Under"),
     over: localize("Chance.Over")
@@ -109,7 +114,8 @@ function getChanceEnvironment() {
         return false;
       }
     },
-    pf2eShowsDcs: game.pf2e?.settings?.metagame?.dcs === true
+    pf2eShowsDcs: game.pf2e?.settings?.metagame?.dcs === true,
+    daggerheartHidesTargets: daggerheartHidesTargets()
   };
 }
 
@@ -243,13 +249,15 @@ export class ChatCardRenderer {
     messageContent.insertAdjacentHTML("beforeend", markup);
 
     const panel = root.querySelector(selector);
+    // A sample card (see sample-windows.js) counts nothing
+    const isSample = Boolean(message?.flags?.[MODULE_ID]?.sample);
     panel?.addEventListener?.("toggle", () => this.openPanels.set(message.id, panel.open));
     // Counted on the click: the toggle event also fires for panels that are rendered open.
-    if (templateData.line && !this.countedLines.has(message.id)) {
+    if (!isSample && templateData.line && !this.countedLines.has(message.id)) {
       this.countedLines.add(message.id);
       countFeature(MODULE_ID, "lineShown");
     }
-    if (templateData.breakdowns.some((entry) => entry.chance) && !this.countedChances.has(message.id)) {
+    if (!isSample && templateData.breakdowns.some((entry) => entry.chance) && !this.countedChances.has(message.id)) {
       this.countedChances.add(message.id);
       countFeature(MODULE_ID, "chanceShown");
     }
@@ -257,19 +265,20 @@ export class ChatCardRenderer {
       attachLineHover(panel, {
         isEnabled: () => getRenderOptions().lineHover,
         onShown: () => {
-          if (this.countedHovers.has(message.id)) return;
+          if (isSample || this.countedHovers.has(message.id)) return;
           this.countedHovers.add(message.id);
           countFeature(MODULE_ID, "lineHovered");
         }
       });
     }
     panel?.querySelector?.(".srb-breakdown__toggle")?.addEventListener?.("click", (event) => {
-      if (panel.open) return;
+      if (panel.open || isSample) return;
       countFeature(MODULE_ID, "panelOpened");
       if (event?.target?.closest?.(".srb-breakdown__line")) countFeature(MODULE_ID, "lineClicked");
     });
     panel?.querySelector?.(".srb-breakdown__settings")?.addEventListener?.("click", (event) => {
       event.preventDefault();
+      if (isSample) return;
       countFeature(MODULE_ID, "panelSettings");
       void openModuleSettings();
     });

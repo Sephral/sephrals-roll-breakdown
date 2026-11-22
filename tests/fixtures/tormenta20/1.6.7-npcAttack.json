@@ -1,0 +1,172 @@
+{
+  "source": "tormenta20 1.6.7, live capture",
+  "speaker": {
+    "alias": "T20 Lobo"
+  },
+  "actor": "wolf",
+  "content": "<div class=\"tormenta20 chat-card item-card\" data-item-id=\"weapon\"><h3 class=\"item-name\"><div>Mordida</div></h3></div>",
+  "flags": {
+    "tormenta20": {
+      "itemData": {
+        "rolls": [
+          {
+            "name": "Ataque",
+            "key": "ataque0",
+            "type": "ataque",
+            "parts": [
+              [
+                "1d20",
+                "",
+                ""
+              ],
+              [
+                "luta",
+                "",
+                ""
+              ],
+              [
+                "0",
+                "",
+                ""
+              ]
+            ],
+            "versatil": "",
+            "adaptavel": ""
+          },
+          {
+            "name": "Dano",
+            "key": "dano1",
+            "type": "dano",
+            "parts": [
+              [
+                "1d6+5",
+                "perfuracao",
+                ""
+              ],
+              [
+                "",
+                "",
+                ""
+              ]
+            ],
+            "versatil": "",
+            "adaptavel": ""
+          }
+        ],
+        "criticoM": 20,
+        "criticoX": 2
+      }
+    }
+  },
+  "rolls": [
+    {
+      "class": "RollT20",
+      "options": {
+        "type": "attack",
+        "title": "Ataque"
+      },
+      "formula": "1d20 + 7 + 0 + 0",
+      "total": 21,
+      "evaluated": true,
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "critical": 20,
+            "fumble": 1
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 14,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 7
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 0
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 0
+        }
+      ]
+    },
+    {
+      "class": "RollT20",
+      "options": {
+        "type": "damage",
+        "rd": 0,
+        "title": "Dano"
+      },
+      "formula": "1d6 + 5",
+      "total": 9,
+      "evaluated": true,
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "perfuracao"
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 6,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 4,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": "perfuracao"
+          },
+          "evaluated": true,
+          "number": 5
+        }
+      ]
+    }
+  ],
+  "itemId": "weapon"
+}

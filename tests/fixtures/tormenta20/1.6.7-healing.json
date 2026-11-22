@@ -1,0 +1,86 @@
+{
+  "source": "tormenta20 1.6.7, live capture",
+  "speaker": {
+    "alias": "T20 Bran"
+  },
+  "actor": "bran",
+  "content": "<div class=\"tormenta20 chat-card item-card\" data-item-id=\"Curar Ferimentos\"><h3 class=\"item-name\"><div>Curar Ferimentos</div></h3></div>",
+  "flags": {
+    "tormenta20": {
+      "itemData": {
+        "rolls": [
+          {
+            "name": "Cura",
+            "key": "dano0",
+            "type": "dano",
+            "parts": [
+              [
+                "2d8+2",
+                "curapv",
+                ""
+              ]
+            ],
+            "versatil": "",
+            "adaptavel": ""
+          }
+        ],
+        "resistencia": {
+          "pericia": "",
+          "atributo": "int",
+          "bonus": 0,
+          "txt": ""
+        }
+      }
+    }
+  },
+  "rolls": [
+    {
+      "class": "RollT20",
+      "options": {
+        "type": "damage",
+        "rd": 0,
+        "title": "Cura"
+      },
+      "formula": "2d8 + 2",
+      "total": 11,
+      "evaluated": true,
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "curapv"
+          },
+          "evaluated": true,
+          "number": 2,
+          "faces": 8,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 6,
+              "active": true
+            },
+            {
+              "result": 3,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {
+            "flavor": "curapv"
+          },
+          "evaluated": true,
+          "number": 2
+        }
+      ]
+    }
+  ],
+  "itemId": "Curar Ferimentos"
+}

@@ -1,0 +1,66 @@
+{
+  "source": "tormenta20 1.6.7, live capture",
+  "speaker": {
+    "alias": "T20 Ayla"
+  },
+  "actor": "ayla",
+  "content": "<div class=\"tormenta20 chat-card item-card\" data-item-id=\"\"><h3 class=\"item-name\"><div>Fortitude</div></h3></div>",
+  "flags": {
+    "tormenta20": {}
+  },
+  "rolls": [
+    {
+      "class": "RollT20",
+      "options": {
+        "type": "attack"
+      },
+      "formula": "1d20 + 6 + 0",
+      "total": 17,
+      "evaluated": true,
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "critical": 20,
+            "fumble": 1
+          },
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 11,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 6
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 0
+        }
+      ]
+    }
+  ],
+  "itemId": null
+}

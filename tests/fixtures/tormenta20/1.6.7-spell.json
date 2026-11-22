@@ -1,0 +1,88 @@
+{
+  "source": "tormenta20 1.6.7, live capture",
+  "speaker": {
+    "alias": "T20 Bran"
+  },
+  "actor": "bran",
+  "content": "<div class=\"tormenta20 chat-card item-card\" data-item-id=\"Bola de Fogo\"><h3 class=\"item-name\"><div>Bola de Fogo</div></h3></div>",
+  "flags": {
+    "tormenta20": {
+      "itemData": {
+        "rolls": [
+          {
+            "name": "Dano",
+            "key": "dano0",
+            "type": "dano",
+            "parts": [
+              [
+                "6d6",
+                "fogo",
+                ""
+              ]
+            ],
+            "versatil": "",
+            "adaptavel": ""
+          }
+        ],
+        "resistencia": {
+          "pericia": "",
+          "atributo": "int",
+          "bonus": 0,
+          "txt": "Reflexos reduz à metade"
+        }
+      }
+    }
+  },
+  "rolls": [
+    {
+      "class": "RollT20",
+      "options": {
+        "type": "damage",
+        "rd": 0,
+        "title": "Dano"
+      },
+      "formula": "6d6",
+      "total": 22,
+      "evaluated": true,
+      "terms": [
+        {
+          "class": "Die",
+          "options": {
+            "flavor": "fogo"
+          },
+          "evaluated": true,
+          "number": 6,
+          "faces": 6,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 3,
+              "active": true
+            },
+            {
+              "result": 2,
+              "active": true
+            },
+            {
+              "result": 6,
+              "active": true
+            },
+            {
+              "result": 1,
+              "active": true
+            },
+            {
+              "result": 4,
+              "active": true
+            },
+            {
+              "result": 6,
+              "active": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "itemId": "Bola de Fogo"
+}

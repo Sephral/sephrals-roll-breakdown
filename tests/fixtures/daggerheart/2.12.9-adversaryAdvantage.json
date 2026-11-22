@@ -1,0 +1,148 @@
+{
+  "source": "daggerheart 2.12.9, live capture",
+  "speaker": {
+    "alias": "Cult Adept"
+  },
+  "type": "adversaryRoll",
+  "rolls": [
+    {
+      "class": "D20Roll",
+      "options": {
+        "actionType": "action",
+        "experiences": [],
+        "roll": {
+          "type": "attack",
+          "trait": null,
+          "difficulty": null,
+          "advantage": 1,
+          "modifiers": [
+            {
+              "label": "Bonus to Hit",
+              "value": "2"
+            }
+          ],
+          "breakdown": [
+            {
+              "label": "Custom Modifier",
+              "value": 2
+            }
+          ],
+          "success": true
+        },
+        "data": {
+          "experiences": {
+            "Lt65O6BraCDSG6A9": {
+              "name": "Fallen Lore",
+              "value": 2
+            },
+            "zUrYeLaTh26XK19W": {
+              "name": "Rituals",
+              "value": 2
+            }
+          },
+          "criticalThreshold": 20
+        }
+      },
+      "formula": "2d20kh + 2",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {},
+          "evaluated": true,
+          "number": 2,
+          "faces": 20,
+          "modifiers": [
+            "kh"
+          ],
+          "results": [
+            {
+              "result": 3,
+              "active": false,
+              "discarded": true
+            },
+            {
+              "result": 17,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 2
+        }
+      ],
+      "total": 19,
+      "evaluated": true
+    }
+  ],
+  "system": {
+    "targets": [
+      {
+        "name": "Aria Vale",
+        "evasion": 11
+      }
+    ],
+    "hasHealing": false,
+    "damage": {
+      "main": {
+        "class": "DamageRoll",
+        "options": {
+          "breakdown": [
+            {
+              "label": "Base Modifier",
+              "value": 3
+            }
+          ],
+          "damageTypes": [
+            "magical"
+          ],
+          "fullRestore": false
+        },
+        "formula": "2d4 + 3",
+        "terms": [
+          {
+            "class": "BaseDie",
+            "options": {},
+            "evaluated": true,
+            "number": 2,
+            "faces": 4,
+            "modifiers": [],
+            "results": [
+              {
+                "result": 3,
+                "active": true
+              },
+              {
+                "result": 1,
+                "active": true
+              }
+            ]
+          },
+          {
+            "class": "OperatorTerm",
+            "options": {},
+            "evaluated": true,
+            "operator": "+"
+          },
+          {
+            "class": "NumericTerm",
+            "options": {},
+            "evaluated": true,
+            "number": 3
+          }
+        ],
+        "total": 7,
+        "evaluated": true
+      },
+      "resources": {}
+    }
+  }
+}

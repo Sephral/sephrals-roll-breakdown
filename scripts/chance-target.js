@@ -1,4 +1,6 @@
-import { chanceOrBetter, chanceToReach, distribution, formatPercent, modelFromRoll, NATURAL_RULES } from "./chance.js";
+import { chanceOrBetter, chanceToReach, chanceToReachDuality, distribution, dualityModelFromRoll, formatPercent, modelFromRoll, NATURAL_RULES } from "./chance.js";
+import { adversaryCriticalFrom, findDaggerheartTarget } from "./daggerheart-targets.js";
+import { findTormenta20Target, t20RollKind } from "./tormenta20-targets.js";
 
 // Which chance a roll gets: the chance to reach a known target number (DC of a save or check, armor class of one target)
 // or, without one or when the player may not know it, the chance of this result or better. Pure over the message data and
@@ -15,6 +17,21 @@ function finite(value) {
 // Returns { value, kind: "dc" | "ac", known, needs } or null. needs is the critical rule of the roll.
 export function findTarget({ roll, message, systemId, env = {} }) {
   const isGM = Boolean(env.isGM);
+  if (systemId === "daggerheart") {
+    // Damage and healing have nothing to reach, the duality roll treats equal Hope and Fear dice as a critical success
+    const kind = dhRollKind(roll);
+    if (kind === "other") return { skip: true };
+    const target = findDaggerheartTarget({ roll, message, env });
+    if (!target) return null;
+    if (kind === "duality") return { ...target, needs: null, duality: true };
+    return { ...target, needs: NATURAL_RULES.attack(adversaryCriticalFrom(roll), 0) };
+  }
+  if (systemId === "tormenta20") {
+    // Damage and healing have nothing to reach. The system names no automatic hit or miss, so the total has to reach the Defense.
+    if (t20RollKind(roll, message) === "damage") return { skip: true };
+    const target = findTormenta20Target({ roll, message, env });
+    return target ? { ...target, needs: null } : null;
+  }
   if (systemId === "dnd5e") {
     // dnd5e 5 keeps the roll type and the targets in flags, dnd5e 6 in the typed message (message.type and message.system)
     const flags = message?.flags?.dnd5e ?? {};
@@ -52,9 +69,26 @@ export function findTarget({ roll, message, systemId, env = {} }) {
   return null;
 }
 
+// What kind of Daggerheart roll this is, by the class name the system registers: "duality", "adversary" (a plain d20 action
+// roll) or "other" (damage, healing, fate dice and anything else, which get no chance).
+function dhRollKind(roll) {
+  let prototype = Object.getPrototypeOf(roll ?? {});
+  const names = new Set();
+  while (prototype && prototype !== Object.prototype) {
+    names.add(prototype.constructor?.name);
+    prototype = Object.getPrototypeOf(prototype);
+  }
+  if (names.has("DualityRoll")) return "duality";
+  if (!names.has("DamageRoll") && !names.has("FateRoll") && (roll?.terms ?? []).some((term) => /^HopeDie$/.test(term?.constructor?.name ?? ""))) return "duality";
+  if (names.has("FateRoll") || names.has("DamageRoll")) return "other";
+  if (names.has("D20Roll")) return "adversary";
+  return "other";
+}
+
 // The chance line of one roll: { kind: "success" | "better", probability, target?, targetKind? } or null.
 export function resolveChance({ roll, message, systemId, env = {} }) {
-  const model = modelFromRoll(roll);
+  const duality = systemId === "daggerheart" && dhRollKind(roll) === "duality";
+  const model = duality ? dualityModelFromRoll(roll) : modelFromRoll(roll);
   if (!model) return null;
   const total = finite(roll?.total);
   if (total === null) return null;
@@ -73,9 +107,9 @@ export function resolveChance({ roll, message, systemId, env = {} }) {
   if (total < min || total > max) return null;
 
   if (target?.known) {
-    const probability = chanceToReach(model, target.value, target.needs);
+    const probability = duality ? chanceToReachDuality(model, target.value) : chanceToReach(model, target.value, target.needs);
     if (probability === null) return null;
-    return { kind: "success", probability, target: target.value, targetKind: target.kind };
+    return { kind: "success", probability, target: target.value, targetKind: target.kind, ...(duality ? { rule: "duality" } : {}) };
   }
   const probability = chanceOrBetter(model, total);
   if (probability === null) return null;
@@ -88,10 +122,12 @@ export function describeChance(chance, words = {}) {
   const percent = formatPercent(chance.probability, words);
   if (!percent) return null;
   if (chance.kind === "success") {
-    const kind = chance.targetKind === "ac" ? words.ac ?? "AC" : words.dc ?? "DC";
+    const kinds = { ac: words.ac ?? "AC", difficulty: words.difficulty ?? "Difficulty", evasion: words.evasion ?? "Evasion", defense: words.defense ?? "Defense" };
+    const kind = kinds[chance.targetKind] ?? words.dc ?? "DC";
+    const extra = chance.rule === "duality" && words.dualityHint ? ` ${words.dualityHint}` : "";
     return {
       text: String(words.success ?? "Chance of success: {percent}").replace("{percent}", percent),
-      hint: String(words.successHint ?? "").replace("{kind}", kind).replace("{target}", chance.target),
+      hint: String(words.successHint ?? "").replace("{kind}", kind).replace("{target}", chance.target) + extra,
       probability: chance.probability,
       kind: "success"
     };

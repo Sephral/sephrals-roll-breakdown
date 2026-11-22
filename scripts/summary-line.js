@@ -68,7 +68,7 @@ export function buildParts(breakdown, words = {}, aliases = {}) {
   }
   const dice = Array.isArray(breakdown?.diceTerms) ? breakdown.diceTerms : [];
   dice.forEach((term, index) => {
-    if (index === 0) return;
+    if (index === 0 || term?.lineSkip) return;
     const expression = clean(term?.expression);
     if (!expression) return;
     const label = shortenLabel(term.sourceLabel, aliases, trims);

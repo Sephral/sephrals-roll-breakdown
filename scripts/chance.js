@@ -220,6 +220,28 @@ export function modelFromRoll(roll) {
   return items.some((item) => item.kind === "die") ? items : null;
 }
 
+// Daggerheart: the model of a duality roll. The Hope, Fear, advantage and disadvantage dice carry the markers h, f, a and d
+// that mean nothing for the maths, they are left out. Any other die modifier stays and gives no chance when it is unknown.
+const DUALITY_MARKERS = new Set(["h", "f", "a", "d"]);
+
+export function dualityModelFromRoll(roll) {
+  const terms = Array.isArray(roll?.terms) ? roll.terms : null;
+  if (!terms?.length) return null;
+  const cleaned = terms.map((term) => {
+    if (typeof term?.faces !== "number" || !Array.isArray(term.modifiers)) return term;
+    return {
+      faces: term.faces,
+      number: term.number,
+      modifiers: term.modifiers.filter((modifier) => !DUALITY_MARKERS.has(String(modifier).toLowerCase()))
+    };
+  });
+  const model = modelFromRoll({ terms: cleaned });
+  // Hope and Fear are the first two terms of the formula, one die each
+  const [hope, fear] = model ?? [];
+  if (!hope || !fear || hope.kind !== "die" || fear.kind !== "die" || hope.number !== 1 || fear.number !== 1 || hope.sign < 0 || fear.sign < 0) return null;
+  return model;
+}
+
 // The distribution of everything except the main die, and of the main die itself.
 function combine(items) {
   let total = point(0);
@@ -267,6 +289,35 @@ export function chanceToReach(model, target, needs = null) {
       continue;
     }
     sum += probability * probabilityAtLeast(combined.rest, threshold - natural);
+  }
+  return Math.min(1, Math.max(0, sum));
+}
+
+// Daggerheart: the chance of a duality roll to reach a difficulty. Hope and Fear showing the same number are a critical
+// success whatever the total is. The model comes from dualityModelFromRoll, its first two items are the two duality dice.
+export function chanceToReachDuality(model, target) {
+  const [hope, fear, ...others] = model ?? [];
+  if (!hope || !fear || hope.kind !== "die" || fear.kind !== "die") return null;
+  const hopeDie = dieDistribution(hope.faces, hope.modifiers);
+  const fearDie = dieDistribution(fear.faces, fear.modifiers);
+  if (!hopeDie || !fearDie || hopeDie.keep || fearDie.keep) return null;
+  let rest = point(0);
+  if (others.length) {
+    if (!others.some((item) => item.kind === "die")) {
+      rest = point(others.reduce((sum, item) => sum + item.value, 0));
+    } else {
+      const combined = combine(others);
+      if (!combined) return null;
+      rest = combined.total;
+    }
+  }
+  let sum = 0;
+  for (const [h, ph] of hopeDie.dist) {
+    for (const [f, pf] of fearDie.dist) {
+      const weight = ph * pf;
+      if (h === f) sum += weight;
+      else sum += weight * probabilityAtLeast(rest, target - h - f);
+    }
   }
   return Math.min(1, Math.max(0, sum));
 }

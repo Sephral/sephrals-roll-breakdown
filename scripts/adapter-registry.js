@@ -109,7 +109,7 @@ export function normalizeBreakdown(breakdown) {
 }
 
 // Public API on game.modules.get("sephrals-roll-breakdown").api
-export function createApi({ registry, onRegister, runSelfTest, saveDebugFile, getBreakdown }) {
+export function createApi({ registry, onRegister, runSelfTest, saveDebugFile, getBreakdown, samples }) {
   return Object.freeze({
     registerAdapter(systemId, adapter) {
       const registered = registry.register(systemId, adapter);
@@ -135,6 +135,10 @@ export function createApi({ registry, onRegister, runSelfTest, saveDebugFile, ge
     // Every breakdown of a chat message (or its id), as stored when the roll was made where a copy exists
     async getBreakdown(messageOrId) {
       return (await getBreakdown?.(messageOrId)) ?? [];
+    },
+    // The chat cards and the luck window filled with made-up rolls, nothing saved (see samples.mjs)
+    samples() {
+      return samples?.() ?? [];
     }
   });
 }

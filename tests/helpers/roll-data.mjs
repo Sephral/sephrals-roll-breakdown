@@ -161,7 +161,14 @@ class ArithmeticExpression extends RollTerm {
   }
 }
 
-const TERM_CLASSES = { Die, WildDie, NumericTerm, OperatorTerm, StringTerm, PoolTerm, InstancePool, Grouping, ArithmeticExpression };
+// Daggerheart dice: the duality dice are Die subclasses with their own names, the damage dice are a BaseDie
+class HopeDie extends Die {}
+class FearDie extends Die {}
+class AdvantageDie extends Die {}
+class DisadvantageDie extends Die {}
+class BaseDie extends Die {}
+
+const TERM_CLASSES = { Die, HopeDie, FearDie, AdvantageDie, DisadvantageDie, BaseDie, WildDie, NumericTerm, OperatorTerm, StringTerm, PoolTerm, InstancePool, Grouping, ArithmeticExpression };
 
 function fromTermData(data) {
   const cls = TERM_CLASSES[data?.class];
@@ -225,10 +232,22 @@ class TraitRoll extends SwadeRoll {}
 class SwadeDamageRoll extends SwadeRoll {}
 Object.defineProperty(SwadeDamageRoll, "name", { value: "DamageRoll" });
 
-// The SWADE and PF2e damage rolls share a class name, the system decides which one is meant.
+// Daggerheart rolls: DualityRoll and FateRoll extend D20Roll, as in the system
+class D20Roll extends Roll {}
+class DualityRoll extends D20Roll {}
+class FateRoll extends D20Roll {}
+class DaggerheartDamageRoll extends Roll {}
+Object.defineProperty(DaggerheartDamageRoll, "name", { value: "DamageRoll" });
+
+// Tormenta20: every d20 and damage roll is a RollT20
+class RollT20 extends Roll {}
+
+// The SWADE, PF2e and Daggerheart damage rolls share a class name, the system decides which one is meant.
 const ROLL_CLASSES = {
   pf2e: { Roll, CheckRoll, StrikeAttackRoll, DamageRoll, DamageInstance },
-  swade: { Roll, SwadeRoll, TraitRoll, DamageRoll: SwadeDamageRoll }
+  swade: { Roll, SwadeRoll, TraitRoll, DamageRoll: SwadeDamageRoll },
+  daggerheart: { Roll, D20Roll, DualityRoll, FateRoll, DamageRoll: DaggerheartDamageRoll },
+  tormenta20: { Roll, RollT20 }
 };
 
 let rollClasses = ROLL_CLASSES.pf2e;
@@ -242,11 +261,20 @@ export function fromRollData(data) {
 export async function loadMessageFixture(system, name, extra = {}) {
   rollClasses = ROLL_CLASSES[system];
   const data = JSON.parse(await readFile(modulePath("tests", "fixtures", system, `${name}.json`), "utf8"));
-  return {
+  const message = {
     id: name,
     ...extra,
     flags: data.flags ?? {},
     rolls: data.rolls.map(fromRollData),
     fixture: data
   };
+  // Daggerheart keeps the damage of an attack in the system data of the message, not in its rolls
+  if (data.system) {
+    message.type = data.type;
+    message.system = {
+      ...data.system,
+      ...(data.system.damage ? { damage: { main: data.system.damage.main ? fromRollData(data.system.damage.main) : null, resources: Object.fromEntries(Object.entries(data.system.damage.resources ?? {}).map(([key, roll]) => [key, fromRollData(roll)])) } } : {})
+    };
+  }
+  return message;
 }

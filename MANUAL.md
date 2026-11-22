@@ -33,18 +33,20 @@ While the hover is on, the line has no native tooltip, because the popover repla
 
 Below the parts of each roll the panel (and so the hover preview) has one line about how likely the roll was, worked out from the dice before they were thrown:
 
-* `Chance of success: 65 %` (German `Chance auf Erfolg: 65 %`) when the card has a target number: the DC of a save or check, the armor class of the one targeted creature on a D&D 5e attack, the DC of a Pathfinder 2e check. The hint on the line names the number.
+* `Chance of success: 65 %` (German `Chance auf Erfolg: 65 %`) when the card has a target number: the DC of a save or check, the armor class of the one targeted creature on a D&D 5e attack, the DC of a Pathfinder 2e check, the difficulty or evasion in Daggerheart, the Defense of the one targeted creature on a Tormenta20 attack. The hint on the line names the number.
 * `This result or better: 15 %` (German `Dieses Ergebnis oder besser: 15 %`) otherwise, for every roll of every system that is made of plain dice and numbers. It is the chance that the roll reaches the rolled total or more.
 
 The engine works out the exact distribution of the formula: sums of dice, the best or worst dice of an advantage roll (`kh`, `kl`, `dh`, `dl`), minimum and maximum, rerolls (`r`, `rr`) and flat modifiers. Exploding dice stop after three explosions per die, which changes the number by far less than a percent. Counted successes, dice pools, nested dice, multiplication and anything that needs more than 100 dice or about 200 000 combinations are skipped: such a roll shows no chance line. A roll whose total the formula cannot produce (a module changed the result after the roll) shows none either.
 
-Critical rules count where the system has simple ones. A D&D 5e attack hits on a natural result in the critical range (20 unless the roll says otherwise) and misses on a natural 1. A Pathfinder 2e check raises the degree of success by one step on a natural 20 and lowers it on a natural 1, so the chance of success is the chance of reaching at least a success. Saves and checks in D&D 5e have no such rule. Damage rolls get no line.
+Critical rules count where the system has simple ones. A D&D 5e attack hits on a natural result in the critical range (20 unless the roll says otherwise) and misses on a natural 1. A Pathfinder 2e check raises the degree of success by one step on a natural 20 and lowers it on a natural 1, so the chance of success is the chance of reaching at least a success. Saves and checks in D&D 5e have no such rule. In Daggerheart Hope and Fear dice that show the same number are a critical success, which succeeds whatever the total is, and the chance counts it. Damage rolls get no line.
 
 Players only get a number they may know. The chance against a target number needs the number to be visible to the user, otherwise the line falls back to `This result or better`:
 
 * D&D 5e DC: shown to players when the roll is not private (the same condition under which dnd5e marks the card with success or failure). A DC the GM keeps secret is not part of the roll, so it never reaches the line.
 * D&D 5e armor class: shown to players only for creatures a player owns (a monster's armor class is the GM's secret). Several targets give no single armor class.
 * Pathfinder 2e: the DC follows the visibility the system gives it (the DC shown on the card or the metagame setting for DCs).
+* Daggerheart: a difficulty set on the roll is shown to everybody, the difficulty or evasion of a single target follows the Metagaming setting of the system for players.
+* Tormenta20: the Defense of a single target is shown to players only for creatures a player owns, like the armor class in D&D 5e.
 * Other systems and rolls without a known target: only `This result or better`.
 
 The GM sees every chance. The setting `Show the chance` (client setting, default on) turns the line off for you. The Roll Breakdown API is not changed by this: the line is computed when the card is drawn and is not stored on the message.
@@ -59,7 +61,7 @@ The clover button next to the gear at the bottom of an open panel, and the entry
 
 ## Supported systems
 
-Roll Breakdown has its own breakdown for D&D 5e, Crucible, Pathfinder 2e, Starfinder 2e and Savage Worlds. Every other system gets a general breakdown of dice and modifiers.
+Roll Breakdown has its own breakdown for D&D 5e, Crucible, Daggerheart, Pathfinder 2e, Starfinder 2e, Savage Worlds and Tormenta20. Every other system gets a general breakdown of dice and modifiers.
 
 ### D&D 5e
 
@@ -137,6 +139,38 @@ Starfinder 2e (system id `sf2e`, built on the Pathfinder 2e engine) uses the Pat
 Initiative in Savage Worlds uses action cards instead of dice, so it gets no breakdown.
 
 Tested with Savage Worlds 5.2.6 on Foundry 13 and 6.0.4 on Foundry 14.
+
+### Daggerheart
+
+Works with the official Daggerheart system on Foundry 14: trait rolls, attacks with weapons and spells, reaction rolls, the attacks of adversaries and all damage and healing rolls.
+
+* **Duality dice:** the Hope die and the Fear die with their sizes, a reroll marked as rerolled, and the outcome of the roll as the system defines it: With Hope, With Fear or Critical success when both dice show the same number. A roll made critical by an effect says so. A reaction roll names no side, because it gives neither Hope nor Fear.
+* **Advantage and disadvantage:** the d6 that was added to or taken off the total, as a die of its own. A bonus die such as the rally die of a Bard is named as well.
+* **Modifiers by source:** the trait, every experience (marked as an experience in its tooltip), bonuses from effects and anything else that was added, each with the label the system stored with the roll and its value. A number the system gives no label shows as Custom modifier.
+* **Difficulty:** when the roll or its single target has a difficulty or evasion, the panel shows it with Success and Failure (Hit and Miss against an evasion) and the margin. The target section of the chat card can be hidden from players in the system settings (Metagaming). Roll Breakdown follows that setting for players, the GM always sees the numbers. A difficulty set on the roll itself is printed on the card for everybody, so it is shown too. Several targets give no single number.
+* **Damage and healing:** the attack and its damage share one panel. The damage shows its dice, the labeled modifiers, the damage types and, on a critical hit, the extra damage that adds the highest result of every die. Resource rolls such as stress are named after the resource.
+* **Adversaries:** their attack is a single d20 (two with advantage, the higher counts) with the bonus to hit and the evasion of the target.
+* **Chance:** the chance line works out the duality roll exactly, including the advantage and disadvantage die. Equal Hope and Fear dice always succeed, so the chance against a difficulty is higher than the sum alone suggests. Adversary attacks use the critical range of the roll. Damage rolls and fate rolls get no line.
+
+The short line lists the modifiers and the advantage die and leaves out Hope and Fear, which the card shows anyway. Fate rolls (one die) get no panel.
+
+Damage and resource names follow the system's own texts and can stay English in other languages.
+
+Tested with Daggerheart 2.12.9 on Foundry 14.370.
+
+### Tormenta20
+
+Works with the Tormenta20 system, which runs on Foundry 14 only. The chat cards of the system name no skill and no modifier, so Roll Breakdown names them from the character and the item that rolled.
+
+* **Tests:** skills (initiative included), saving throws and attribute tests. The panel names the skill and its tooltip shows how the bonus comes together: half the level, the attribute, the training and other bonuses. The empty extra bonus the system adds to every roll is not listed. The card of an attribute test carries no name, so the attribute is named when only one of the six has that value, otherwise the row reads Attribute. Creatures show the total only, because the skills of a creature are set by hand.
+* **Attacks and damage:** a weapon, spell or power card is one panel with the attack and its damage. The damage shows its dice with the damage type (or healing type) as their name, the attribute and bonus rows, and a spell or power with a resistance test shows its save DC (ten plus half the level plus the key attribute plus the bonus of the item, or the DC of a creature). The resistance text of the item is in the tooltip.
+* **Critical threats:** a natural result in the threat range of the weapon shows Critical threat. The system multiplies the damage dice of the same card for a threat, whether the attack hits or not, so the damage shows Critical x2 (or the multiplier of the weapon) and a note on the dice. If the attack misses, the damage is rolled normally.
+* **Defense:** the system does not read targets. The client that rolls an item with exactly one target stores that Defense on the message (`flags.sephrals-roll-breakdown.t20Target`). With it the attack shows the Defense, Hit or Miss and the margin, and the chance line the chance of the total reaching it. A natural result changes nothing in that count. Players see the Defense of creatures they own, the GM sees every one. Attacks without a target or with several have no Defense and show This result or better.
+* **Chance:** tests, saving throws and attacks without a known Defense show This result or better, with advantage and disadvantage (two d20 keeping one) counted exactly. Damage and healing get no line.
+
+Skill, attribute and damage names are the module's own English and German names. The cards of the system itself stay in the language of the system.
+
+Tested with Tormenta20 1.6.7 on Foundry 14.370.
 
 ### Other systems
 
@@ -259,7 +293,7 @@ An adapter has two functions:
 
 * `title`: a heading for this roll, for example the target.
 * `formula`, `rollTotal` and `totalStaticModifier`: the formula, the total and the sum of the fixed modifiers.
-* `diceTerms`: dice with `expression`, `totalText`, an optional label `sourceLabel` with the explanation `sourceDetail`, extra tags in `notes` and `muted` for dice that did not count.
+* `diceTerms`: dice with `expression`, `totalText`, an optional label `sourceLabel` with the explanation `sourceDetail`, extra tags in `notes`, `muted` for dice that did not count and `lineSkip` for dice the short line leaves out.
 * `modifiers`: fixed modifiers with `value`, `valueText`, `sourceLabel` and `sourceDetail`.
 * `computedTerms` and `unresolvedTerms`: parts of the formula that are computed or not explained.
 * `sections`: extra lists with `label`, `placement` (`"top"` above the dice, otherwise below the modifiers) and `items`, each item with `text`, `tag`, `value`, `tooltip` and `muted`.
@@ -278,6 +312,10 @@ const breakdowns = await game.modules.get("sephrals-roll-breakdown")?.api?.getBr
 It takes a chat message or its id and returns one entry per roll that has a panel, with the fields listed in [Adding a system](#adding-a-system) and `rollIndex`, the index of the roll in the message. Entries from the stored copy carry `stored: true` and show the sources at the moment of the roll, the others are built from the current state. No visibility setting applies, so a module that shows the result to players has to check them itself.
 
 The stored copy is in `flags.sephrals-roll-breakdown.breakdown` of the chat message: `{ v: 1, adapter, lang, rolls }` with one entry per roll of the message, `{ s, b }` with a signature of the roll and the breakdown without empty fields. An entry without `b` means that the roll has no panel. The copy is written right after the message is created or a roll is added, in an update of the message. Use `getBreakdown` instead of reading the flag: it checks that each entry still belongs to its roll and fills in what the copy leaves out.
+
+## Sample windows
+
+`game.modules.get("sephrals-roll-breakdown").api.samples()` lists chat cards with made-up rolls (attack, critical hit, damage, saving throw, skill check, a card with two rolls, a GM roll as players see it) and the `My dice luck` window with made-up numbers, for translators and testers. Every entry has `id`, `label`, `group` and `open()`. Nothing is saved, no chat message is created and no usage counter counts.
 
 ## Debug file
 

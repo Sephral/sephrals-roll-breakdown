@@ -22,7 +22,7 @@
 * **GM rolls stay behind the screen:** if you like, players see only the total of your rolls, and your private rolls not at all.
 * **Out of the way:** the panel stays folded until someone opens it, and an open panel stays open while the chat updates. Each player picks for themselves: line only, line and button, or button only.
 * **Made for Crucible too:** see which boons and banes changed which die, where every bonus comes from, the result against the DC and how the damage adds up.
-* **More systems:** Pathfinder 2e, Starfinder 2e and Savage Worlds show their named modifiers and results, every other system gets a general breakdown of dice and modifiers.
+* **More systems:** Daggerheart, Pathfinder 2e, Starfinder 2e, Savage Worlds and Tormenta20 show their named modifiers and results, Daggerheart with Hope, Fear and the chance against a difficulty. Every other system gets a general breakdown of dice and modifiers.
 
 ## How it works
 
@@ -36,7 +36,7 @@ You decide who sees the line and the panel: only the GM, the GM and the owner of
 
 Search for **Roll Breakdown** in Foundry's module browser or open the [package page](https://foundryvtt.com/packages/sephrals-roll-breakdown).
 
-Foundry VTT 13 and 14 · any game system, extra details for D&D 5e, Crucible, Pathfinder 2e, Starfinder 2e and Savage Worlds · English and German
+Foundry VTT 13 and 14 · any game system, extra details for D&D 5e, Crucible, Daggerheart, Pathfinder 2e, Starfinder 2e, Savage Worlds and Tormenta20 (Foundry 14) · English and German
 
 ## Help it get better
 

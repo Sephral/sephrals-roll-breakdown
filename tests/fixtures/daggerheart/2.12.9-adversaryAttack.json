@@ -1,0 +1,128 @@
+{
+  "source": "daggerheart 2.12.9, live capture",
+  "speaker": {
+    "alias": "Skeleton Warrior"
+  },
+  "type": "adversaryRoll",
+  "rolls": [
+    {
+      "class": "D20Roll",
+      "options": {
+        "actionType": "action",
+        "experiences": [],
+        "roll": {
+          "type": "attack",
+          "trait": null,
+          "difficulty": null,
+          "advantage": 0,
+          "modifiers": [
+            {
+              "label": "Bonus to Hit",
+              "value": "0"
+            }
+          ],
+          "breakdown": [
+            {
+              "label": "Custom Modifier",
+              "value": 0
+            }
+          ],
+          "success": true
+        },
+        "data": {
+          "experiences": {},
+          "criticalThreshold": 20
+        }
+      },
+      "formula": "1d20 + 0",
+      "terms": [
+        {
+          "class": "Die",
+          "options": {},
+          "evaluated": true,
+          "number": 1,
+          "faces": 20,
+          "modifiers": [],
+          "results": [
+            {
+              "result": 13,
+              "active": true
+            }
+          ]
+        },
+        {
+          "class": "OperatorTerm",
+          "options": {},
+          "evaluated": true,
+          "operator": "+"
+        },
+        {
+          "class": "NumericTerm",
+          "options": {},
+          "evaluated": true,
+          "number": 0
+        }
+      ],
+      "total": 13,
+      "evaluated": true
+    }
+  ],
+  "system": {
+    "targets": [
+      {
+        "name": "Aria Vale",
+        "evasion": 11
+      }
+    ],
+    "hasHealing": false,
+    "damage": {
+      "main": {
+        "class": "DamageRoll",
+        "options": {
+          "breakdown": [
+            {
+              "label": "Base Modifier",
+              "value": 2
+            }
+          ],
+          "damageTypes": [
+            "physical"
+          ],
+          "fullRestore": false
+        },
+        "formula": "1d6 + 2",
+        "terms": [
+          {
+            "class": "BaseDie",
+            "options": {},
+            "evaluated": true,
+            "number": 1,
+            "faces": 6,
+            "modifiers": [],
+            "results": [
+              {
+                "result": 4,
+                "active": true
+              }
+            ]
+          },
+          {
+            "class": "OperatorTerm",
+            "options": {},
+            "evaluated": true,
+            "operator": "+"
+          },
+          {
+            "class": "NumericTerm",
+            "options": {},
+            "evaluated": true,
+            "number": 2
+          }
+        ],
+        "total": 6,
+        "evaluated": true
+      },
+      "resources": {}
+    }
+  }
+}
